@@ -1,16 +1,40 @@
 /**
- * 获取 iframe 的名称
+ * 在前端界面或脚本内使用, 从而重新加载前端界面或脚本
  *
- * @returns 对于楼层消息是 `message-iframe-楼层id-是该楼层第几个iframe`; 对于全局脚本是 `script-iframe-脚本名称`; 对于脚本库是 `tavern-helper-script-脚本名称`
+ * 这相当于调用 `window.location.reload()`, 会让分享到全局的接口失效;
+ *   如果有需要在重新加载前端界面后沿用的数据, 你应该自行编写重新加载方式而不是使用这个函数
+ *
+ * @example
+ * // 当聊天文件变更时, 重新加载前端界面或脚本
+ * let current_chat_id = SillyTavern.getCurrentChatId();
+ * eventOn(tavern_events.CHAT_CHANGED, chat_id => {
+ *   if (current_chat_id !== chat_id) {
+ *     current_chat_id = chat_id;
+ *     reloadIframe();
+ *   }
+ * })
+ *
+ * @example
+ * // 自行编写重新加载方式
+ * function initailzie() { ... }
+ * $(initialize);
+ *
+ * function destroy() { eventClearAll(); ... }
+ * $(window).on('pagehide', destroy);
+ *
+ * function reload() {
+ *   destory();
+ *   initialize();
+ * }
  */
-declare function getIframeName(): string;
+declare function reloadIframe(): void;
 
 /**
- * 获取脚本的脚本库 id, **只能在脚本内使用**
+ * 获取前端界面或脚本的标识名称
  *
- * @returns 脚本库的 id
+ * @returns 对于前端界面是 `TH-message--楼层号--前端界面是该楼层第几个界面`, 对于脚本库是 `TH-script--脚本名称--脚本id`
  */
-declare function getScriptId(): string;
+declare function getIframeName(): string;
 
 /**
  * 获取本消息楼层 iframe 所在楼层的楼层 id, **只能对楼层消息 iframe** 使用
@@ -20,27 +44,8 @@ declare function getScriptId(): string;
 declare function getCurrentMessageId(): number;
 
 /**
- * 将接口共享到全局, 使之在其他 iframe 中可用
+ * 获取脚本的脚本库 id, **只能在脚本内使用**
  *
- * 其他 iframe 将能通过 `await waitGlobalInitialized(global)` 来等待初始化完毕, 从而用 `global` 为变量名访问该接口
- *
- * @param global 要共享的接口名称
- * @param value 要共享的接口内容
- *
- * @example
- * initializeGlobal('Mvu', Mvu);
+ * @returns 脚本库的 id
  */
-declare function initializeGlobal(global: string, value: any): void;
-
-/**
- * 等待其他 iframe 中共享出来的全局接口初始化完毕, 并使之在当前 iframe 中可用
- *
- * 这需要其他 iframe 通过 `initializeGlobal(global, value)` 来共享接口
- *
- * @param global 要初始化的全局接口名称, 当前已知的仅有 'Mvu'
- *
- * @example
- * await waitGlobalInitialized('Mvu');
- * ...此后可以直接使用 Mvu
- */
-declare function waitGlobalInitialized(global: LiteralUnion<'Mvu', string>): Promise<void>;
+declare function getScriptId(): string;
