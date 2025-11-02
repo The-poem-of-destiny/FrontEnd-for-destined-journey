@@ -45,9 +45,26 @@ jobs:
 
       # 自动打版本 tag, 从而让 jsdelivr 基于版本号在 12h 内更新缓存而不是用非版本号的 7d 缓存
       - id: autotag
+        if: github.ref_name == 'main'
         uses: phish108/autotag-action@v1.1.64
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           with-v: true
       - if: ${{ steps.autotag.outputs.tag != '0.0.0' && steps.autotag.outputs.new-tag != steps.autotag.outputs.tag }}
         run: git push --delete origin ${{ steps.autotag.outputs.tag }}
+
+      # 为 dev 分支手动创建标签
+      - name: Create dev tag
+        if: github.ref_name == 'dev'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="dev-v${VERSION}"
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, deleting old tag"
+            git push --delete origin "$TAG" || true
+          fi
+
+          git tag "$TAG"
+          git push origin "$TAG"
+          echo "Created tag: $TAG"
