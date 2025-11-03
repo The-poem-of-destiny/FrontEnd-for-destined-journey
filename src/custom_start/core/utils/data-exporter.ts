@@ -41,14 +41,22 @@ export async function writeCharacterToMvu(
   const presetItems = items.filter(item => !item.isCustom);
   const presetDestinedOnes = destinedOnes.filter(one => !one.isCustom);
 
+  // 获取当前 MVU 数据以便清空现有条目
+  const chatMvuData = Mvu.getMvuData({ type: 'chat' });
+  const messageMvuData = Mvu.getMvuData({ type: 'message', message_id: 'latest' });
+
   // 构建 MVU 命令字符串
   const mvuCommands: string[] = [];
 
-  // 清空并写入命运点数
+  // 写入命运点数
   mvuCommands.push(`_.set('命定系统.命运点数', ${character.destinyPoints}); // 初始化命运点数`);
 
-  // 清空技能列表，然后写入技能（只写入预设技能）
-  mvuCommands.push(`_.set('技能列表', {}); // 清空技能列表`);
+  // 清空技能列表中的现有技能
+  const existingSkills = Mvu.getMvuVariable(chatMvuData, '技能列表', { default_value: {} });
+  for (const skillName of Object.keys(existingSkills)) {
+    mvuCommands.push(`_.delete('技能列表', '${skillName}'); // 删除旧技能：${skillName}`);
+  }
+  // 然后写入新技能（只写入预设技能）
   for (const skill of presetSkills) {
     const skillData = {
       品质: RARITY_MAP[skill.rarity] || '普通',
@@ -61,11 +69,16 @@ export async function writeCharacterToMvu(
     mvuCommands.push(`_.insert('技能列表', '${skill.name}', ${JSON.stringify(skillData)}); // 添加技能：${skill.name}`);
   }
 
-  // 清空货币和背包，然后写入道具（只写入预设道具，区分货币和普通道具）
-  mvuCommands.push(`_.set('财产.货币.金币', 0); // 清空金币`);
-  mvuCommands.push(`_.set('财产.货币.银币', 0); // 清空银币`);
-  mvuCommands.push(`_.set('财产.货币.铜币', 0); // 清空铜币`);
-  mvuCommands.push(`_.set('财产.背包', {}); // 清空背包`);
+  // 初始化货币并清空背包中的现有道具
+  mvuCommands.push(`_.set('财产.货币.金币', 0); // 初始化金币`);
+  mvuCommands.push(`_.set('财产.货币.银币', 0); // 初始化银币`);
+  mvuCommands.push(`_.set('财产.货币.铜币', 0); // 初始化铜币`);
+
+  const existingItems = Mvu.getMvuVariable(chatMvuData, '财产.背包', { default_value: {} });
+  for (const itemName of Object.keys(existingItems)) {
+    mvuCommands.push(`_.delete('财产.背包', '${itemName}'); // 删除旧道具：${itemName}`);
+  }
+  // 然后写入道具（只写入预设道具，区分货币和普通道具）
   for (const item of presetItems) {
     // 检查是否是货币类型
     if (item.type === '货币') {
@@ -96,8 +109,12 @@ export async function writeCharacterToMvu(
     }
   }
 
-  // 清空命定之人列表，然后写入命定之人（只写入预设命定之人）
-  mvuCommands.push(`_.set('命定系统.命定之人', {}); // 清空命定之人列表`);
+  // 清空命定之人列表中的现有命定之人
+  const existingDestinedOnes = Mvu.getMvuVariable(chatMvuData, '命定系统.命定之人', { default_value: {} });
+  for (const oneName of Object.keys(existingDestinedOnes)) {
+    mvuCommands.push(`_.delete('命定系统.命定之人', '${oneName}'); // 删除旧命定之人：${oneName}`);
+  }
+  // 然后写入命定之人（只写入预设命定之人）
   for (const one of presetDestinedOnes) {
     // 创建命定之人数据对象
     const oneData: Record<string, any> = {
@@ -160,8 +177,6 @@ export async function writeCharacterToMvu(
   }
 
   // 使用 parseMessage 解析命令并更新聊天变量和消息楼层变量
-  const chatMvuData = Mvu.getMvuData({ type: 'chat' });
-  const messageMvuData = Mvu.getMvuData({ type: 'message', message_id: 'latest' });
   const commandMessage = mvuCommands.join('\n');
 
   const updatedChatData = await Mvu.parseMessage(commandMessage, chatMvuData);
