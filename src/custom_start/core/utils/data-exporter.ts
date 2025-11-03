@@ -44,10 +44,11 @@ export async function writeCharacterToMvu(
   // 构建 MVU 命令字符串
   const mvuCommands: string[] = [];
 
-  // 写入命运点数
+  // 清空并写入命运点数
   mvuCommands.push(`_.set('命定系统.命运点数', ${character.destinyPoints}); // 初始化命运点数`);
 
-  // 写入技能（只写入预设技能）
+  // 清空技能列表，然后写入技能（只写入预设技能）
+  mvuCommands.push(`_.set('技能列表', {}); // 清空技能列表`);
   for (const skill of presetSkills) {
     const skillData = {
       品质: RARITY_MAP[skill.rarity] || '普通',
@@ -60,7 +61,11 @@ export async function writeCharacterToMvu(
     mvuCommands.push(`_.insert('技能列表', '${skill.name}', ${JSON.stringify(skillData)}); // 添加技能：${skill.name}`);
   }
 
-  // 写入道具（只写入预设道具，区分货币和普通道具）
+  // 清空货币和背包，然后写入道具（只写入预设道具，区分货币和普通道具）
+  mvuCommands.push(`_.set('财产.货币.金币', 0); // 清空金币`);
+  mvuCommands.push(`_.set('财产.货币.银币', 0); // 清空银币`);
+  mvuCommands.push(`_.set('财产.货币.铜币', 0); // 清空铜币`);
+  mvuCommands.push(`_.set('财产.背包', {}); // 清空背包`);
   for (const item of presetItems) {
     // 检查是否是货币类型
     if (item.type === '货币') {
@@ -91,7 +96,8 @@ export async function writeCharacterToMvu(
     }
   }
 
-  // 写入命定之人（只写入预设命定之人）
+  // 清空命定之人列表，然后写入命定之人（只写入预设命定之人）
+  mvuCommands.push(`_.set('命定系统.命定之人', {}); // 清空命定之人列表`);
   for (const one of presetDestinedOnes) {
     // 创建命定之人数据对象
     const oneData: Record<string, any> = {
@@ -318,8 +324,9 @@ export function generateAIPrompt(
   // 添加 AI 生成指令
   parts.push(`\n---\n`);
   parts.push(`务必按照<status_current_variables>和以上内容，生成一个符合描述和情景的初始剧情！\n`);
+  parts.push(`<NOTICE: 已在<status_current_variables>内的数据，不得修改和删除>\n`);
   parts.push(
-    `(注意：生成初始剧情时，还需根据内容，将相关数据在<UpdateVariable>内进行记录和更新，严禁任何修改和省略。如有数据是不完整的，务必参考相关设定进行完善)`,
+    `(注意：生成初始剧情时，还需根据内容，将相关数据在<UpdateVariable>内进行记录和更新，严禁任何修改和省略。同时检查上述内容是否完整，如不完整，参必须考相关设定进行完善)`,
   );
 
   return parts.join('\n');

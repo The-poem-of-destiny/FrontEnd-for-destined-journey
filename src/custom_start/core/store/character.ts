@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import {
   ATTRIBUTES,
   BASE_STAT,
@@ -234,6 +234,21 @@ export const useCharacterStore = defineStore('character', () => {
     }
     return result as Attributes;
   });
+
+  // 监听等级变化，自动重置属性点分配
+  watch(
+    () => character.value.level,
+    () => {
+      // 等级变化时，重置所有属性点分配
+      character.value.attributePoints = {
+        力量: 0,
+        敏捷: 0,
+        体质: 0,
+        智力: 0,
+        精神: 0,
+      };
+    },
+  );
 
   return {
     character,

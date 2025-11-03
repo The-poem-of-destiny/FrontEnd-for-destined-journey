@@ -67,10 +67,6 @@ const customDescription = ref('');
 const handleSelect = (item: Background) => {
   if (meetsRequirements(item)) {
     emit('select', item);
-    // 如果是自定义开局，清空 textarea
-    if (item.name === '【自定义开局】') {
-      customDescription.value = '';
-    }
   }
 };
 
