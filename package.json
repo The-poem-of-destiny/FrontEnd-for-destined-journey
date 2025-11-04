@@ -16,7 +16,6 @@
     "@types/jquery": "^3.5.33",
     "@types/jqueryui": "^1.12.24",
     "@types/lodash": "^4.17.20",
-    "@types/node": "^20.19.24",
     "@types/showdown": "^2.0.6",
     "@types/toastr": "^2.1.43",
     "@types/webpack": "^5.28.5",
@@ -42,6 +41,7 @@
     "mini-css-extract-plugin": "^2.9.4",
     "postcss": "^8.5.6",
     "postcss-cli": "^11.0.1",
+    "postcss-load-config": "^6.0.1",
     "postcss-loader": "^8.2.0",
     "postcss-minify": "^1.2.0",
     "prettier": "^3.6.2",
@@ -76,11 +76,9 @@
     "@vueuse/integrations": "^13.9.0",
     "@vueuse/shared": "^13.9.0",
     "dedent": "^1.7.0",
-    "glob": "^11.0.3",
     "gsap": "^3.13.0",
     "jquery": "^3.7.1",
     "jqueryui": "^1.11.1",
-    "json5": "^2.2.3",
     "klona": "^2.0.6",
     "lodash": "^4.17.21",
     "pinia": "^3.0.3",
@@ -103,6 +101,5 @@
       "unrs-resolver",
       "vue-demi"
     ]
-  },
-  "version": "0.1.0"
+  }
 }

@@ -1,4 +1,3 @@
-import { globSync } from 'glob';
 import HtmlInlineScriptWebpackPlugin from 'html-inline-script-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
@@ -51,9 +50,9 @@ function common_path(lhs: string, rhs: string) {
 }
 
 function glob_script_files() {
-  const files: string[] = globSync(`src/**/index.{ts,js}`).filter(
-    file => process.env.CI !== 'true' || !fs.readFileSync(path.join(__dirname, file)).includes('@no-ci'),
-  );
+  const files: string[] = fs
+    .globSync(`src/**/index.{ts,js}`)
+    .filter(file => process.env.CI !== 'true' || !fs.readFileSync(path.join(__dirname, file)).includes('@no-ci'));
 
   const results: string[] = [];
   const handle = (file: string) => {
@@ -230,7 +229,7 @@ function parse_configuration(entry: Entry): (_env: any, argv: any) => webpack.Co
               exclude: /node_modules/,
             },
             {
-              test: /\.html?$/,
+              test: /\.html$/,
               use: 'html-loader',
               exclude: /node_modules/,
             },
@@ -367,7 +366,7 @@ function parse_configuration(entry: Entry): (_env: any, argv: any) => webpack.Co
         new webpack.DefinePlugin({
           __VUE_OPTIONS_API__: false,
           __VUE_PROD_DEVTOOLS__: process.env.CI !== 'true',
-          __VUE_PROD_HYDRATION_MISMATCH_DETAIL__: false,
+          __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
         }),
       )
       .concat(
