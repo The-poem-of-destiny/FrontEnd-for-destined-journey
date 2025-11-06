@@ -6,55 +6,25 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
+  repository-projects: read
 
 jobs:
   sync_template:
     if: github.repository != 'StageDog/tavern_helper_template'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout current repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
-
-      - name: Download template files
-        run: |
-          git clone --depth 1 https://github.com/StageDog/tavern_helper_template.git /tmp/template
-          rm -rf /tmp/template/.git
-
-      - name: Copy template files (respecting .templatesyncignore)
-        run: |
-          if [ -f .github/.templatesyncignore ]; then
-            rsync -av \
-              --exclude-from=.github/.templatesyncignore \
-              --exclude='.git' \
-              --exclude='.github/.templatesyncignore' \
-              /tmp/template/ ./
-          else
-            rsync -av --exclude='.git' /tmp/template/ ./
-          fi
-
-      - name: Check for changes
-        id: check_changes
-        run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create Pull Request
-        if: steps.check_changes.outputs.has_changes == 'true'
-        uses: peter-evans/create-pull-request@v7
+          fetch-depth: 0
+      - uses: AndreasAugustin/actions-template-sync@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: '[bot] 同步模板仓库的更新'
-          title: '[bot] 同步模板仓库的更新'
-          body: |
-            此 PR 由自动化工作流创建，同步模板仓库的最新更改。
-
-            **注意**: 此同步不包含模板仓库的 commit 历史，仅同步文件差异。
-          branch: template-sync-${{ github.run_number }}
-          delete-branch: true
+          source_repo_path: StageDog/tavern_helper_template
+          pr_title: '[bot] 同步模板仓库的更新'
+          pr_commit_msg: '[bot] bump template repository update'
+          is_pr_cleanup: true
+          template_sync_ignore_file_path: .github/.templatesyncignore
+          is_force_deletion: true
+          git_remote_pull_params: --allow-unrelated-histories --strategy=recursive --no-edit -X diff-algorithm=minimal -X ignore-all-space -X patience -X renormalize
