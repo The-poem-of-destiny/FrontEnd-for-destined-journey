@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import { globSync } from 'glob';
+=======
+>>>>>>> 70f76763bf938d1a765f8f40172cd68d06c75fca
 import HtmlInlineScriptWebpackPlugin from 'html-inline-script-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
@@ -51,9 +54,15 @@ function common_path(lhs: string, rhs: string) {
 }
 
 function glob_script_files() {
+<<<<<<< HEAD
   const files: string[] = globSync(`src/**/index.{ts,js}`).filter(
     file => process.env.CI !== 'true' || !fs.readFileSync(path.join(__dirname, file)).includes('@no-ci'),
   );
+=======
+  const files: string[] = fs
+    .globSync(`src/**/index.{ts,tsx,js,jsx}`)
+    .filter(file => process.env.CI !== 'true' || !fs.readFileSync(path.join(__dirname, file)).includes('@no-ci'));
+>>>>>>> 70f76763bf938d1a765f8f40172cd68d06c75fca
 
   const results: string[] = [];
   const handle = (file: string) => {
@@ -445,6 +454,12 @@ function parse_configuration(entry: Entry): (_env: any, argv: any) => webpack.Co
       if (argv.mode !== 'production' && ['vue', 'pixi'].some(key => request.includes(key))) {
         return callback();
       }
+<<<<<<< HEAD
+=======
+      if (['react'].some(key => request.includes(key))) {
+        return callback();
+      }
+>>>>>>> 70f76763bf938d1a765f8f40172cd68d06c75fca
       const global = {
         jquery: '$',
         lodash: '_',

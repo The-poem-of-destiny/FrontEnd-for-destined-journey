@@ -16,7 +16,12 @@
     "@types/jquery": "^3.5.33",
     "@types/jqueryui": "^1.12.24",
     "@types/lodash": "^4.17.20",
+<<<<<<< HEAD
     "@types/node": "^20.19.24",
+=======
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+>>>>>>> 70f76763bf938d1a765f8f40172cd68d06c75fca
     "@types/showdown": "^2.0.6",
     "@types/toastr": "^2.1.43",
     "@types/webpack": "^5.28.5",
@@ -72,20 +77,35 @@
     "webpack-obfuscator": "^3.5.1"
   },
   "dependencies": {
+<<<<<<< HEAD
+=======
+    "@pixi/react": "8.0.0-beta.25",
+>>>>>>> 70f76763bf938d1a765f8f40172cd68d06c75fca
     "@vueuse/components": "^14.0.0",
     "@vueuse/core": "^13.9.0",
     "@vueuse/integrations": "^13.9.0",
     "@vueuse/shared": "^13.9.0",
     "dedent": "^1.7.0",
+<<<<<<< HEAD
     "glob": "^11.0.3",
     "gsap": "^3.13.0",
     "jquery": "^3.7.1",
     "jqueryui": "^1.11.1",
     "json5": "^2.2.3",
+=======
+    "gsap": "^3.13.0",
+    "jquery": "^3.7.1",
+    "jqueryui": "^1.11.1",
+>>>>>>> 70f76763bf938d1a765f8f40172cd68d06c75fca
     "klona": "^2.0.6",
     "lodash": "^4.17.21",
     "pinia": "^3.0.4",
     "pixi.js": "^8.14.0",
+<<<<<<< HEAD
+=======
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+>>>>>>> 70f76763bf938d1a765f8f40172cd68d06c75fca
     "toastr": "^2.1.4",
     "vue": "^3.5.23",
     "vue-final-modal": "^4.5.5",
@@ -104,6 +124,10 @@
       "unrs-resolver",
       "vue-demi"
     ]
+<<<<<<< HEAD
   },
   "version": "0.1.0"
+=======
+  }
+>>>>>>> 70f76763bf938d1a765f8f40172cd68d06c75fca
 }
