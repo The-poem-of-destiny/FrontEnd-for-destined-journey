@@ -287,7 +287,7 @@ function parse_configuration(entry: Entry): (_env: any, argv: any) => webpack.Co
                     use: ['style-loader', { loader: 'css-loader', options: { url: false } }, 'postcss-loader'],
                     exclude: /node_modules/,
                   },
-                ] as any[]),
+                ] as any[])
               : ([
                   {
                     test: /\.s(a|c)ss$/,
