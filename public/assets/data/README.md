@@ -7,6 +7,7 @@
 ```
 public/assets/data/
 ├── README.md          # 本说明文档
+├── baseInfo.json      # 基础信息数据（性别、种族、身份、初始地点）
 ├── equipments.json    # 装备数据
 ├── items.json         # 道具数据
 ├── skills.json        # 技能数据
@@ -46,7 +47,7 @@ public/assets/data/
 ## 🚀 快速开始
 
 1. **直接编辑数据文件**：
-   - 打开 `equipments.json`、`items.json`、`skills.json`、`destinedOnes.json`、`backgrounds.json`
+   - 打开 `baseInfo.json`、`equipments.json`、`items.json`、`skills.json`、`destinedOnes.json`、`backgrounds.json`
    - 按照格式添加或修改数据
    - **可以自由添加注释来说明数据用途**
 
@@ -63,9 +64,12 @@ public/assets/data/
 - ✅ **可以随意添加注释** - 用 `//` 或 `/* */` 添加说明
 - ✅ **尾随逗号无所谓** - 最后一个属性后可以有逗号
 - 📝 **什么文件写什么数据**：
+  - `baseInfo.json` - 基础信息数据（性别、种族、身份、初始地点）
   - `equipments.json` - 装备数据
   - `items.json` - 道具数据（货币数据在代码中，如需修改请联系相关技术人员）
   - `skills.json` - 技能数据
+  - `destinedOnes.json` - 命定之人数据
+  - `backgrounds.json` - 初始剧情数据
 
 ## 📝 数据格式说明
 
@@ -161,6 +165,41 @@ public/assets/data/
 }
 ```
 
+### 基础信息数据 (baseInfo.json)
+
+```json5
+{
+  // 性别选项
+  "genders": ["男", "女", "雌性", "雄性"],
+
+  // 种族消耗点数（正数扣点，负数加点）
+  "raceCosts": {
+    "地精": -10,
+    "人类": 0,
+    "兽族": 0,
+    "翼民": 10,
+    // 更多种族...
+  },
+
+  // 身份消耗点数
+  "identityCosts": {
+    "沦为奴隶": -20,
+    "自由平民": 0,
+    "贵族阶级": 40,
+    // 更多身份...
+  },
+
+  // 初始地点
+  "startLocations": [
+    "大陆东南部区域-索伦蒂斯王国",
+    "大陆东北部区域-诺斯加德联盟",
+    // 更多地点...
+  ]
+}
+```
+
+**注意**：系统会自动在每个列表末尾添加"自定义"选项，无需手动添加。
+
 ### 初始剧情数据 (backgrounds.json)
 
 ```json5
@@ -170,7 +209,7 @@ public/assets/data/
       "name": "（初始剧情标题）",  // 为初始剧情起个标题好进行区分
       "description": "（初始剧情的一个简要描述）",
       "requiredRace": "兽族",  // （可选）初始剧情需要什么种族才能进行选择
-      "requiredLocation": "(起始地点)"  //（可选) 初始剧情需要什么起始地点才能进行选择
+      "requiredLocation": "(初始地点)"  //（可选) 初始剧情需要什么起始地点才能进行选择，对应上面的 startLocations 字段
     }
   ]
 }
@@ -273,7 +312,13 @@ public/assets/data/
    - 技能数据需要额外的 `consume` 字段（消耗说明）
    - 道具数据需要额外的 `quantity` 字段（数量，默认为1）
 
-4. **分类名称**：
+4. **基础信息字段** (baseInfo.json)：
+   - `genders`：性别选项数组
+   - `raceCosts`：种族消耗点数对象（正数扣点，负数加点）
+   - `identityCosts`：身份消耗点数对象
+   - `startLocations`：初始地点数组
+
+5. **分类名称**：
    - 装备：武器、防具、饰品等
    - 道具：消耗品、材料等
    - 技能：主动技能和被动技能，每个下面还有战技、法术、祷告、其它等子分类（可自定义子分类）

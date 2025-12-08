@@ -1,5 +1,5 @@
 import JSON5 from 'json5';
-import type { Background, DestinedOne, Equipment, Item, Skill } from '../types';
+import type { Background, BaseInfoData, DestinedOne, Equipment, Item, Skill } from '../types';
 
 /**
  * 数据基础路径 - CDN 部署环境
@@ -100,6 +100,13 @@ export async function loadCustomBackgrounds(): Promise<Record<string, Background
  */
 export async function loadCustomDestinedOnes(): Promise<Record<string, DestinedOne[]>> {
   return loadJsonData<Record<string, DestinedOne[]>>('destinedOnes.json', '命定之人');
+}
+
+/**
+ * 加载基础信息数据（性别、种族、身份、初始地点）
+ */
+export async function loadBaseInfo(): Promise<BaseInfoData> {
+  return loadJsonData<BaseInfoData>('baseInfo.json', '基础信息');
 }
 
 /**

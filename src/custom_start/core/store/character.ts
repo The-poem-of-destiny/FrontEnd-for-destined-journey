@@ -5,10 +5,10 @@ import {
   BASE_STAT,
   calculateAPByLevel,
   generateInitialPoints,
+  getIdentityCosts,
+  getRaceCosts,
   getTierAttributeBonus,
-  IDENTITY_COSTS,
   INITIAL_REINCARNATION_POINTS,
-  RACE_COSTS,
   raceAttrs,
 } from '../data/base-info';
 import { getActiveSkills, getPassiveSkills } from '../data/skills';
@@ -60,11 +60,11 @@ export const useCharacterStore = defineStore('character', () => {
     let total = 0;
 
     // 种族消耗
-    const raceCost = RACE_COSTS[character.value.race] || 0;
+    const raceCost = getRaceCosts.value[character.value.race] || 0;
     total += raceCost;
 
     // 身份消耗
-    const identityCost = IDENTITY_COSTS[character.value.identity] || 0;
+    const identityCost = getIdentityCosts.value[character.value.identity] || 0;
     total += identityCost;
 
     // 属性加点消耗 (每点1个转生点)
@@ -265,7 +265,7 @@ export const useCharacterStore = defineStore('character', () => {
       const currentRace = character.value.race === '自定义' ? character.value.customRace : character.value.race;
 
       // 获取所有种族列表
-      const raceSpecificCategories = Object.keys(RACE_COSTS).filter(race => race !== '自定义');
+      const raceSpecificCategories = Object.keys(getRaceCosts.value).filter(race => race !== '自定义');
 
       // 获取技能数据
       const activeSkills = getActiveSkills();

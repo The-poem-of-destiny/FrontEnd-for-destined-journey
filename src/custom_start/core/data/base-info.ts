@@ -1,56 +1,35 @@
-import type { Attributes } from '../types';
+import { computed, ref } from 'vue';
+import type { Attributes, BaseInfoData } from '../types';
+import { loadBaseInfo } from '../utils/loader';
 
-export const GENDERS = ['男', '女', '雌性', '雄性', '自定义'] as const;
+// 响应式数据存储
+const baseInfoData = ref<BaseInfoData>({});
 
-// 种族消耗点数
-export const RACE_COSTS: Record<string, number> = {
-  地精: -10,
-  人类: 0,
-  兽族: 0,
-  翼民: 10,
-  矮人: 10,
-  魔物: 10,
-  女妖: 10,
-  半身人: 10,
-  亡灵种族: 10,
-  深渊魔族: 20,
-  巨人: 30,
-  妖精: 30,
-  精灵: 40,
-  血族: 50,
-  龙族: 60,
-  自定义: 80,
-} as const;
+// 初始化
+loadBaseInfo().then(data => {
+  baseInfoData.value = data;
+});
 
-// 身份消耗点数
-export const IDENTITY_COSTS: Record<string, number> = {
-  沦为奴隶: -20,
-  魔王残党: -20,
-  自由平民: 0,
-  游荡亡灵: 0,
-  野生魔物: 0,
-  中产阶级: 20,
-  贵族阶级: 40,
-  自定义: 80,
-} as const;
+// 使用 computed 缓存结果，避免重复创建新引用
+export const getGenders = computed(() => {
+  const external = baseInfoData.value.genders || [];
+  return [...external.filter(g => g !== '自定义'), '自定义'];
+});
 
-export const START_LOCATIONS = [
-  '大陆东南部区域-索伦蒂斯王国',
-  '大陆东北部区域-诺斯加德联盟',
-  '大陆东北部沿海区域-伯伦斯法环联邦-雾晶港',
-  '大陆中东部区域-奥古斯提姆帝国',
-  '大陆中央区域-神迹山脉-天空圣域高原-圣都梵尼亚',
-  '大陆中西部区域-无尽风痕草原-卡拉什特里斯(兽族联盟)',
-  '大陆西南端-翡翠之心-艾尔文海姆(精灵王国)',
-  '大陆西南部区域-无尽树海-奥古斯提姆帝国-诺瓦·瓦伦蒂亚城',
-  '大陆西南部区域-无尽树海-雨林中层区域',
-  '大陆西南部区域-诺瓦尔河流域-主河道中游河底',
-  '大陆西南部区域-无尽树海-雨林中央-无尽深渊地城-地下23层',
-  '大陆南端-悲鸣沼泽-伯恩·瑞瑟喃斯(骸响之都)-城门内',
-  '大陆上空-泣歌云海-艾琉德雷姆·尼尔(泣空遗迹)',
-  '无尽海东部-碎星群岛-蓝泪岛',
-  '自定义',
-] as const;
+export const getRaceCosts = computed(() => {
+  const external = baseInfoData.value.raceCosts || {};
+  return { ...external, 自定义: 80 };
+});
+
+export const getIdentityCosts = computed(() => {
+  const external = baseInfoData.value.identityCosts || {};
+  return { ...external, 自定义: 80 };
+});
+
+export const getStartLocations = computed(() => {
+  const external = baseInfoData.value.startLocations || [];
+  return [...external.filter(l => l !== '自定义'), '自定义'];
+});
 
 /**
  * 检查是否启用开发者模式（通过姓名暗号）

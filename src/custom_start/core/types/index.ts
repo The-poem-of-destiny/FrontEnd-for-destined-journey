@@ -81,6 +81,14 @@ export interface Background {
   [key: string]: any;
 }
 
+// 基础信息数据类型
+export interface BaseInfoData {
+  genders?: string[];
+  raceCosts?: Record<string, number>;
+  identityCosts?: Record<string, number>;
+  startLocations?: string[];
+}
+
 // 属性类型
 export interface Attributes {
   力量: number;

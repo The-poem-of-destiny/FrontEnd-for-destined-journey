@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { computed } from 'vue';
+import { computed, inject, type Ref, watch } from 'vue';
 import { FormInput, FormLabel, FormNumber, FormSelect, FormStepper, FormTextarea } from '../../components/Form';
 import {
   ATTRIBUTES,
   BASE_STAT,
-  GENDERS,
+  getGenders,
+  getIdentityCosts,
   getLevelTierName,
+  getRaceCosts,
+  getStartLocations,
   getTierAttributeBonus,
-  IDENTITY_COSTS,
   MAX_LEVEL,
   MIN_LEVEL,
-  RACE_COSTS,
   raceAttrs,
-  START_LOCATIONS,
 } from '../../data/base-info';
 import { useCharacterStore } from '../../store';
 
@@ -25,9 +25,14 @@ const { addAttributePoint, removeAttributePoint } = characterStore;
 const randomGenerateTrigger = inject<Ref<number>>('randomGenerateTrigger');
 const resetPageTrigger = inject<Ref<number>>('resetPageTrigger');
 
-// 从消耗点数对象中获取选项列表
-const raceOptions = computed(() => Object.keys(RACE_COSTS));
-const identityOptions = computed(() => Object.keys(IDENTITY_COSTS));
+// 从外部数据获取选项列表
+const genders = getGenders;
+const raceCosts = getRaceCosts;
+const identityCosts = getIdentityCosts;
+const startLocations = getStartLocations;
+
+const raceOptions = computed(() => Object.keys(raceCosts.value));
+const identityOptions = computed(() => Object.keys(identityCosts.value));
 
 // 计算当前等级的层级属性加成
 const tierAttributeBonus = computed(() => getTierAttributeBonus(character.value.level));
@@ -73,26 +78,26 @@ watch(
 // 随机生成基本信息
 const randomGenerate = () => {
   // 随机性别（排除自定义）
-  const genderList = GENDERS.filter(g => g !== '自定义');
-  character.value.gender = genderList[Math.floor(Math.random() * genderList.length)];
+  const genderList = genders.value.filter(g => g !== '自定义');
+  character.value.gender = genderList[Math.floor(Math.random() * genderList.length)] || '男';
 
   // 随机年龄 (18-100)
   character.value.age = Math.floor(Math.random() * 83) + 18;
 
   // 随机种族（排除自定义）
   const races = raceOptions.value.filter(r => r !== '自定义');
-  character.value.race = races[Math.floor(Math.random() * races.length)];
+  character.value.race = races[Math.floor(Math.random() * races.length)] || '人类';
 
   // 随机身份（排除自定义）
   const identities = identityOptions.value.filter(i => i !== '自定义');
-  character.value.identity = identities[Math.floor(Math.random() * identities.length)];
+  character.value.identity = identities[Math.floor(Math.random() * identities.length)] || '自由平民';
 
   // 随机等级 (1-10)
   character.value.level = Math.floor(Math.random() * MAX_LEVEL) + MIN_LEVEL;
 
   // 随机出生地（排除自定义）
-  const locations = START_LOCATIONS.filter(l => l !== '自定义');
-  character.value.startLocation = locations[Math.floor(Math.random() * locations.length)];
+  const locations = startLocations.value.filter(l => l !== '自定义');
+  character.value.startLocation = locations[Math.floor(Math.random() * locations.length)] || '自定义';
 
   console.log('基本信息已随机生成');
 };
@@ -126,7 +131,7 @@ const resetPage = () => {
         </div>
         <div class="form-field">
           <FormLabel label="性别" required />
-          <FormSelect v-model="character.gender" :options="GENDERS" />
+          <FormSelect v-model="character.gender" :options="genders" />
           <FormTextarea
             v-if="character.gender === '自定义'"
             v-model="character.customGender"
@@ -161,9 +166,7 @@ const resetPage = () => {
               raceOptions.map(race => ({
                 label:
                   race +
-                  (RACE_COSTS[race] !== 0
-                    ? ` (${RACE_COSTS[race] > 0 ? '-' : '+'}${Math.abs(RACE_COSTS[race])}点)`
-                    : ''),
+                  (raceCosts[race] !== 0 ? ` (${raceCosts[race] > 0 ? '-' : '+'}${Math.abs(raceCosts[race])}点)` : ''),
                 value: race,
               }))
             "
@@ -183,8 +186,8 @@ const resetPage = () => {
               identityOptions.map(identity => ({
                 label:
                   identity +
-                  (IDENTITY_COSTS[identity] !== 0
-                    ? ` (${IDENTITY_COSTS[identity] > 0 ? '-' : '+'}${Math.abs(IDENTITY_COSTS[identity])}点)`
+                  (identityCosts[identity] !== 0
+                    ? ` (${identityCosts[identity] > 0 ? '-' : '+'}${Math.abs(identityCosts[identity])}点)`
                     : ''),
                 value: identity,
               }))
@@ -203,7 +206,7 @@ const resetPage = () => {
       <div class="form-row full-width">
         <div class="form-field">
           <FormLabel label="起始地点" required />
-          <FormSelect v-model="character.startLocation" :options="START_LOCATIONS" />
+          <FormSelect v-model="character.startLocation" :options="startLocations" />
           <FormTextarea
             v-if="character.startLocation === '自定义'"
             v-model="character.customStartLocation"

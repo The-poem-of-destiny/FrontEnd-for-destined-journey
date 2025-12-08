@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, ref, watch, type Ref } from 'vue';
-import { RACE_COSTS } from '../../data/base-info';
+import { getRaceCosts } from '../../data/base-info';
 import { getEquipments } from '../../data/equipments';
 import { getInitialItems } from '../../data/Items';
 import { getActiveSkills, getPassiveSkills } from '../../data/skills';
@@ -63,7 +63,7 @@ const isSkillSubCategoryAvailable = (subCategory: string): boolean => {
     characterStore.character.race === '自定义' ? characterStore.character.customRace : characterStore.character.race;
 
   // 获取所有种族列表
-  const raceSpecificCategories = Object.keys(RACE_COSTS).filter(race => race !== '自定义');
+  const raceSpecificCategories = Object.keys(getRaceCosts.value).filter(race => race !== '自定义');
 
   if (raceSpecificCategories.includes(subCategory)) {
     return currentRace === subCategory;
