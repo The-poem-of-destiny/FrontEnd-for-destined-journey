@@ -17,7 +17,7 @@
     "@types/jquery": "^3.5.33",
     "@types/jqueryui": "^1.12.24",
     "@types/lodash": "^4.17.21",
-    "@types/node": "^24.10.3",
+    "@types/node": "^25.0.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@types/showdown": "^2.0.6",
