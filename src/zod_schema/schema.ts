@@ -20,9 +20,9 @@ export const Schema = z.object({
     开启: z.boolean().prefault(false),
     结束: z.boolean().prefault(false),
     琥珀事件: z.boolean().prefault(false),
-    标题: z.string(),
-    阶段: z.string(),
-    已完成事件: z.array(z.string()),
+    标题: z.any(),
+    阶段: z.any(),
+    已完成事件: z.array(z.any()),
   }),
   任务列表: z.record(z.string(), QuestSchema),
   角色: z
