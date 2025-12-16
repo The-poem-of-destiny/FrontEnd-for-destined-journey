@@ -1,14 +1,69 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import PresetModal from '../components/PresetModal.vue';
 import { useCharacterStore } from '../store';
 import { generateAIPrompt, writeCharacterToMvu } from '../utils/data-exporter';
+import { findMatchingPreset, hasPresets } from '../utils/preset-manager';
 import Steps from './component/Steps.vue';
 
 const router = useRouter();
 const route = useRoute();
 const characterStore = useCharacterStore();
 const { character } = storeToRefs(characterStore);
+
+// 预设弹窗控制
+const showPresetModal = ref(false);
+const presetModalMode = ref<'manage' | 'load'>('manage');
+
+// 踏上旅程前询问是否保存预设
+const showSaveBeforeJourneyConfirm = ref(false);
+
+// 滚动到 iframe 位置（让父页面滚动到 iframe 可见区域）
+const scrollToIframe = () => {
+  nextTick(() => {
+    const frameElement = window.frameElement;
+    if (frameElement) {
+      // 直接调用 scrollIntoView，因为 frameElement 属于父页面 DOM
+      frameElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+};
+
+// 打开预设管理弹窗
+const handleOpenPresetModal = () => {
+  presetModalMode.value = 'manage';
+  showPresetModal.value = true;
+};
+
+// 关闭预设弹窗
+const handleClosePresetModal = () => {
+  showPresetModal.value = false;
+};
+
+// 预设加载完成回调
+const handlePresetLoaded = () => {
+  // 加载预设后跳转到第一步
+  router.push({ name: 'BasicInfo' });
+};
+
+// 预设保存完成后继续旅程
+const handlePresetSavedThenJourney = () => {
+  showPresetModal.value = false;
+  executeJourney();
+};
+
+// 组件挂载时检查是否有预设
+onMounted(() => {
+  // 延迟检查，确保页面渲染完成
+  setTimeout(() => {
+    if (hasPresets()) {
+      presetModalMode.value = 'load';
+      showPresetModal.value = true;
+    }
+  }, 300);
+});
 
 // 计算可用点数
 const availablePoints = computed(() => {
@@ -89,9 +144,19 @@ const handlePrevious = () => {
 
 // 下一页
 const handleNext = async () => {
-  // 如果是最后一步，执行"踏上旅程"逻辑
+  // 如果是最后一步，检查是否需要询问保存预设
   if (currentStep.value === stepTitles.value.length) {
-    await handleStartJourney();
+    // 先检查当前数据是否已与某个预设相同
+    const matchingPresetName = findMatchingPreset(characterStore);
+    if (matchingPresetName) {
+      // 已有相同预设，直接开始旅程
+      toastr.info(`当前配置与预设「${matchingPresetName}」相同，直接开始旅程`);
+      executeJourney();
+    } else {
+      // 没有相同预设，询问是否保存
+      showSaveBeforeJourneyConfirm.value = true;
+      scrollToIframe();
+    }
     return;
   }
 
@@ -102,8 +167,27 @@ const handleNext = async () => {
     router.push({ name: routeName });
   }
 };
-// 踏上旅程
-const handleStartJourney = async () => {
+
+// 选择保存预设后再开始旅程
+const handleSavePresetBeforeJourney = () => {
+  showSaveBeforeJourneyConfirm.value = false;
+  presetModalMode.value = 'manage';
+  showPresetModal.value = true;
+};
+
+// 选择不保存直接开始旅程
+const handleSkipSaveAndJourney = () => {
+  showSaveBeforeJourneyConfirm.value = false;
+  executeJourney();
+};
+
+// 取消踏上旅程
+const handleCancelJourney = () => {
+  showSaveBeforeJourneyConfirm.value = false;
+};
+
+// 执行踏上旅程逻辑
+const executeJourney = async () => {
   try {
     // 1. 写入 MVU 变量
     await writeCharacterToMvu(
@@ -194,19 +278,31 @@ watch(
 
     <Steps ref="stepRef" :steps="stepTitles" :step="currentStep" />
 
-    <!-- 随机生成和重置按钮（确认页面不显示） -->
-    <div v-if="currentStep !== 4" class="action-buttons">
+    <!-- 操作按钮区域 -->
+    <div class="action-buttons">
+      <!-- 随机生成和重置按钮（确认页面不显示） -->
+      <template v-if="currentStep !== 4">
+        <button
+          class="action-button random-button"
+          title="随机生成当前页面内容"
+          @click="handleRandomGenerate"
+        >
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span class="text">随机当前页</span>
+        </button>
+        <button class="action-button reset-button" title="重置当前页面" @click="handleReset">
+          <i class="fa-solid fa-rotate-left"></i>
+          <span class="text">重置当前页</span>
+        </button>
+      </template>
+      <!-- 预设管理按钮（始终显示） -->
       <button
-        class="action-button random-button"
-        title="随机生成当前页面内容"
-        @click="handleRandomGenerate"
+        class="action-button preset-button"
+        title="管理角色预设"
+        @click="handleOpenPresetModal"
       >
-        <span class="icon">✨</span>
-        <span class="text">随机当前页</span>
-      </button>
-      <button class="action-button reset-button" title="重置当前页面" @click="handleReset">
-        <span class="icon">🔄</span>
-        <span class="text">重置当前页</span>
+        <i class="fa-solid fa-bookmark"></i>
+        <span class="text">预设管理</span>
       </button>
     </div>
 
@@ -232,6 +328,49 @@ watch(
         <span class="text">{{ nextButtonText }}</span>
       </button>
     </div>
+
+    <!-- 预设管理弹窗 -->
+    <PresetModal
+      :visible="showPresetModal"
+      :mode="presetModalMode"
+      @close="handleClosePresetModal"
+      @loaded="handlePresetLoaded"
+      @saved="handlePresetSavedThenJourney"
+    />
+
+    <!-- 踏上旅程前询问是否保存预设 -->
+    <Teleport to="body">
+      <div
+        v-if="showSaveBeforeJourneyConfirm"
+        class="confirm-overlay"
+        @click.self="handleCancelJourney"
+      >
+        <div class="confirm-dialog">
+          <div class="confirm-header">
+            <i class="fa-solid fa-bookmark"></i>
+            <h3>保存预设</h3>
+          </div>
+          <div class="confirm-body">
+            <p>是否在踏上旅程前保存当前配置为预设？</p>
+            <p class="confirm-hint">保存后下次可以快速加载相同配置</p>
+          </div>
+          <div class="confirm-actions">
+            <button class="confirm-button save" @click="handleSavePresetBeforeJourney">
+              <i class="fa-solid fa-floppy-disk"></i>
+              保存预设
+            </button>
+            <button class="confirm-button skip" @click="handleSkipSaveAndJourney">
+              <i class="fa-solid fa-forward"></i>
+              不保存
+            </button>
+            <button class="confirm-button cancel" @click="handleCancelJourney">
+              <i class="fa-solid fa-xmark"></i>
+              取消
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -412,8 +551,8 @@ watch(
   transition: var(--transition-normal);
   box-shadow: var(--shadow-sm);
 
-  .icon {
-    font-size: 1.1rem;
+  i {
+    font-size: 1rem;
   }
 
   &.random-button {
@@ -433,6 +572,18 @@ watch(
 
     &:hover {
       background: linear-gradient(135deg, #d4c4b0 0%, #c6b8a5 100%);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+  }
+
+  &.preset-button {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #b8941f 100%);
+    color: white;
+    border-color: var(--accent-color);
+
+    &:hover {
+      background: linear-gradient(135deg, #e0c04a 0%, #d4af37 100%);
       transform: translateY(-2px);
       box-shadow: var(--shadow-md);
     }
@@ -509,6 +660,130 @@ watch(
 
   .action-button {
     flex: 1;
+  }
+}
+
+// 确认弹窗样式
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+
+.confirm-dialog {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  width: 90%;
+  max-width: 400px;
+  overflow: hidden;
+}
+
+.confirm-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);
+  border-bottom: 1px solid var(--border-color);
+
+  i {
+    font-size: 1.3rem;
+    color: var(--accent-color);
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--title-color);
+    font-weight: 700;
+  }
+}
+
+.confirm-body {
+  padding: var(--spacing-lg);
+  text-align: center;
+
+  p {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--text-color);
+    font-size: 1rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .confirm-hint {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    font-style: italic;
+  }
+}
+
+.confirm-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
+  justify-content: center;
+}
+
+.confirm-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+
+  i {
+    font-size: 0.9rem;
+  }
+
+  &.save {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #b8941f 100%);
+    color: white;
+    border-color: var(--accent-color);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+
+  &.skip {
+    background: linear-gradient(135deg, var(--success-color) 0%, #2e7d32 100%);
+    color: white;
+    border-color: var(--success-color);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+
+  &.cancel {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+
+    &:hover {
+      background: var(--button-bg);
+    }
   }
 }
 </style>

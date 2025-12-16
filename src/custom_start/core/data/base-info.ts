@@ -37,7 +37,7 @@ export const getStartLocations = computed(() => {
  */
 const checkDevModeByName = (name: string): boolean => {
   // 暗号
-  const devPatterns = ['[dev]', '[test]', '田所浩二'];
+  const devPatterns = ['[dev]', '[test]'];
   const lowerName = name.toLowerCase();
   return devPatterns.some(pattern => lowerName.includes(pattern));
 };
@@ -51,7 +51,7 @@ const checkDevModeByName = (name: string): boolean => {
 export const generateInitialPoints = (characterName?: string): number => {
   // 开发者模式：如果角色名包含特定暗号，返回高点数
   if (characterName && checkDevModeByName(characterName)) {
-    return 114514;
+    return 888888;
   }
 
   const random = Math.random();

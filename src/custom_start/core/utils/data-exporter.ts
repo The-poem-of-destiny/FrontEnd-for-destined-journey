@@ -35,27 +35,29 @@ export async function writeCharacterToMvu(
 ): Promise<void> {
   await waitGlobalInitialized('Mvu');
 
-  const presetSkills = skills.filter(skill => !skill.isCustom);
-  const presetItems = items.filter(item => !item.isCustom);
-  const presetDestinedOnes = destinedOnes.filter(one => !one.isCustom);
+  const presetSkills = _.filter(skills, skill => !skill.isCustom);
+  const presetItems = _.filter(items, item => !item.isCustom);
+  const presetDestinedOnes = _.filter(destinedOnes, one => !one.isCustom);
 
   const mvuData = Mvu.getMvuData({ type: 'message', message_id: 'latest' });
 
   // 命运点数
   _.set(mvuData, 'stat_data.命定系统.命运点数', character.destinyPoints);
 
-  // 技能列表：先清空再添加
-  const skillsData: Record<string, any> = {};
-  for (const skill of presetSkills) {
-    skillsData[skill.name] = {
-      品质: RARITY_MAP[skill.rarity] || '普通',
-      类型: skill.type,
-      消耗: skill.consume || '',
-      标签: skill.tag,
-      效果: skill.effect,
-      描述: skill.description,
-    };
-  }
+  // 技能列表：使用 _.fromPairs + _.map 将数组转为以 name 为键的对象
+  const skillsData = _.fromPairs(
+    _.map(presetSkills, skill => [
+      skill.name,
+      {
+        品质: _.get(RARITY_MAP, skill.rarity, '普通'),
+        类型: skill.type,
+        消耗: skill.consume || '',
+        标签: skill.tag,
+        效果: skill.effect,
+        描述: skill.description,
+      },
+    ]),
+  );
   _.set(mvuData, 'stat_data.角色.技能列表', skillsData);
 
   // 货币初始化
@@ -63,87 +65,113 @@ export async function writeCharacterToMvu(
   let silverTotal = 0;
   let copperTotal = 0;
 
-  // 背包：先清空再添加
-  const bagData: Record<string, any> = {};
-  for (const item of presetItems) {
-    if (item.type === '货币') {
+  // 分离货币和普通道具
+  const [currencyItems, normalItems] = _.partition(presetItems, item => item.type === '货币');
+
+  // 计算货币总额
+  const currencyTotals = _.reduce(
+    currencyItems,
+    (acc, item) => {
       const currency = parseCurrency(item.description);
-      goldTotal += currency.gold;
-      silverTotal += currency.silver;
-      copperTotal += currency.copper;
-    } else {
-      bagData[item.name] = {
-        品质: RARITY_MAP[item.rarity] || '普通',
+      return {
+        gold: acc.gold + currency.gold,
+        silver: acc.silver + currency.silver,
+        copper: acc.copper + currency.copper,
+      };
+    },
+    { gold: 0, silver: 0, copper: 0 },
+  );
+  goldTotal = currencyTotals.gold;
+  silverTotal = currencyTotals.silver;
+  copperTotal = currencyTotals.copper;
+
+  // 背包数据
+  const bagData = _.fromPairs(
+    _.map(normalItems, item => [
+      item.name,
+      {
+        品质: _.get(RARITY_MAP, item.rarity, '普通'),
         数量: item.quantity || 1,
         类型: item.type,
         标签: item.tag,
         效果: item.effect,
         描述: item.description,
-      };
-    }
-  }
+      },
+    ]),
+  );
   _.set(mvuData, 'stat_data.背包', bagData);
   _.set(mvuData, 'stat_data.货币.金币', goldTotal);
   _.set(mvuData, 'stat_data.货币.银币', silverTotal);
   _.set(mvuData, 'stat_data.货币.铜币', copperTotal);
 
   // 命定之人
-  const destinedOnesData: Record<string, any> = {};
-  for (const one of presetDestinedOnes) {
-    const oneData: Record<string, any> = {
-      是否在场: '是',
-      生命层级: one.lifeLevel,
-      等级: one.level,
-      种族: one.race,
-      身份: [...one.identity],
-      职业: [...one.career],
-      性格: one.personality,
-      喜爱: one.like,
-      外貌特质: one.app,
-      衣物装饰: one.cloth,
-      属性: {
-        力量: one.attributes.strength,
-        敏捷: one.attributes.dexterity,
-        体质: one.attributes.constitution,
-        智力: one.attributes.intelligence,
-        精神: one.attributes.mind,
-      },
-      登神长阶: {
-        是否开启: one.stairway.isOpen ? '是' : '否',
-      },
-      是否缔结契约: one.isContract ? '是' : '否',
-      好感度: one.affinity,
-      评价: one.comment || '',
-      背景故事: one.backgroundInfo || '',
-      装备: {} as Record<string, any>,
-      技能: {} as Record<string, any>,
-    };
+  const destinedOnesData = _.fromPairs(
+    _.map(presetDestinedOnes, one => {
+      // 装备数据：过滤有 name 的装备，转为以 name 为键的对象
+      const equipData = _.fromPairs(
+        _.chain(one.equip)
+          .filter(eq => !!eq.name)
+          .map(eq => [
+            eq.name,
+            {
+              品质: _.get(RARITY_MAP, eq.rarity || '', '普通'),
+              类型: eq.type || '',
+              标签: eq.tag || '',
+              效果: eq.effect || '',
+              描述: eq.description || '',
+            },
+          ])
+          .value(),
+      );
 
-    for (const eq of one.equip) {
-      if (eq.name) {
-        oneData.装备[eq.name] = {
-          品质: eq.rarity ? RARITY_MAP[eq.rarity] || '普通' : '普通',
-          类型: eq.type || '',
-          标签: eq.tag || '',
-          效果: eq.effect || '',
-          描述: eq.description || '',
-        };
-      }
-    }
+      // 技能数据
+      const skillData = _.fromPairs(
+        _.map(one.skills, skill => [
+          skill.name,
+          {
+            品质: _.get(RARITY_MAP, skill.rarity, '普通'),
+            类型: skill.type,
+            消耗: skill.consume || '',
+            标签: skill.tag,
+            效果: skill.effect,
+            描述: skill.description,
+          },
+        ]),
+      );
 
-    for (const skill of one.skills) {
-      oneData.技能[skill.name] = {
-        品质: RARITY_MAP[skill.rarity] || '普通',
-        类型: skill.type,
-        消耗: skill.consume || '',
-        标签: skill.tag,
-        效果: skill.effect,
-        描述: skill.description,
-      };
-    }
-
-    destinedOnesData[one.name] = oneData;
-  }
+      return [
+        one.name,
+        {
+          是否在场: '是',
+          生命层级: one.lifeLevel,
+          等级: one.level,
+          种族: one.race,
+          身份: [...one.identity],
+          职业: [...one.career],
+          性格: one.personality,
+          喜爱: one.like,
+          外貌特质: one.app,
+          衣物装饰: one.cloth,
+          属性: {
+            力量: one.attributes.strength,
+            敏捷: one.attributes.dexterity,
+            体质: one.attributes.constitution,
+            智力: one.attributes.intelligence,
+            精神: one.attributes.mind,
+          },
+          登神长阶: {
+            是否开启: one.stairway.isOpen ? '是' : '否',
+          },
+          是否缔结契约: one.isContract ? '是' : '否',
+          好感度: one.affinity,
+          评价: one.comment || '',
+          背景故事: one.backgroundInfo || '',
+          装备: equipData,
+          技能: skillData,
+        },
+      ];
+    }),
+  );
   _.set(mvuData, 'stat_data.命定系统.命定之人', destinedOnesData);
 
   // 将更新后的数据写回
@@ -211,7 +239,7 @@ export function generateAIPrompt(
   }
 
   // 自定义道具
-  const customItems = items.filter(item => item.isCustom);
+  const customItems = _.filter(items, 'isCustom');
   if (customItems.length > 0) {
     lines.push('');
     lines.push('【自定义道具】');
@@ -229,7 +257,7 @@ export function generateAIPrompt(
   }
 
   // 自定义技能
-  const customSkills = skills.filter(skill => skill.isCustom);
+  const customSkills = _.filter(skills, 'isCustom');
   if (customSkills.length > 0) {
     lines.push('');
     lines.push('【自定义技能】');
@@ -247,7 +275,7 @@ export function generateAIPrompt(
   }
 
   // 命定之人
-  const customOnes = destinedOnes.filter(one => one.isCustom);
+  const customOnes = _.filter(destinedOnes, 'isCustom');
   if (customOnes.length > 0) {
     lines.push('');
     lines.push('【命定之人】');
@@ -270,8 +298,8 @@ export function generateAIPrompt(
       lines.push(`    精神: ${one.attributes.mind}`);
       lines.push(`  是否缔结契约: ${one.isContract ? '是' : '否'}`);
       lines.push(`  好感度: ${one.affinity}`);
-      if (one.equip.length > 0) {
-        const validEquips = one.equip.filter(eq => eq.name);
+      if (!_.isEmpty(one.equip)) {
+        const validEquips = _.filter(one.equip, 'name');
         if (validEquips.length > 0) {
           lines.push(`  装备:`);
           validEquips.forEach((eq, eqIndex) => {

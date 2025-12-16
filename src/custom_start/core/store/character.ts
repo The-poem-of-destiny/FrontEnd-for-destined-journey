@@ -64,40 +64,24 @@ export const useCharacterStore = defineStore('character', () => {
    * 计算当前消耗的转生点数
    */
   const consumedPoints = computed(() => {
-    let total = 0;
-
-    // 种族消耗
-    const raceCost = getRaceCosts.value[character.value.race] || 0;
-    total += raceCost;
-
-    // 身份消耗
-    const identityCost = getIdentityCosts.value[character.value.identity] || 0;
-    total += identityCost;
-
-    // 属性加点消耗 (每点1个转生点)
-    const attributeAddPoints = usedAP.value;
-    total += attributeAddPoints;
-
-    // 装备消耗
-    const equipmentCost = selectedEquipments.value.reduce((sum, item) => sum + item.cost, 0);
-    total += equipmentCost;
-
-    // 道具消耗
-    const itemCost = selectedItems.value.reduce((sum, item) => sum + item.cost, 0);
-    total += itemCost;
-
-    // 技能消耗
-    const skillCost = selectedSkills.value.reduce((sum, skill) => sum + skill.cost, 0);
-    total += skillCost;
-
-    // 命定之人消耗
-    const destinedOnesCost = selectedDestinedOnes.value.reduce((sum, one) => sum + one.cost, 0);
-    total += destinedOnesCost;
-
-    // 兑换命运点数消耗的转生点数
-    total += exchangedReincarnationPoints.value;
-
-    return total;
+    return _.sum([
+      // 种族消耗
+      _.get(getRaceCosts.value, character.value.race, 0),
+      // 身份消耗
+      _.get(getIdentityCosts.value, character.value.identity, 0),
+      // 属性加点消耗 (每点1个转生点)
+      usedAP.value,
+      // 装备消耗
+      _.sumBy(selectedEquipments.value, 'cost'),
+      // 道具消耗
+      _.sumBy(selectedItems.value, 'cost'),
+      // 技能消耗
+      _.sumBy(selectedSkills.value, 'cost'),
+      // 命定之人消耗
+      _.sumBy(selectedDestinedOnes.value, 'cost'),
+      // 兑换命运点数消耗的转生点数
+      exchangedReincarnationPoints.value,
+    ]);
   });
 
   // Actions
@@ -159,10 +143,7 @@ export const useCharacterStore = defineStore('character', () => {
   };
 
   const removeEquipment = (equipment: Equipment) => {
-    const index = selectedEquipments.value.findIndex(e => e.name === equipment.name);
-    if (index !== -1) {
-      selectedEquipments.value.splice(index, 1);
-    }
+    _.remove(selectedEquipments.value, e => e.name === equipment.name);
   };
 
   const addItem = (item: Item) => {
@@ -170,10 +151,7 @@ export const useCharacterStore = defineStore('character', () => {
   };
 
   const removeItem = (item: Item) => {
-    const index = selectedItems.value.findIndex(i => i.name === item.name);
-    if (index !== -1) {
-      selectedItems.value.splice(index, 1);
-    }
+    _.remove(selectedItems.value, i => i.name === item.name);
   };
 
   const addSkill = (skill: Skill) => {
@@ -181,10 +159,7 @@ export const useCharacterStore = defineStore('character', () => {
   };
 
   const removeSkill = (skill: Skill) => {
-    const index = selectedSkills.value.findIndex(s => s.name === skill.name);
-    if (index !== -1) {
-      selectedSkills.value.splice(index, 1);
-    }
+    _.remove(selectedSkills.value, s => s.name === skill.name);
   };
 
   const clearSelections = () => {
@@ -193,16 +168,27 @@ export const useCharacterStore = defineStore('character', () => {
     selectedSkills.value = [];
   };
 
+  // 清空命定之人
+  const clearDestinedOnes = () => {
+    selectedDestinedOnes.value = [];
+  };
+
+  // 清空所有选择（包括装备、道具、技能、命定之人、背景）
+  const clearAllSelections = () => {
+    selectedEquipments.value = [];
+    selectedItems.value = [];
+    selectedSkills.value = [];
+    selectedDestinedOnes.value = [];
+    selectedBackground.value = null;
+  };
+
   // 命定之人相关操作
   const addDestinedOne = (destinedOne: DestinedOne) => {
     selectedDestinedOnes.value.push(destinedOne);
   };
 
   const removeDestinedOne = (destinedOne: DestinedOne) => {
-    const index = selectedDestinedOnes.value.findIndex(d => d.name === destinedOne.name);
-    if (index !== -1) {
-      selectedDestinedOnes.value.splice(index, 1);
-    }
+    _.remove(selectedDestinedOnes.value, d => d.name === destinedOne.name);
   };
 
   // 背景相关操作
@@ -212,8 +198,8 @@ export const useCharacterStore = defineStore('character', () => {
 
   // 命运点数兑换相关操作
   const exchangeDestinyPoints = (reincarnationPoints: number) => {
-    // 1 转生点 = 10 命运点
-    const destinyPointsToAdd = reincarnationPoints * 10;
+    // 1 转生点 = 2 命运点
+    const destinyPointsToAdd = reincarnationPoints * 2;
     character.value.destinyPoints += destinyPointsToAdd;
     // 记录已兑换的转生点数
     exchangedReincarnationPoints.value += reincarnationPoints;
@@ -228,20 +214,19 @@ export const useCharacterStore = defineStore('character', () => {
   };
 
   // 属性点相关计算
-  const usedAP = computed(() =>
-    Object.values(character.value.attributePoints).reduce((sum, points) => sum + points, 0),
-  );
+  const usedAP = computed(() => _.sum(_.values(character.value.attributePoints)));
   const maxAP = computed(() => calculateAPByLevel(character.value.level));
   const remainingAP = computed(() => maxAP.value - usedAP.value);
 
   // 最终属性计算
   const finalAttributes = computed(() => {
     const tierBonus = getTierAttributeBonus(character.value.level);
-    const result: Partial<Attributes> = {};
-    for (const attr of ATTRIBUTES) {
-      result[attr] = BASE_STAT + tierBonus + character.value.attributePoints[attr];
-    }
-    return result as Attributes;
+    return _.fromPairs(
+      _.map(ATTRIBUTES, attr => [
+        attr,
+        BASE_STAT + tierBonus + character.value.attributePoints[attr],
+      ]),
+    ) as unknown as Attributes;
   });
 
   // 监听等级变化，自动重置属性点分配
@@ -267,43 +252,33 @@ export const useCharacterStore = defineStore('character', () => {
       const currentRace =
         character.value.race === '自定义' ? character.value.customRace : character.value.race;
 
-      // 获取所有种族列表
-      const raceSpecificCategories = Object.keys(getRaceCosts.value).filter(
-        race => race !== '自定义',
-      );
+      // 获取所有种族列表（排除"自定义"）
+      const raceSpecificCategories = _.without(_.keys(getRaceCosts.value), '自定义');
 
       // 获取技能数据
       const activeSkills = getActiveSkills();
       const passiveSkills = getPassiveSkills();
 
-      // 找出需要移除的技能索引（倒序遍历，避免索引问题）
-      for (let i = selectedSkills.value.length - 1; i >= 0; i--) {
-        const skill = selectedSkills.value[i];
-        let skillCategory = '';
-
+      // 查找技能所属分类的辅助函数
+      const findSkillCategory = (skillName: string): string => {
         // 在主动技能中查找
-        for (const [category, skills] of Object.entries(activeSkills)) {
-          if (skills.some(s => s.name === skill.name)) {
-            skillCategory = category;
-            break;
-          }
-        }
+        const activeCategory = _.findKey(activeSkills, skills =>
+          _.some(skills, s => s.name === skillName),
+        );
+        if (activeCategory) return activeCategory;
 
         // 在被动技能中查找
-        if (!skillCategory) {
-          for (const [category, skills] of Object.entries(passiveSkills)) {
-            if (skills.some(s => s.name === skill.name)) {
-              skillCategory = category;
-              break;
-            }
-          }
-        }
+        const passiveCategory = _.findKey(passiveSkills, skills =>
+          _.some(skills, s => s.name === skillName),
+        );
+        return passiveCategory || '';
+      };
 
-        // 如果技能分类是种族特定的，且不匹配当前种族，移除该技能
-        if (raceSpecificCategories.includes(skillCategory) && skillCategory !== currentRace) {
-          selectedSkills.value.splice(i, 1);
-        }
-      }
+      // 移除不符合当前种族的技能
+      _.remove(selectedSkills.value, skill => {
+        const skillCategory = findSkillCategory(skill.name);
+        return _.includes(raceSpecificCategories, skillCategory) && skillCategory !== currentRace;
+      });
     },
     { deep: true },
   );
@@ -336,6 +311,8 @@ export const useCharacterStore = defineStore('character', () => {
     addSkill,
     removeSkill,
     clearSelections,
+    clearDestinedOnes,
+    clearAllSelections,
     addDestinedOne,
     removeDestinedOne,
     setBackground,
