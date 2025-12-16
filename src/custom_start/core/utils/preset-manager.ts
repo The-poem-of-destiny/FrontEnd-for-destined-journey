@@ -220,7 +220,7 @@ export function createPresetFromStore(
   };
 }
 
-/** 角色配置字段列表，用于预设应用 */
+/** 角色配置字段列表，用于预设应用（不包含 destinyPoints，需通过兑换机制设置） */
 const CharacterFields = [
   'name',
   'gender',
@@ -235,7 +235,6 @@ const CharacterFields = [
   'level',
   'attributePoints',
   'reincarnationPoints',
-  'destinyPoints',
 ] as const;
 
 /**
@@ -283,6 +282,11 @@ export function applyPresetToStore(
 
   // 4. 应用背景
   characterStore.setBackground(preset.background);
+
+  // 5. 通过兑换机制应用命运点数（消耗转生点数）
+  if (preset.exchangedReincarnationPoints > 0) {
+    characterStore.exchangeDestinyPoints(preset.exchangedReincarnationPoints);
+  }
 
   toastr.success(`已加载预设「${preset.name}」`);
 }
