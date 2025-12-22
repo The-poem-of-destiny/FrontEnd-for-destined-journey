@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useCharacterStore } from '../../store/character';
+import { useCustomContentStore } from '../../store/customContent';
 
 const characterStore = useCharacterStore();
+const customContentStore = useCustomContentStore();
 
 // 计算总消耗点数
 const totalConsumed = computed(() => characterStore.consumedPoints);
@@ -260,7 +262,19 @@ const rarityColorMap: Record<string, string> = {
                 >地点：{{ characterStore.selectedBackground.location }}</span
               >
             </p>
-            <p class="background-desc">{{ characterStore.selectedBackground.description }}</p>
+            <!-- 自定义开局显示用户输入的内容，否则显示预设描述 -->
+            <p
+              v-if="
+                characterStore.selectedBackground.name === '【自定义开局】' &&
+                customContentStore.customBackgroundDescription
+              "
+              class="background-desc"
+            >
+              {{ customContentStore.customBackgroundDescription }}
+            </p>
+            <p v-else class="background-desc">
+              {{ characterStore.selectedBackground.description }}
+            </p>
           </div>
           <p v-else class="empty-text">未选择初始开局剧情</p>
         </section>

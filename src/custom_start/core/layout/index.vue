@@ -4,6 +4,7 @@ import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PresetModal from '../components/PresetModal.vue';
 import { useCharacterStore } from '../store';
+import { useCustomContentStore } from '../store/customContent';
 import { generateAIPrompt, writeCharacterToMvu } from '../utils/data-exporter';
 import { findMatchingPreset, hasPresets } from '../utils/preset-manager';
 import Steps from './component/Steps.vue';
@@ -11,6 +12,7 @@ import Steps from './component/Steps.vue';
 const router = useRouter();
 const route = useRoute();
 const characterStore = useCharacterStore();
+const customContentStore = useCustomContentStore();
 const { character } = storeToRefs(characterStore);
 
 // 预设弹窗控制
@@ -206,6 +208,7 @@ const executeJourney = async () => {
       characterStore.selectedBackground,
       characterStore.selectedItems,
       characterStore.selectedSkills,
+      customContentStore.customBackgroundDescription,
     );
     console.log('✅ AI 提示词已生成：\n', aiPrompt);
 

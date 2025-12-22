@@ -191,7 +191,11 @@ watch(
       </div>
 
       <!-- 自定义开局输入框 -->
-      <div v-show="isCustomBackground(item) && isSelected(item)" class="custom-input-area">
+      <div
+        v-show="isCustomBackground(item) && isSelected(item)"
+        class="custom-input-area"
+        @click.stop
+      >
         <div class="custom-input-label">请编写您的自定义开局剧情：</div>
         <FormTextarea
           :model-value="customDescription"
