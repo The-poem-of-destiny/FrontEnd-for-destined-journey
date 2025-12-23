@@ -80,8 +80,8 @@
               "type": "number"
             },
             {
-              "default": "MAX",
-              "type": "string"
+              "type": "string",
+              "const": "MAX"
             }
           ]
         },

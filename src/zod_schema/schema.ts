@@ -28,7 +28,7 @@ export const Schema = z.object({
       生命层级: z.string().prefault('第一层级/普通层级'),
       等级: clampedNum(1, 1, 25),
       累计经验值: z.coerce.number().prefault(0),
-      升级所需经验: z.union([z.coerce.number().prefault(120), z.string().prefault('MAX')]),
+      升级所需经验: z.union([z.coerce.number().prefault(120), z.literal('MAX')]),
       冒险者等级: z.string().prefault('未评级'),
       生命值上限: z.coerce.number().prefault(0),
       生命值: z.coerce.number().prefault(0),
