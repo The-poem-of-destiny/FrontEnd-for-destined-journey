@@ -56,11 +56,11 @@ export const Schema = z.object({
       金币: z.coerce
         .number()
         .prefault(0)
-        .transform(val => Math.floor(Math.max(val, 0))),
+        .transform(val => Math.floor(val)),
       银币: z.coerce
         .number()
         .prefault(0)
-        .transform(val => Math.floor(Math.max(val, 0))),
+        .transform(val => Math.floor(val)),
       铜币: z.coerce
         .number()
         .prefault(0)
