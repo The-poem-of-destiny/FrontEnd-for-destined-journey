@@ -12,7 +12,7 @@ export const TabsConfig: TabItem[] = [
   },
   {
     id: 'status',
-    label: '状态',
+    label: '信息',
     icon: 'fa-solid fa-user',
   },
   {
