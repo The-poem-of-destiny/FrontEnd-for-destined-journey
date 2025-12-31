@@ -1,0 +1,98 @@
+@use '../../../styles/variables' as *;
+
+.textEditor {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-xs;
+  font-size: 12px;
+}
+
+.label {
+  color: var(--theme-text-secondary);
+  white-space: nowrap;
+  padding-top: 4px;
+  word-break: break-word;
+}
+
+// 展示模式
+.displayMode {
+  cursor: pointer;
+  padding: 4px $spacing-sm;
+  border-radius: $border-radius-sm;
+  transition: background $transition-fast;
+
+  &:hover:not(.disabled) {
+    background: var(--theme-tab-hover-bg);
+
+    .editIcon {
+      opacity: 1;
+    }
+  }
+
+  &.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.displayValue {
+  color: var(--theme-text-primary);
+  word-break: break-word;
+
+  &.placeholder {
+    color: var(--theme-text-muted);
+    font-style: italic;
+  }
+}
+
+.editIcon {
+  margin-left: $spacing-xs;
+  font-size: 10px;
+  color: var(--theme-text-muted);
+  opacity: 0;
+  transition: opacity $transition-fast;
+}
+
+// 编辑模式
+.editMode {
+  flex-direction: column;
+  width: 100%;
+}
+
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  padding: $spacing-sm;
+  background: var(--theme-window-bg);
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+  color: var(--theme-text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  resize: vertical;
+  transition:
+    border-color $transition-fast,
+    box-shadow $transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: var(--theme-primary-bg);
+    box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb, 59, 130, 246), 0.2);
+  }
+
+  &::placeholder {
+    color: var(--theme-text-muted);
+  }
+
+  &:disabled {
+    background: var(--theme-card-bg);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}

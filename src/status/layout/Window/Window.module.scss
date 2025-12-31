@@ -1,0 +1,40 @@
+@use '../../shared/styles/variables' as *;
+
+.statusWindow {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 220px;
+  background: var(--theme-window-bg);
+  border: 1px solid var(--theme-window-border);
+  border-radius: $border-radius-lg;
+  box-shadow: var(--theme-window-shadow);
+  overflow: hidden;
+  font-family: 'Noto Sans SC', sans-serif;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--theme-window-border);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  &::before {
+    top: 10px;
+    left: 10px;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  &::after {
+    right: 10px;
+    bottom: 10px;
+    border-left: none;
+    border-top: none;
+  }
+}

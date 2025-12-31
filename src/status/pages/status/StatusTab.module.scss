@@ -1,0 +1,370 @@
+@use '../../shared/styles/variables' as *;
+
+.statusTab {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.statusTabCard {
+  border: 1px solid var(--theme-card-border);
+}
+
+.statusTabLoading,
+.statusTabError,
+.statusTabEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  color: var(--theme-text-muted);
+}
+
+.statusTabError {
+  color: var(--theme-error);
+}
+
+// 基础信息
+.basicInfo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $spacing-xs $spacing-md;
+}
+
+.basicInfoRow {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.33fr) minmax(0, 1fr);
+  gap: $spacing-xs;
+  align-items: center;
+}
+
+.basicInfoLabel {
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.basicInfoValue {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text-primary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+@media (max-width: 540px) {
+  .basicInfo {
+    grid-template-columns: 1fr;
+  }
+}
+
+// 属性
+.attributes {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: $spacing-xs;
+}
+
+.attributesEdit {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 540px) {
+  .attributes {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .attributesEdit {
+    grid-template-columns: 1fr;
+  }
+}
+
+.attributesItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-xs $spacing-sm;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: $border-radius-sm;
+  border: none;
+}
+
+.attributesItemEdit {
+  flex-direction: row;
+  justify-content: space-between;
+  gap: $spacing-sm;
+}
+
+.attributesLabel {
+  font-size: 11px;
+  color: var(--theme-text-secondary);
+  margin-bottom: 2px;
+}
+
+.attributesItemEdit .attributesLabel {
+  margin-bottom: 0;
+}
+
+.attributesValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+}
+
+// 属性卡片标题编辑模式
+.attributesTitleEdit {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+// 资源条
+.resources {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+// 状态效果
+.statusEffects {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.effectItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-xs $spacing-sm;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: $border-radius-sm;
+  border-left: 3px solid var(--theme-success);
+}
+
+.effectBuff {
+  border-left-color: var(--theme-success);
+}
+
+.effectDebuff {
+  border-left-color: var(--theme-error);
+}
+
+.effectSpecial {
+  border-left-color: var(--theme-warning);
+}
+
+@media (max-width: 540px) {
+  .effectItem {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+}
+
+.effectInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.collapseTitleRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  min-width: 0;
+}
+
+.collapseSummary {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: auto;
+}
+
+@media (max-width: 540px) {
+  .collapseTitleRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-xs;
+  }
+
+  .collapseSummary {
+    margin-left: 0;
+    white-space: normal;
+  }
+}
+
+.effectHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  min-width: 0;
+}
+
+.effectName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text-primary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.effectType {
+  font-size: 10px;
+  color: var(--theme-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--theme-card-border);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.effectDesc {
+  font-size: 11px;
+  color: var(--theme-text-secondary);
+  word-break: break-word;
+}
+
+.effectSource {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+  word-break: break-word;
+}
+
+.effectMeta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  justify-self: end;
+  min-width: 0;
+}
+
+@media (max-width: 540px) {
+  .effectMeta {
+    justify-self: start;
+  }
+}
+
+.effectStack {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+  background: rgba(0, 0, 0, 0.25);
+  padding: 2px 6px;
+  border-radius: $border-radius-sm;
+  border: 1px solid var(--theme-card-border);
+}
+
+.effectTime {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+}
+
+.emptyEffects {
+  text-align: center;
+  padding: $spacing-md;
+  color: var(--theme-text-muted);
+  font-size: 12px;
+}
+
+// 资源编辑模式
+.resourceEditRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-xs 0;
+}
+
+.resourceLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-text-secondary);
+  min-width: 40px;
+}
+
+.resourceEditors {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  flex: 1;
+}
+
+.resourceSeparator {
+  color: var(--theme-text-muted);
+  font-size: 12px;
+}
+
+.expMax {
+  font-size: 13px;
+  color: var(--theme-text-secondary);
+}
+
+// 状态效果编辑模式样式
+.effectItemEdit {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: flex-start;
+}
+
+.effectItemEdit .effectInfo {
+  gap: $spacing-xs;
+}
+
+.effectEditRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.effectEditLabel {
+  font-size: 10px;
+  color: var(--theme-text-muted);
+  flex-shrink: 0;
+  min-width: 32px;
+}
+
+.effectMetaItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.effectMetaLabel {
+  font-size: 10px;
+  color: var(--theme-text-muted);
+  flex-shrink: 0;
+}
+
+@media (max-width: 540px) {
+  .effectItemEdit {
+    grid-template-columns: 1fr;
+  }
+
+  .effectItemEdit .effectMeta {
+    flex-wrap: wrap;
+  }
+}
+
+.effectDeleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  border-radius: $border-radius-sm;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--theme-error);
+    background: rgba(var(--theme-error-rgb), 0.1);
+  }
+}

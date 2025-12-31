@@ -1,0 +1,236 @@
+@use '../../../styles/variables' as *;
+
+.keyValueEditor {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  font-size: 12px;
+
+  &.disabled {
+    opacity: 0.6;
+  }
+}
+
+.label {
+  color: var(--theme-text-secondary);
+  font-weight: 500;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.33fr) minmax(0, 1fr) auto;
+  align-items: start;
+  gap: $spacing-xs;
+  padding: 4px $spacing-sm;
+  background: var(--theme-card-bg);
+  border-radius: $border-radius-sm;
+}
+
+.entryKey {
+  color: var(--theme-text-secondary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.entryValue {
+  min-width: 0;
+  color: var(--theme-text-primary);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+  transition: background $transition-fast;
+  word-break: break-word;
+
+  &:hover {
+    background: var(--theme-tab-hover-bg);
+  }
+}
+
+.editWrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.editInput {
+  flex: 1;
+  padding: 2px 6px;
+  background: var(--theme-window-bg);
+  border: 1px solid var(--theme-primary-bg);
+  border-radius: $border-radius-sm;
+  color: var(--theme-text-primary);
+  font-size: 11px;
+  outline: none;
+
+  // 隐藏数字输入框箭头
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  -moz-appearance: textfield;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  i {
+    font-size: 9px;
+  }
+}
+
+.confirmBtn {
+  background: var(--theme-success, #22c55e);
+  color: white;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+.cancelBtn {
+  background: var(--theme-card-bg);
+  color: var(--theme-text-secondary);
+  border: 1px solid var(--theme-card-border);
+
+  &:hover {
+    background: var(--theme-tab-hover-bg);
+  }
+}
+
+.removeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all $transition-fast;
+
+  i {
+    font-size: 10px;
+  }
+
+  &:hover {
+    opacity: 1;
+    color: var(--theme-error, #ef4444);
+  }
+}
+
+// 添加行
+.addRow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) auto;
+  align-items: center;
+  gap: 4px;
+  padding-top: $spacing-xs;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.addInput {
+  flex: 1;
+  padding: 4px 6px;
+  background: var(--theme-window-bg);
+  border: none;
+  border-radius: $border-radius-sm;
+  color: var(--theme-text-primary);
+  font-size: 11px;
+  outline: none;
+
+  &:focus {
+    border-color: var(--theme-primary-bg);
+  }
+
+  &::placeholder {
+    color: var(--theme-text-muted);
+  }
+
+  // 隐藏数字输入框箭头
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  -moz-appearance: textfield;
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: var(--theme-primary-bg);
+  border: none;
+  border-radius: $border-radius-sm;
+  color: var(--theme-primary-text);
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  i {
+    font-size: 10px;
+  }
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 540px) {
+  .entry {
+    grid-template-columns: 1fr;
+  }
+
+  .removeBtn {
+    justify-self: flex-end;
+  }
+
+  .addRow {
+    grid-template-columns: 1fr;
+  }
+
+  .addBtn {
+    width: 100%;
+  }
+}
+
+.empty {
+  color: var(--theme-text-muted);
+  font-style: italic;
+}

@@ -1,0 +1,128 @@
+@use '../../../styles/variables' as *;
+
+.toggleEditor {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+// 尺寸变体
+.sm {
+  .toggle {
+    width: 32px;
+    height: 18px;
+  }
+
+  .thumb {
+    width: 12px;
+    height: 12px;
+  }
+
+  .isOn .thumb {
+    transform: translateX(14px);
+  }
+
+  .labelText {
+    font-size: 11px;
+  }
+}
+
+.md {
+  .toggle {
+    width: 38px;
+    height: 20px;
+  }
+
+  .thumb {
+    width: 14px;
+    height: 14px;
+  }
+
+  .isOn .thumb {
+    transform: translateX(18px);
+  }
+
+  .labelText {
+    font-size: 12px;
+  }
+}
+
+// 左右状态文字
+.labelText {
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  user-select: none;
+  transition: color $transition-fast;
+  white-space: nowrap;
+
+  &.active {
+    color: var(--theme-text-primary);
+    font-weight: 500;
+  }
+
+  &:hover {
+    color: var(--theme-text-secondary);
+  }
+}
+
+.labelOff {
+  // 关闭状态文字样式
+}
+
+.labelOn {
+  // 开启状态文字样式
+}
+
+// 开关按钮
+.toggle {
+  position: relative;
+  padding: 0;
+  border: 1px solid var(--theme-card-border);
+  border-radius: 999px;
+  background: var(--theme-card-bg);
+  cursor: pointer;
+  transition: all $transition-fast;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    border-color: var(--theme-text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-primary-bg);
+    outline-offset: 2px;
+  }
+}
+
+.thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  border-radius: 50%;
+  background: var(--theme-text-muted);
+  transition:
+    transform $transition-fast,
+    background $transition-fast;
+}
+
+.isOn {
+  background: var(--theme-primary-bg);
+  border-color: var(--theme-primary-bg);
+
+  .thumb {
+    background: var(--theme-primary-text);
+  }
+}
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+
+  .toggle {
+    cursor: not-allowed;
+  }
+
+  .labelText {
+    cursor: not-allowed;
+  }
+}

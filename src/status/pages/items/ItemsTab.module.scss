@@ -1,0 +1,260 @@
+@use '../../shared/styles/variables' as *;
+
+.itemsTab {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.itemsTabLoading,
+.itemsTabError,
+.itemsTabEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  color: var(--theme-text-muted);
+}
+
+.itemsTabCurrency {
+  // 货币卡片样式
+}
+
+.itemsTabCategories {
+  display: flex;
+  gap: $spacing-xs;
+}
+
+.itemsTabContent {
+  flex: 1;
+}
+
+// 筛选器栏
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: $border-radius-sm;
+}
+
+.filterBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px $spacing-sm;
+  background: transparent;
+  border-radius: $border-radius-sm;
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all $transition-fast;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+
+  &:hover {
+    background: var(--theme-tab-hover-bg);
+    color: var(--theme-text-primary);
+  }
+
+  &.isActive {
+    background: var(--theme-primary-bg);
+    color: var(--theme-primary-text);
+  }
+}
+
+.filterCount {
+  padding: 1px 4px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-size: 10px;
+  min-width: 16px;
+  text-align: center;
+
+  .isActive & {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+// 货币显示
+.currency {
+  display: flex;
+  justify-content: space-around;
+  letter-spacing: 0.3px;
+}
+
+.currencyItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 0;
+
+  i {
+    font-size: 14px;
+  }
+}
+
+.currencyItemGold {
+  color: #ffd700;
+}
+
+.currencyItemSilver {
+  color: #c0c0c0;
+}
+
+.currencyItemCopper {
+  color: #b87333;
+}
+
+// 类别按钮
+.categoryBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: $border-radius-sm;
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all $transition-fast;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &:hover {
+    background: var(--theme-tab-hover-bg);
+  }
+}
+
+.isActive {
+  background: var(--theme-primary-bg);
+  border-color: var(--theme-primary-bg);
+  color: var(--theme-primary-text);
+}
+
+// 物品列表
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+// 物品标题
+.itemTitle {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.itemName {
+  flex: 1;
+  font-weight: 500;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.itemCount,
+.itemSlot,
+.itemCost {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+  word-break: break-word;
+}
+
+// 物品详情
+.itemDetails {
+  font-size: 12px;
+}
+
+.itemType {
+  color: var(--theme-text-secondary);
+  margin-bottom: $spacing-xs;
+  word-break: break-word;
+}
+
+// 物品标签
+.itemTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: $spacing-xs;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--theme-text-primary);
+  border: 1px solid var(--theme-card-border);
+}
+
+.itemDesc {
+  color: var(--theme-text-primary);
+  line-height: 1.5;
+  margin-bottom: $spacing-sm;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.itemEffects {
+  padding-top: $spacing-sm;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.effectRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.effectKey {
+  color: var(--theme-text-secondary);
+}
+
+.effectValue {
+  color: var(--theme-text-primary);
+}
+
+// 空提示
+.emptyHint {
+  text-align: center;
+  padding: $spacing-lg;
+  color: var(--theme-text-muted);
+  font-size: 12px;
+}
+
+// 品质颜色
+.qualityUnique {
+  color: var(--theme-quality-unique);
+}
+
+.qualityMythic {
+  color: var(--theme-quality-mythic);
+}
+
+.qualityLegendary {
+  color: var(--theme-quality-legendary);
+}
+
+.qualityEpic {
+  color: var(--theme-quality-epic);
+}
+
+.qualityRare {
+  color: var(--theme-quality-rare);
+}
+
+.qualityUncommon {
+  color: var(--theme-quality-uncommon);
+}

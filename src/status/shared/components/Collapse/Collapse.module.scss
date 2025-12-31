@@ -1,0 +1,99 @@
+@use '../../styles/variables' as *;
+
+.collapse {
+  background: var(--theme-card-bg);
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-md;
+  overflow: hidden;
+
+  & + & {
+    margin-top: $spacing-sm;
+  }
+}
+
+.collapseHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  padding: $spacing-sm $spacing-md;
+  background: var(--theme-tab-bar-bg);
+  cursor: pointer;
+  transition: background $transition-fast;
+}
+
+.collapseHeader:hover {
+  background: var(--theme-tab-hover-bg);
+}
+
+.collapseTitle {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text-primary);
+  min-width: 0;
+  padding-right: $spacing-sm;
+  word-break: break-word;
+}
+
+.collapseIcon {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--theme-text-muted);
+  transition: transform $transition-normal;
+}
+
+.collapseContent {
+  display: none;
+}
+
+.collapseBody {
+  padding: $spacing-md;
+  border-top: 1px solid var(--theme-card-border);
+}
+
+// 展开状态
+.collapse.open {
+  > .collapseHeader .collapseIcon {
+    transform: rotate(180deg);
+  }
+
+  > .collapseContent {
+    display: block;
+  }
+}
+
+// 品质样式
+.collapseQualityUnique {
+  border-color: var(--theme-quality-unique);
+}
+
+.collapseQualityMythic {
+  border-color: var(--theme-quality-mythic);
+}
+
+.collapseQualityLegendary {
+  border-color: var(--theme-quality-legendary);
+}
+
+.collapseQualityEpic {
+  border-color: var(--theme-quality-epic);
+}
+
+.collapseQualityRare {
+  border-color: var(--theme-quality-rare);
+}
+
+.collapseQualityUncommon {
+  border-color: var(--theme-quality-uncommon);
+}
+
+@media (max-width: 540px) {
+  .collapseHeader {
+    padding: $spacing-xs $spacing-sm;
+  }
+
+  .collapseBody {
+    padding: $spacing-sm;
+  }
+}

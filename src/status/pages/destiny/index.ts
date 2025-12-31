@@ -1,0 +1,1 @@
+export { DestinyTab } from './DestinyTab';

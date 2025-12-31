@@ -189,6 +189,7 @@ export function generateAIPrompt(
   background: Background | null,
   items: Item[],
   skills: Skill[],
+  customBackgroundDescription?: string,
 ): string {
   const lines: string[] = [];
   const displayGender = character.gender === '自定义' ? character.customGender : character.gender;
@@ -342,7 +343,12 @@ export function generateAIPrompt(
     lines.push('');
     lines.push('【初始开局剧情】');
     lines.push(`${background.name}`);
-    lines.push(`描述: ${background.description}`);
+    // 自定义开局使用用户输入的描述，否则使用预设描述
+    const description =
+      background.name === '【自定义开局】' && customBackgroundDescription
+        ? customBackgroundDescription
+        : background.description;
+    lines.push(`描述: ${description}`);
   }
 
   const content = lines.join('\n');

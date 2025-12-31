@@ -1,0 +1,96 @@
+@use '../../shared/styles/variables' as *;
+
+.titleBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm $spacing-md;
+  background: var(--theme-title-bar-bg);
+  position: relative;
+  gap: $spacing-sm;
+  min-width: 0;
+}
+
+.info {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  color: var(--theme-title-bar-text);
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.time,
+.location {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  min-width: 0;
+  word-break: break-word;
+
+  i {
+    color: var(--theme-title-bar-icon);
+    font-size: 12px;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: $spacing-xs;
+  flex-shrink: 0;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: $border-radius-sm;
+  color: var(--theme-title-bar-icon);
+  cursor: pointer;
+  transition:
+    background $transition-fast,
+    border-color $transition-fast,
+    color $transition-fast;
+
+  &:hover {
+    background: var(--theme-title-bar-btn-hover);
+    border-color: var(--theme-window-border);
+    color: var(--theme-title-bar-text);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 540px) {
+  .titleBar {
+    flex-direction: row;
+    align-items: center;
+    padding: $spacing-xs $spacing-sm;
+  }
+
+  .info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-xs;
+    font-size: 12px;
+  }
+
+  .actions {
+    justify-content: flex-end;
+  }
+
+  .time,
+  .location {
+    width: auto;
+  }
+}

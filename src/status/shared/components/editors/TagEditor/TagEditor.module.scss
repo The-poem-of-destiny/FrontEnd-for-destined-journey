@@ -1,0 +1,103 @@
+@use '../../../styles/variables' as *;
+
+.tagEditor {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-xs;
+  font-size: 12px;
+
+  &.disabled {
+    opacity: 0.6;
+  }
+}
+
+.label {
+  color: var(--theme-text-secondary);
+  white-space: nowrap;
+  padding-top: 4px;
+}
+
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background: var(--theme-primary-bg);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--theme-primary-text);
+  word-break: break-word;
+}
+
+.removeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  color: inherit;
+  cursor: pointer;
+  transition: background $transition-fast;
+
+  i {
+    font-size: 8px;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.4);
+  }
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: var(--theme-card-bg);
+  border: 1px dashed var(--theme-card-border);
+  border-radius: 4px;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  i {
+    font-size: 10px;
+  }
+
+  &:hover {
+    background: var(--theme-tab-hover-bg);
+    color: var(--theme-text-primary);
+    border-style: solid;
+  }
+}
+
+.input {
+  min-width: 80px;
+  max-width: 120px;
+  padding: 2px 6px;
+  background: var(--theme-window-bg);
+  border: 1px solid var(--theme-primary-bg);
+  border-radius: 4px;
+  color: var(--theme-text-primary);
+  font-size: 11px;
+  outline: none;
+  word-break: break-word;
+
+  &::placeholder {
+    color: var(--theme-text-muted);
+  }
+}

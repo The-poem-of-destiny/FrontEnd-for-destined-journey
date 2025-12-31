@@ -1,0 +1,120 @@
+@use '../../../styles/variables' as *;
+
+.numberEditor {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: 12px;
+}
+
+.label {
+  color: var(--theme-text-secondary);
+  white-space: nowrap;
+  word-break: break-word;
+}
+
+// 展示模式
+.displayMode {
+  &.disabled {
+    opacity: 0.6;
+
+    .stepBtn {
+      cursor: not-allowed;
+    }
+  }
+}
+
+.valueWrapper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.displayValue {
+  min-width: 40px;
+  padding: 4px $spacing-sm;
+  text-align: center;
+  cursor: pointer;
+  border-radius: $border-radius-sm;
+  color: var(--theme-text-primary);
+  transition: background $transition-fast;
+
+  &:hover {
+    background: var(--theme-tab-hover-bg);
+  }
+}
+
+.suffix {
+  margin-left: 2px;
+  color: var(--theme-text-muted);
+  font-size: 10px;
+}
+
+.stepBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--theme-card-bg);
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  i {
+    font-size: 8px;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--theme-tab-hover-bg);
+    color: var(--theme-text-primary);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// 编辑模式
+.editMode {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.input {
+  width: 80px;
+  padding: $spacing-xs;
+  background: var(--theme-window-bg);
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+  color: var(--theme-text-primary);
+  font-size: 12px;
+  text-align: center;
+  transition:
+    border-color $transition-fast,
+    box-shadow $transition-fast;
+
+  // 隐藏默认的数字输入框箭头
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  -moz-appearance: textfield;
+
+  &:focus {
+    outline: none;
+    border-color: var(--theme-primary-bg);
+    box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb, 59, 130, 246), 0.2);
+  }
+}

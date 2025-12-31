@@ -1,0 +1,147 @@
+@use '../../styles/variables' as *;
+
+// 遮罩层
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+// 弹窗容器
+.modal {
+  width: min(90vw, 360px);
+  background: var(--theme-card-bg);
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  padding: $spacing-md;
+}
+
+// 标题
+.title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+  margin-bottom: $spacing-sm;
+}
+
+// 内容区域
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+// 信息行
+.row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: $spacing-xs;
+  font-size: 12px;
+}
+
+// 行标签
+.label {
+  color: var(--theme-text-secondary);
+  word-break: break-word;
+}
+
+// 行值
+.value {
+  color: var(--theme-text-primary);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+// 操作按钮区域
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-xs;
+  margin-top: $spacing-sm;
+}
+
+// 主要按钮（确认）
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+  background: var(--theme-primary-bg);
+  color: var(--theme-primary-text);
+  border: none;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// 危险按钮（删除确认等）
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+  background: var(--theme-danger-bg, #ef4444);
+  color: white;
+  border: none;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// 次要按钮（取消）
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+  background: var(--theme-card-bg);
+  color: var(--theme-text-secondary);
+  border: 1px solid var(--theme-card-border);
+
+  &:hover:not(:disabled) {
+    background: var(--theme-tab-hover-bg);
+    color: var(--theme-text-primary);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// 自定义内容区域
+.content {
+  margin-bottom: $spacing-sm;
+}

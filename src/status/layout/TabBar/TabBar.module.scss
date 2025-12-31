@@ -1,0 +1,73 @@
+@use '../../shared/styles/variables' as *;
+
+.tabBar {
+  background: var(--theme-tab-bar-bg);
+  border-bottom: 1px solid var(--theme-window-border);
+  overflow-x: auto;
+  position: relative;
+
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--theme-tab-indicator);
+    border-radius: 999px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+.list {
+  display: flex;
+  min-width: 100%;
+}
+
+.item {
+  flex: 1 0 auto;
+  min-width: fit-content;
+  max-width: 140px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  padding: $spacing-sm $spacing-md;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  color: var(--theme-tab-text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all $transition-fast;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+
+  i {
+    font-size: 12px;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--theme-tab-hover-bg);
+    color: var(--theme-tab-active-text);
+    border-color: var(--theme-window-border);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.itemActive {
+  color: var(--theme-tab-active-text);
+  border-bottom-color: var(--theme-tab-indicator);
+  border-top-color: var(--theme-tab-indicator);
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.12);
+}

@@ -1,0 +1,106 @@
+@use '../../styles/variables' as *;
+
+.editableField {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-xs;
+}
+
+.editorWrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.deleteWrapper {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 4px;
+}
+
+.deleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: $border-radius-sm;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all $transition-fast;
+
+  i {
+    font-size: 11px;
+  }
+
+  &:hover:not(:disabled) {
+    opacity: 1;
+    color: var(--theme-danger-bg, #ef4444);
+    border-color: var(--theme-danger-bg, #ef4444);
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+// 确认对话框
+.confirmDialog {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: 4px $spacing-sm;
+  background: var(--theme-card-bg);
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.confirmText {
+  font-size: 11px;
+  color: var(--theme-text-secondary);
+  white-space: nowrap;
+  word-break: break-word;
+}
+
+.confirmBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  font-size: 11px;
+  border: none;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.yesBtn {
+  background: var(--theme-danger-bg, #ef4444);
+  color: white;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+}
+
+.noBtn {
+  background: var(--theme-card-bg);
+  color: var(--theme-text-secondary);
+  border: 1px solid var(--theme-card-border);
+
+  &:hover:not(:disabled) {
+    background: var(--theme-tab-hover-bg);
+    color: var(--theme-text-primary);
+  }
+}

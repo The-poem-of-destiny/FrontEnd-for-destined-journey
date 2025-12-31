@@ -1,0 +1,164 @@
+@use '../../styles/variables' as *;
+
+// 物品标题
+.itemTitle {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.itemName {
+  flex: 1;
+  font-weight: 500;
+  min-width: 0;
+}
+
+// 删除按钮
+.deleteButton {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(220, 53, 69, 0.15);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  border-radius: 4px;
+  color: #dc3545;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 11px;
+  margin-left: auto;
+
+  &:hover {
+    background: rgba(220, 53, 69, 0.25);
+    border-color: rgba(220, 53, 69, 0.5);
+  }
+}
+
+// 字段标签
+.fieldLabel {
+  color: var(--theme-text-secondary);
+  margin-right: $spacing-xs;
+}
+
+// 位置/消耗/数量
+.itemSlot,
+.itemCost,
+.itemQuantity {
+  color: var(--theme-text-secondary);
+  margin-bottom: $spacing-xs;
+}
+
+// 效果标题
+.effectsHeader {
+  font-size: 11px;
+  color: var(--theme-text-secondary);
+  margin-bottom: $spacing-xs;
+  font-weight: 500;
+}
+
+// 物品详情
+.itemDetails {
+  font-size: 12px;
+}
+
+.itemQuality {
+  color: var(--theme-text-secondary);
+  margin-bottom: $spacing-xs;
+  font-weight: 500;
+}
+
+.itemType {
+  color: var(--theme-text-secondary);
+  margin-bottom: $spacing-xs;
+}
+
+@media (max-width: 540px) {
+  .itemTitle {
+    align-items: flex-start;
+  }
+}
+
+// 物品标签
+.itemTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: $spacing-xs;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--theme-text-primary);
+  border: none;
+}
+
+.itemDesc {
+  color: var(--theme-text-primary);
+  line-height: 1.5;
+  margin-bottom: $spacing-xs;
+}
+
+.itemEffects {
+  padding-top: $spacing-xs;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.effectRow {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.33fr) minmax(0, 1fr);
+  gap: $spacing-xs;
+  padding: 2px 0;
+  align-items: start;
+}
+
+.effectKey {
+  color: var(--theme-text-secondary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.effectValue {
+  color: var(--theme-text-primary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+@media (max-width: 540px) {
+  .effectRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+// 品质颜色
+.qualityUnique {
+  color: var(--theme-quality-unique);
+}
+
+.qualityMythic {
+  color: var(--theme-quality-mythic);
+}
+
+.qualityLegendary {
+  color: var(--theme-quality-legendary);
+}
+
+.qualityEpic {
+  color: var(--theme-quality-epic);
+}
+
+.qualityRare {
+  color: var(--theme-quality-rare);
+}
+
+.qualityUncommon {
+  color: var(--theme-quality-uncommon);
+}

@@ -1,0 +1,50 @@
+@use '../../styles/variables' as *;
+
+.card {
+  background: var(--theme-card-bg);
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-md;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+.cardHeader {
+  padding: $spacing-sm $spacing-md;
+  background: var(--theme-tab-bar-bg);
+  border-bottom: 1px solid var(--theme-card-border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  word-break: break-word;
+}
+
+.cardBody {
+  padding: $spacing-md;
+}
+
+// 品质样式
+.cardQualityUnique {
+  border-color: var(--theme-quality-unique);
+}
+
+.cardQualityMythic {
+  border-color: var(--theme-quality-mythic);
+}
+
+.cardQualityLegendary {
+  border-color: var(--theme-quality-legendary);
+}
+
+.cardQualityEpic {
+  border-color: var(--theme-quality-epic);
+}
+
+.cardQualityRare {
+  border-color: var(--theme-quality-rare);
+}
+
+.cardQualityUncommon {
+  border-color: var(--theme-quality-uncommon);
+}

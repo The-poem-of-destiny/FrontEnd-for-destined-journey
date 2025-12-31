@@ -18,16 +18,7 @@ export const Schema = z.object({
       地点: z.string().prefault(''),
     })
     .prefault({}),
-  事件链: z
-    .object({
-      开启: z.boolean().prefault(false),
-      结束: z.boolean().prefault(false),
-      琥珀事件: z.boolean().prefault(false),
-      标题: z.any().prefault(''),
-      阶段: z.any().prefault(''),
-      已完成事件: z.array(z.any()).prefault([]),
-    })
-    .prefault({}),
+  事件链: z.record(z.any(), z.any()).prefault({}),
   任务列表: z.record(z.string(), QuestSchema).prefault({}),
   角色: z
     .object({
@@ -37,7 +28,7 @@ export const Schema = z.object({
       生命层级: z.string().prefault('第一层级/普通层级'),
       等级: clampedNum(1, 1, 25),
       累计经验值: z.coerce.number().prefault(0),
-      升级所需经验: z.coerce.number().prefault(23),
+      升级所需经验: z.union([z.coerce.number().prefault(120), z.literal('MAX')]),
       冒险者等级: z.string().prefault('未评级'),
       生命值上限: z.coerce.number().prefault(0),
       生命值: z.coerce.number().prefault(0),
@@ -65,11 +56,11 @@ export const Schema = z.object({
       金币: z.coerce
         .number()
         .prefault(0)
-        .transform(val => Math.floor(Math.max(val, 0))),
+        .transform(val => Math.floor(val)),
       银币: z.coerce
         .number()
         .prefault(0)
-        .transform(val => Math.floor(Math.max(val, 0))),
+        .transform(val => Math.floor(val)),
       铜币: z.coerce
         .number()
         .prefault(0)

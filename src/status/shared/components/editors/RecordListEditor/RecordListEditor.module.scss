@@ -1,0 +1,33 @@
+@use '../../../styles/variables' as *;
+
+.recordListEditor {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  font-size: 12px;
+}
+
+.label {
+  color: var(--theme-text-secondary);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.itemCollapse {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.empty {
+  padding: $spacing-sm;
+  text-align: center;
+}
+
+.disabled {
+  opacity: 0.6;
+}

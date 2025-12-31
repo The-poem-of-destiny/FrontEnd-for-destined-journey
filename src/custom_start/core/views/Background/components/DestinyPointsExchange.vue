@@ -41,7 +41,7 @@ const handleExchange = () => {
     <div class="exchange-header">
       <span class="exchange-icon">💫</span>
       <span class="exchange-title">命运点数</span>
-      <span class="exchange-rate">(1转生点 = 10命运点)</span>
+      <span class="exchange-rate">(1转生点 = 2命运点)</span>
     </div>
 
     <div class="exchange-body">

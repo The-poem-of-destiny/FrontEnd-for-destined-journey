@@ -19,7 +19,7 @@ export default [
   ...vue.configs['flat/recommended'],
   pinia.configs['recommended-flat'],
   {
-    files: ['src/**/*.{html,vue,js,ts}'],
+    files: ['src/**/*.{html,vue,js,jsx,ts,tsx}'],
     plugins: {
       'better-tailwindcss': eslintPluginBetterTailwindcss,
     },
@@ -77,5 +77,11 @@ export default [
     },
   },
   eslintConfigPrettier,
-  globalIgnores(['dist/**', 'node_modules/**', 'eslint.config.mjs', 'postcss.config.js', 'webpack.config.ts']),
+  globalIgnores([
+    'dist/**',
+    'node_modules/**',
+    'eslint.config.mjs',
+    'postcss.config.js',
+    'webpack.config.ts',
+  ]),
 ];

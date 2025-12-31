@@ -1,0 +1,58 @@
+@use '../../../styles/variables' as *;
+
+.selectEditor {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: 12px;
+}
+
+.label {
+  color: var(--theme-text-secondary);
+  white-space: nowrap;
+  word-break: break-word;
+}
+
+.selectWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.select {
+  appearance: none;
+  padding: 4px 28px 4px $spacing-sm;
+  background: var(--theme-window-bg);
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+  color: var(--theme-text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color $transition-fast,
+    box-shadow $transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: var(--theme-primary-bg);
+    box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb, 59, 130, 246), 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.icon {
+  position: absolute;
+  right: 8px;
+  color: var(--theme-text-muted);
+  pointer-events: none;
+  font-size: 10px;
+}
+
+.disabled {
+  opacity: 0.6;
+}

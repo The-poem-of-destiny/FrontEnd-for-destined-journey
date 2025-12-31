@@ -1,0 +1,159 @@
+@use '../../styles/variables' as *;
+
+.ascension {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.compact {
+  gap: $spacing-sm;
+
+  .sectionTitle {
+    font-size: 12px;
+    margin-bottom: $spacing-xs;
+  }
+
+  .item {
+    padding: 2px $spacing-xs;
+    font-size: 11px;
+  }
+
+  .godTitle {
+    font-size: 14px;
+  }
+}
+
+.section {
+  // 区块容器
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+  margin-bottom: $spacing-sm;
+
+  i {
+    color: var(--theme-text-secondary);
+  }
+}
+
+.items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.item {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  font-size: 12px;
+}
+
+.itemName {
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: var(--theme-text-primary);
+}
+
+.itemDetails {
+  margin-top: 4px;
+  padding-left: $spacing-xs;
+  font-size: 11px;
+  color: var(--theme-text-secondary);
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.33fr) minmax(0, 1fr);
+  gap: 4px;
+  padding: 1px 0;
+  align-items: start;
+}
+
+.detailKey {
+  font-weight: 600;
+  color: var(--theme-text-secondary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.detailValue {
+  color: var(--theme-text-primary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.itemElement {
+  background: rgba(33, 150, 243, 0.08);
+  color: var(--theme-text-primary);
+}
+
+.itemPower {
+  background: rgba(255, 152, 0, 0.08);
+  color: var(--theme-text-primary);
+}
+
+.itemLaw {
+  background: rgba(156, 39, 176, 0.08);
+  color: var(--theme-text-primary);
+}
+
+.godInfo {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.godInfoRow {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+}
+
+.godInfoLabel {
+  flex-shrink: 0;
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  min-width: 40px;
+}
+
+.godTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--theme-text-primary);
+}
+
+.godKingdom {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kingdomName {
+  font-weight: 600;
+  color: var(--theme-text-primary);
+}
+
+.kingdomDesc {
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+  line-height: 1.5;
+}
+
+@media (max-width: 540px) {
+  .detailRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.empty {
+  text-align: center;
+  padding: $spacing-md;
+  color: var(--theme-text-muted);
+  font-size: 13px;
+}

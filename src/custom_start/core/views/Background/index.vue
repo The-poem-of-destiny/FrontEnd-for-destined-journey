@@ -67,14 +67,6 @@ const handleSelectBackground = (background: Background) => {
 // 更新自定义开局描述
 const handleUpdateCustomDescription = (value: string) => {
   customContentStore.updateCustomBackgroundDescription(value);
-  // 如果当前选中的是自定义开局，更新 store 中的描述
-  if (characterStore.selectedBackground?.name === '【自定义开局】') {
-    const updatedBackground: Background = {
-      ...characterStore.selectedBackground,
-      description: value || '自由发挥你的想象力，编写你自己的人物初始背景。',
-    };
-    characterStore.setBackground(updatedBackground);
-  }
 };
 
 // 命运点数兑换

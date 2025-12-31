@@ -17,24 +17,8 @@
     "事件链": {
       "default": {},
       "type": "object",
-      "properties": {
-        "开启": {
-          "type": "boolean"
-        },
-        "结束": {
-          "type": "boolean"
-        },
-        "琥珀事件": {
-          "type": "boolean"
-        },
-        "标题": {},
-        "阶段": {},
-        "已完成事件": {
-          "default": [],
-          "type": "array",
-          "items": {}
-        }
-      }
+      "propertyNames": {},
+      "additionalProperties": {}
     },
     "任务列表": {
       "default": {},
@@ -90,8 +74,16 @@
           "type": "number"
         },
         "升级所需经验": {
-          "default": 23,
-          "type": "number"
+          "anyOf": [
+            {
+              "default": 120,
+              "type": "number"
+            },
+            {
+              "type": "string",
+              "const": "MAX"
+            }
+          ]
         },
         "冒险者等级": {
           "default": "未评级",

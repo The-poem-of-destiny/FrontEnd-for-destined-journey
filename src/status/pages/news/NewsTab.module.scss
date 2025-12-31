@@ -1,0 +1,79 @@
+@use '../../shared/styles/variables' as *;
+
+.newsTab {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.newsTabLoading,
+.newsTabError,
+.newsTabEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  color: var(--theme-text-muted);
+}
+
+// 新闻类别标题
+.newsCategoryTitle {
+  display: flex;
+  align-items: center;
+  gap: $spacing-base;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  min-width: 0;
+
+  i {
+    font-size: 14px;
+  }
+
+  span {
+    min-width: 0;
+    word-break: break-word;
+  }
+}
+
+// 新闻条目列表
+.newsItems {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.newsItem {
+  padding: $spacing-xs $spacing-sm;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: $border-radius-sm;
+  border-left: 3px solid var(--theme-tab-indicator);
+  border: 1px solid var(--theme-card-border);
+  min-width: 0;
+}
+
+.newsItemTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--theme-text-secondary);
+  margin-bottom: 4px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  word-break: break-word;
+}
+
+.newsItemContent {
+  font-size: 12px;
+  color: var(--theme-text-primary);
+  line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+// 空提示
+.emptyHint {
+  text-align: center;
+  padding: $spacing-md;
+  color: var(--theme-text-muted);
+  font-size: 12px;
+}

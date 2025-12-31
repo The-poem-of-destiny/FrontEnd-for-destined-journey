@@ -1,0 +1,135 @@
+@use '../../shared/styles/variables' as *;
+
+.settingsTab {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+// 编辑设置 - 紧凑行样式（不使用卡片包裹）
+.editSettingBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm $spacing-md;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+}
+
+.editSettingLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+  letter-spacing: 0.3px;
+}
+
+.settingsTabTheme {
+  border: 1px solid var(--theme-card-border);
+}
+
+// 主题编辑器
+.themeEditor {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.colorGroup {
+  // 颜色分组
+}
+
+.colorGroupTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--theme-text-secondary);
+  margin-bottom: $spacing-sm;
+  padding-bottom: $spacing-xs;
+  border-bottom: 1px solid var(--theme-card-border);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  word-break: break-word;
+}
+
+.colorGroupItems {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-xs $spacing-sm;
+}
+
+.colorItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  padding: 4px $spacing-sm;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: $border-radius-sm;
+  border: 1px solid var(--theme-card-border);
+}
+
+.colorItemLabel {
+  font-size: 11px;
+  color: var(--theme-text-primary);
+  letter-spacing: 0.3px;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.colorItemInput {
+  width: 32px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+
+  &::-webkit-color-swatch-wrapper {
+    padding: 2px;
+  }
+
+  &::-webkit-color-swatch {
+    border: none;
+    border-radius: 2px;
+  }
+}
+
+// 操作按钮
+.themeActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 1px solid var(--theme-card-border);
+}
+
+.btn {
+  padding: $spacing-sm $spacing-md;
+  font-size: 12px;
+  border: none;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.btnPrimary {
+  background: var(--theme-primary-bg);
+  color: var(--theme-primary-text);
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.btnSecondary {
+  background: var(--theme-card-bg);
+  border: 1px solid var(--theme-card-border);
+  color: var(--theme-text-secondary);
+
+  &:hover {
+    background: var(--theme-tab-hover-bg);
+  }
+}

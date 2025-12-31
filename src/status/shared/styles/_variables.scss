@@ -1,0 +1,17 @@
+// 间距系统（8px 基础网格）
+$spacing-base: 8px;
+$spacing-xs: $spacing-base * 0.5; // 4px
+$spacing-sm: $spacing-base * 1.5; // 12px
+$spacing-md: $spacing-base * 2; // 16px
+$spacing-lg: $spacing-base * 3; // 24px
+$spacing-xl: $spacing-base * 4; // 32px
+
+// 圆角
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+
+// 过渡动画
+$transition-fast: 150ms ease;
+$transition-normal: 250ms ease;
+$transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);

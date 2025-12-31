@@ -1,0 +1,515 @@
+@use '../../shared/styles/variables' as *;
+
+.destinyTab {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.partnerTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: $spacing-sm;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.partnerMeta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-left: auto;
+}
+
+.affectionBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: var(--theme-text-primary);
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: $border-radius-sm;
+}
+
+@media (max-width: 540px) {
+  .partnerTitle {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-xs;
+  }
+
+  .partnerMeta {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+.destinyTabLoading,
+.destinyTabError,
+.destinyTabEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  color: var(--theme-text-muted);
+}
+
+// 命运点数卡片
+.destinyTabPoints {
+}
+
+.destinyTabPartners {
+  // 命定之人卡片
+}
+
+.destinyTabAscension {
+  // 登神长阶卡片
+}
+
+// 命运点数
+.destinyPoints {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+}
+
+.destinyPointsIcon {
+  color: var(--theme-tab-indicator);
+  font-size: 18px;
+}
+
+.destinyPointsLabel {
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.destinyPointsValue {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+}
+
+// 命定之人列表
+.partnerList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.partnerName {
+  font-weight: 500;
+  color: var(--theme-text-primary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.partnerTags {
+  display: flex;
+  gap: $spacing-xs;
+  flex-wrap: wrap;
+}
+
+.tag {
+  padding: 2px 6px;
+  font-size: 10px;
+  border-radius: 3px;
+}
+
+.tagPresent {
+  background: rgba(76, 175, 80, 0.18);
+  color: #7ac28c;
+}
+
+.tagContract {
+  background: rgba(233, 30, 99, 0.18);
+  color: #e08aa6;
+}
+
+// 命定之人详情
+.partnerDetails {
+  font-size: 12px;
+}
+
+.partnerAffection {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.label {
+  flex-shrink: 0;
+  color: var(--theme-text-secondary);
+}
+
+.affectionBar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.affectionBarTrack {
+  flex: 1;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  overflow: hidden;
+  border: none;
+}
+
+.affectionBarFill {
+  height: 100%;
+  background: #b54a5f;
+  border-radius: 4px;
+  transition: width $transition-normal;
+}
+
+.affectionBarValue {
+  flex-shrink: 0;
+  width: 30px;
+  text-align: right;
+  font-weight: 600;
+  color: #d58d9d;
+}
+
+.isNegative {
+  &.affectionBarFill {
+    background: #9c3a3a;
+  }
+
+  &.affectionBarValue {
+    color: #d68f8f;
+  }
+}
+
+// 编辑模式下的状态开关区域
+.partnerStatusToggles {
+  display: flex;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+  margin-bottom: $spacing-sm;
+  padding: $spacing-xs $spacing-sm;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: $border-radius-sm;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.toggleLabel {
+  font-size: 11px;
+  color: var(--theme-text-secondary);
+}
+
+.partnerInfo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $spacing-xs $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.infoRow {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.33fr) minmax(0, 1fr);
+  gap: $spacing-xs;
+}
+
+@media (max-width: 540px) {
+  .partnerInfo {
+    grid-template-columns: 1fr;
+  }
+}
+
+.infoLabel {
+  color: var(--theme-text-secondary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.infoValue {
+  color: var(--theme-text-primary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+// 外貌与着装
+.partnerAppearance {
+  padding: $spacing-sm 0;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.appearanceRow {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.33fr) minmax(0, 1fr);
+  gap: $spacing-xs;
+  padding: 2px 0;
+}
+
+.appearanceLabel {
+  color: var(--theme-text-secondary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.appearanceValue {
+  color: var(--theme-text-primary);
+  line-height: 1.4;
+  min-width: 0;
+  word-break: break-word;
+}
+
+@media (max-width: 540px) {
+  .appearanceRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.partnerTraits {
+  padding: $spacing-sm 0;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.traitRow {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.33fr) minmax(0, 1fr);
+  gap: $spacing-xs;
+  padding: 2px 0;
+}
+
+.traitLabel {
+  color: var(--theme-text-secondary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.traitValue {
+  color: var(--theme-text-primary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+@media (max-width: 540px) {
+  .traitRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+// 通用区块标签
+.sectionLabel {
+  color: var(--theme-text-secondary);
+  margin-bottom: $spacing-xs;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+// 属性
+.partnerAttributes {
+  padding: $spacing-sm 0;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.attributeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-xs;
+}
+
+// 编辑模式下属性网格改为 2 列，适应编辑器宽度
+.attributeGridEdit {
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-sm;
+}
+
+// 窄屏下编辑模式属性网格改为单列
+@media (max-width: 420px) {
+  .attributeGridEdit {
+    grid-template-columns: 1fr;
+  }
+}
+
+.attributeItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px $spacing-xs;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+// 编辑模式下属性项目布局调整
+.attributeItemEdit {
+  flex-direction: row;
+  gap: $spacing-xs;
+  padding: $spacing-xs;
+
+  .attributeKey {
+    flex-shrink: 0;
+    min-width: 28px;
+  }
+}
+
+.attributeKey {
+  color: var(--theme-text-secondary);
+}
+
+.attributeValue {
+  font-weight: 500;
+  color: var(--theme-text-primary);
+}
+
+// 装备
+.partnerEquipment {
+  padding: $spacing-sm 0;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.equipmentList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.equipmentSlot {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+}
+
+// 技能
+.partnerSkills {
+  padding: $spacing-sm 0;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.skillList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.skillCost {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+}
+
+// 心里话
+.partnerThoughts {
+  padding-top: $spacing-sm;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.thoughtsRow {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.33fr) minmax(0, 1fr);
+  gap: $spacing-xs;
+}
+
+.thoughtsLabel {
+  color: var(--theme-text-secondary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.thoughtsContent {
+  font-style: italic;
+  color: var(--theme-text-primary);
+  line-height: 1.5;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+// 背景故事
+.partnerBackground {
+  padding-top: $spacing-sm;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.backgroundRow {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.33fr) minmax(0, 1fr);
+  gap: $spacing-xs;
+}
+
+.backgroundLabel {
+  color: var(--theme-text-secondary);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.backgroundContent {
+  color: var(--theme-text-primary);
+  line-height: 1.6;
+  text-align: justify;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 540px) {
+  .thoughtsRow,
+  .backgroundRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+// 命定之人详情中的登神长阶
+.partnerAscension {
+  margin-top: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.ascensionLabel {
+  color: var(--theme-text-secondary);
+  margin-bottom: $spacing-sm;
+  font-size: 12px;
+}
+
+// 空提示
+.emptyHint {
+  text-align: center;
+  padding: $spacing-lg;
+  color: var(--theme-text-muted);
+  font-size: 12px;
+}
+
+// 删除命定之人按钮
+.deletePartnerBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin-left: $spacing-xs;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: $border-radius-sm;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: all $transition-fast;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+    color: #c04040;
+    background: rgba(192, 64, 64, 0.12);
+    border-color: rgba(192, 64, 64, 0.25);
+  }
+
+  i {
+    font-size: 12px;
+  }
+}

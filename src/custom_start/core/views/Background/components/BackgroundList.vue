@@ -109,9 +109,18 @@ const isCustomBackground = (item: Background) => item.name === '【自定义开�
 const parsedItems = ref<Background[]>([]);
 
 // 解析所有背景
+const itemsKey = ref('');
+
 watch(
   () => props.items,
   async items => {
+    // 比较是否有变化
+    const newKey = items.map(i => i.name).join('|');
+    if (newKey === itemsKey.value && parsedItems.value.length > 0) {
+      return;
+    }
+
+    itemsKey.value = newKey;
     parsedItems.value = await Promise.all(items.map(parseMacroDeep));
   },
   { immediate: true },
@@ -182,7 +191,11 @@ watch(
       </div>
 
       <!-- 自定义开局输入框 -->
-      <div v-if="isCustomBackground(item) && isSelected(item)" class="custom-input-area">
+      <div
+        v-show="isCustomBackground(item) && isSelected(item)"
+        class="custom-input-area"
+        @click.stop
+      >
         <div class="custom-input-label">请编写您的自定义开局剧情：</div>
         <FormTextarea
           :model-value="customDescription"
