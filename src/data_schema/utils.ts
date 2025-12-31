@@ -41,23 +41,16 @@ export const TaskSchema = z
   .prefault({});
 
 /**
- * 货币 schema
- */
-export const CurrencySchema = z
-  .object({
-    金币: z.coerce.number().prefault(0).transform(Math.round),
-    银币: z.coerce.number().prefault(0).transform(Math.round),
-    铜币: z.coerce.number().prefault(0).transform(Math.round),
-  })
-  .prefault({});
-
-/**
  * 基础物品 schema
  */
 export const BaseItemSchema = z.object({
   品质: z.string().prefault(''),
   类型: z.string().prefault(''),
-  标签: z.array(z.string()).prefault([]).optional(),
+  标签: z
+    .array(z.string())
+    .prefault([])
+    .transform(arr => _.uniq(arr))
+    .optional(),
   效果: z.record(z.string(), z.string()).prefault({}),
   描述: z.string().prefault(''),
 });
@@ -180,8 +173,14 @@ export const IdentitySchema = z.object({
   等级: clampedMum(1, 1, 25),
   生命层级: z.string().prefault(''),
   种族: z.string().prefault(''),
-  身份: z.array(z.string()).prefault([]),
-  职业: z.array(z.string()).prefault([]),
+  身份: z
+    .array(z.string())
+    .prefault([])
+    .transform(arr => _.uniq(arr)),
+  职业: z
+    .array(z.string())
+    .prefault([])
+    .transform(arr => _.uniq(arr)),
   属性: BaseAttrSchema,
   装备: z.record(z.string(), EquipmentSchema).prefault({}),
   技能: z.record(z.string(), SkillSchema).prefault({}),
