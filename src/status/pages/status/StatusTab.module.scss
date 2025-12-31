@@ -292,12 +292,29 @@
 .effectEditHeader {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: $spacing-sm;
-  flex-wrap: wrap;
+  width: 100%;
 
   .effectName {
     font-weight: 600;
+    flex-shrink: 0;
   }
+}
+
+// 内容区域：包含名称和元信息，占据左侧空间
+.effectEditHeaderContent {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+  min-width: 0;
+  flex: 1;
+}
+
+// 元信息行（类型、层数、时间）
+.effectEditHeaderMeta {
+  display: contents;
 }
 
 // 编辑模式内容行：标签 + 全宽输入
@@ -335,17 +352,26 @@
 
 .effectDeleteBtn {
   @include delete-button-danger(28px);
-  margin-left: auto;
+  flex-shrink: 0;
 }
 
 @media (max-width: 540px) {
   .effectEditHeader {
+    align-items: flex-start;
+  }
+
+  // 移动端：名称和元信息垂直排列
+  .effectEditHeaderContent {
     flex-direction: column;
     align-items: flex-start;
     gap: $spacing-xs;
+  }
 
-    .effectDeleteBtn {
-      margin-left: 0;
-    }
+  // 移动端：元信息行横向排列
+  .effectEditHeaderMeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-xs;
+    align-items: center;
   }
 }

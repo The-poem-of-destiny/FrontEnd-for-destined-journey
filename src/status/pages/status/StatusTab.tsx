@@ -92,29 +92,33 @@ const StatusEffects: FC<StatusEffectsProps> = ({ effects, summary, editEnabled, 
                   <>
                     {/* 编辑模式 */}
                     <div className={styles.effectEditHeader}>
-                      <span className={styles.effectName}>{name}</span>
-                      <EditableField
-                        path={`主角.状态效果.${name}.类型`}
-                        value={effect.类型 ?? '增益'}
-                        type="select"
-                        selectConfig={{ options: StatusEffectTypeOptions }}
-                      />
-                      <div className={styles.effectMetaItem}>
-                        <span className={styles.effectMetaLabel}>层数</span>
-                        <EditableField
-                          path={`主角.状态效果.${name}.层数`}
-                          value={effect.层数 ?? 1}
-                          type="number"
-                          numberConfig={{ min: 1, step: 1 }}
-                        />
-                      </div>
-                      <div className={styles.effectMetaItem}>
-                        <span className={styles.effectMetaLabel}>剩余时间</span>
-                        <EditableField
-                          path={`主角.状态效果.${name}.剩余时间`}
-                          value={effect.剩余时间 ?? ''}
-                          type="text"
-                        />
+                      <div className={styles.effectEditHeaderContent}>
+                        <span className={styles.effectName}>{name}</span>
+                        <div className={styles.effectEditHeaderMeta}>
+                          <EditableField
+                            path={`主角.状态效果.${name}.类型`}
+                            value={effect.类型 ?? '增益'}
+                            type="select"
+                            selectConfig={{ options: StatusEffectTypeOptions }}
+                          />
+                          <div className={styles.effectMetaItem}>
+                            <span className={styles.effectMetaLabel}>层数</span>
+                            <EditableField
+                              path={`主角.状态效果.${name}.层数`}
+                              value={effect.层数 ?? 1}
+                              type="number"
+                              numberConfig={{ min: 1, step: 1 }}
+                            />
+                          </div>
+                          <div className={styles.effectMetaItem}>
+                            <span className={styles.effectMetaLabel}>剩余时间</span>
+                            <EditableField
+                              path={`主角.状态效果.${name}.剩余时间`}
+                              value={effect.剩余时间 ?? ''}
+                              type="text"
+                            />
+                          </div>
+                        </div>
                       </div>
                       <button
                         className={styles.effectDeleteBtn}
