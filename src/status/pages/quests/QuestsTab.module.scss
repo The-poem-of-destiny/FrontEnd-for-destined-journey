@@ -69,6 +69,14 @@
   gap: $spacing-sm;
 }
 
+// 任务标题区域
+.questHeader {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: $spacing-sm;
+}
+
 // 任务标题
 .questTitle {
   display: flex;
@@ -76,10 +84,34 @@
   gap: $spacing-sm;
   letter-spacing: 0.4px;
   min-width: 0;
+  flex: 1;
 
   i {
     color: var(--theme-tab-indicator);
     font-size: 14px;
+  }
+}
+
+// 删除按钮
+.deleteButton {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(220, 53, 69, 0.15);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  border-radius: 4px;
+  color: #dc3545;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 11px;
+  margin-left: auto;
+
+  &:hover {
+    background: rgba(220, 53, 69, 0.25);
+    border-color: rgba(220, 53, 69, 0.5);
   }
 }
 
@@ -117,6 +149,11 @@
   margin: 0;
   word-break: break-word;
   overflow-wrap: anywhere;
+}
+
+// 可编辑内容
+.editableContent {
+  width: 100%;
 }
 
 // 空状态

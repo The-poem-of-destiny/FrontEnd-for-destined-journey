@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Collapse, EmptyHint, IconTitle } from '../../shared/components';
+import { Collapse, EditableField, EmptyHint, IconTitle } from '../../shared/components';
 import { withMvuData, WithMvuDataProps } from '../../shared/hoc';
 import styles from './NewsTab.module.scss';
 
@@ -28,22 +28,40 @@ const NewsCategories = [
 const NewsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const news = data.新闻;
 
-  /** 渲染新闻条目 */
-  const renderNewsItems = (categoryData: Record<string, string>) => {
-    const items = _.pickBy(categoryData, value => !_.isEmpty(value));
+  /** 渲染新闻条目（可编辑） */
+  const renderNewsItems = (categoryKey: string, categoryData: Record<string, string>) => {
+    const entries = _.entries(categoryData);
 
-    if (_.isEmpty(items)) {
+    // 过滤出有内容的条目用于显示判断
+    const hasContent = entries.some(([, value]) => !_.isEmpty(value));
+
+    if (!hasContent) {
       return <EmptyHint className={styles.emptyHint} text="暂无消息" />;
     }
 
     return (
       <div className={styles.newsItems}>
-        {_.map(items, (content, title) => (
-          <div key={title} className={styles.newsItem}>
-            <div className={styles.newsItemTitle}>{title}</div>
-            <div className={styles.newsItemContent}>{content}</div>
-          </div>
-        ))}
+        {entries.map(([title, content]) => {
+          // 跳过空内容的条目
+          if (_.isEmpty(content)) return null;
+
+          const fieldPath = `新闻.${categoryKey}.${title}`;
+
+          return (
+            <div key={title} className={styles.newsItem}>
+              <div className={styles.newsItemTitle}>{title}</div>
+              <div className={styles.newsItemContent}>
+                <EditableField
+                  path={fieldPath}
+                  value={content}
+                  type="textarea"
+                  label={`${categoryKey} - ${title}`}
+                  className={styles.editableContent}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -66,7 +84,7 @@ const NewsTabContent: FC<WithMvuDataProps> = ({ data }) => {
               />
             }
           >
-            {renderNewsItems(categoryData)}
+            {renderNewsItems(category.key, categoryData)}
           </Collapse>
         );
       })}
