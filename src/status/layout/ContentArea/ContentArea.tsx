@@ -27,10 +27,10 @@ export const ContentArea: FC<ContentAreaProps> = ({ children }) => {
           opacity: 1,
           duration: 0.35,
           ease: 'power2.out',
-        }
+        },
       );
     },
-    { dependencies: [children], scope: containerRef }
+    { dependencies: [children], scope: containerRef },
   );
 
   return (
