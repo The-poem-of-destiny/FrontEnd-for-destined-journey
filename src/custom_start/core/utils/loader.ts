@@ -5,7 +5,7 @@ import type { Background, BaseInfoData, DestinedOne, Equipment, Item, Skill } fr
  * 数据基础路径 - CDN 部署环境
  */
 const DATA_BASE_PATH =
-  'https://testingcf.jsdelivr.net/gh/The-poem-of-destiny/FrontEnd-for-destined-journey@old-v3.1.1/public/assets/data';
+  'https://testingcf.jsdelivr.net/gh/The-poem-of-destiny/FrontEnd-for-destined-journey@old-v3.1.4/public/assets/data';
 
 /**
  * 生成带缓存破坏参数的 URL

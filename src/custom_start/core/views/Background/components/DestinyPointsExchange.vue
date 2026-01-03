@@ -19,7 +19,7 @@ const pointsToExchange = ref(0);
 
 // 计算可以获得的命运点数
 const destinyPointsToGain = computed(() => {
-  return pointsToExchange.value * 10;
+  return pointsToExchange.value * 2;
 });
 
 // 最大可兑换点数
