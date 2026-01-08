@@ -107,14 +107,10 @@ export const BaseAttrSchema = z
 /**
  * 登神长阶 schema
  *
- * 进阶逻辑（递归关系）：
- * - 3要素 → 合成1权能（清空要素）
- * - 2权能 → 合成1法则（清空权能）
- *
  * 状态约束：
- * - 有法则时：权能和要素永久清空，不可再获得
- * - 权能满2个时：要素清空，不可再获得
- * - 正常情况（权能<2 且 无法则）：可收集要素（最多3个）
+ * - 有法则时：权能和要素清空，不可再获得
+ * - 有权能时：要素清空，不可再获得
+ * - 正常情况（无权能 且 无法则）：可收集要素（最多3个）
  */
 export const AscensionSchema = z
   .object({
@@ -132,28 +128,29 @@ export const AscensionSchema = z
   })
   .prefault({})
   .transform(data => {
-    const LawNum = _.size(data.法则);
+    const lawNum = _.size(data.法则);
     const powerNum = _.size(data.权能);
-    const powerLimit = 2;
+    const powerLimit = 1;
     const eleLimit = 3;
+    const lawLimit = data.神国?.名称 ? Number.POSITIVE_INFINITY : data.神位 ? 2 : 1;
 
     // 有法则：权能和要素永久清空
-    if (LawNum > 0) {
+    if (lawNum > 0) {
       return {
         ...data,
         要素: {},
         权能: {},
-        法则: data.神位 ? data.法则 : sliceRecord(data.法则, 1),
+        法则: sliceRecord(data.法则, lawLimit),
       };
     }
 
-    // 权能满上限：要素清空
-    if (powerNum >= powerLimit) {
+    // 有权能：要素清空
+    if (powerNum > 0) {
       return {
         ...data,
         要素: {},
         权能: sliceRecord(data.权能, powerLimit),
-        法则: sliceRecord(data.法则, 1),
+        法则: sliceRecord(data.法则, lawLimit),
       };
     }
 
