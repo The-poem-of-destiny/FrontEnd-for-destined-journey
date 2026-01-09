@@ -3,7 +3,14 @@
  * 装备编辑器组件
  */
 import { computed, ref, watch } from 'vue';
-import { FormInput, FormLabel, FormSelect, FormTextarea } from '../../../components/Form';
+import {
+  FormArrayInput,
+  FormInput,
+  FormKeyValueInput,
+  FormLabel,
+  FormSelect,
+  FormTextarea,
+} from '../../../components/Form';
 import {
   EQUIPMENT_TYPE_OPTIONS,
   getRarityColor,
@@ -15,9 +22,9 @@ import {
 export interface EquipmentItem {
   name: string;
   type: string;
-  tag: string;
+  tag: string[];
   rarity: string;
-  effect: string;
+  effect: Record<string, string>;
   description: string;
 }
 
@@ -49,9 +56,9 @@ const editingIndex = ref<number | null>(null);
 const newEquipment = ref<EquipmentItem>({
   name: '',
   type: EQUIPMENT_TYPE_OPTIONS[0].value,
-  tag: '',
+  tag: [],
   rarity: 'common',
-  effect: '',
+  effect: {},
   description: '',
 });
 
@@ -71,9 +78,9 @@ const resetNewEquipment = () => {
   newEquipment.value = {
     name: '',
     type: EQUIPMENT_TYPE_OPTIONS[0].value,
-    tag: '',
+    tag: [],
     rarity: 'common',
-    effect: '',
+    effect: {},
     description: '',
   };
 };
@@ -85,8 +92,8 @@ const addEquipment = () => {
   const newItem: EquipmentItem = {
     ...newEquipment.value,
     name: newEquipment.value.name.trim(),
-    tag: newEquipment.value.tag?.trim() || '',
-    effect: newEquipment.value.effect?.trim() || '',
+    tag: newEquipment.value.tag.filter(tag => tag.trim() !== ''),
+    effect: { ...newEquipment.value.effect },
     description: newEquipment.value.description?.trim() || '',
   };
 
@@ -120,8 +127,8 @@ const saveEdit = () => {
   newArray[editingIndex.value] = {
     ...editingEquipment.value,
     name: editingEquipment.value.name.trim(),
-    tag: editingEquipment.value.tag?.trim() || '',
-    effect: editingEquipment.value.effect?.trim() || '',
+    tag: editingEquipment.value.tag.filter(tag => tag.trim() !== ''),
+    effect: { ...editingEquipment.value.effect },
     description: editingEquipment.value.description?.trim() || '',
   };
 
@@ -185,14 +192,21 @@ watch(
               </div>
               <div class="form-row">
                 <FormLabel label="标签" />
-                <FormInput v-model="editingEquipment.tag" placeholder="例如：[单手][近战][锋利]" />
+                <FormArrayInput
+                  v-model="editingEquipment.tag"
+                  placeholder="输入标签后按回车添加"
+                  add-button-text="添加标签"
+                  empty-text="暂无标签"
+                />
               </div>
               <div class="form-row">
                 <FormLabel label="效果" />
-                <FormTextarea
+                <FormKeyValueInput
                   v-model="editingEquipment.effect"
-                  :rows="2"
-                  placeholder="请输入装备效果"
+                  placeholder-key="效果名"
+                  placeholder-value="效果内容"
+                  add-button-text="添加效果"
+                  empty-text="暂无效果条目"
                 />
               </div>
               <div class="form-row">
@@ -232,13 +246,18 @@ watch(
               </span>
             </div>
 
-            <div v-if="item.tag" class="item-tag">
-              <span class="tag-text">{{ item.tag }}</span>
+            <div v-if="item.tag && item.tag.length > 0" class="item-tag">
+              <span v-for="tag in item.tag" :key="tag" class="tag-text">{{ tag }}</span>
             </div>
 
-            <div v-if="item.effect" class="item-effect">
+            <div v-if="Object.keys(item.effect || {}).length > 0" class="item-effect">
               <span class="effect-label">效果：</span>
-              <span class="effect-text">{{ item.effect }}</span>
+              <div class="effect-list">
+                <div v-for="(value, key) in item.effect" :key="key" class="effect-row">
+                  <span class="effect-key">{{ key }}：</span>
+                  <span class="effect-value">{{ value }}</span>
+                </div>
+              </div>
             </div>
 
             <div v-if="item.description" class="item-description">
@@ -253,7 +272,8 @@ watch(
                 :disabled="disabled"
                 @click="startEdit(index)"
               >
-                ✏️ 编辑
+                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                编辑
               </button>
               <button
                 type="button"
@@ -262,7 +282,8 @@ watch(
                 :disabled="disabled"
                 @click="removeEquipment(index)"
               >
-                🗑️ 删除
+                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                删除
               </button>
             </div>
           </template>
@@ -272,7 +293,7 @@ watch(
 
     <!-- 空状态 -->
     <div v-else class="empty-state">
-      <span class="empty-icon">⚔️</span>
+      <span class="empty-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
       <span class="empty-text">暂无装备，点击下方按钮添加</span>
     </div>
 
@@ -280,7 +301,9 @@ watch(
     <div v-if="showAddForm && canAddMore" class="add-form">
       <div class="add-form-header">
         <span class="form-title">添加新装备</span>
-        <button type="button" class="close-btn" @click="toggleAddForm">✕</button>
+        <button type="button" class="close-btn" @click="toggleAddForm">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
       </div>
       <div class="form-row">
         <FormLabel label="装备名称" required />
@@ -298,11 +321,22 @@ watch(
       </div>
       <div class="form-row">
         <FormLabel label="标签" />
-        <FormInput v-model="newEquipment.tag" placeholder="例如：[单手][近战][锋利]" />
+        <FormArrayInput
+          v-model="newEquipment.tag"
+          placeholder="输入标签后按回车添加"
+          add-button-text="添加标签"
+          empty-text="暂无标签"
+        />
       </div>
       <div class="form-row">
         <FormLabel label="效果" />
-        <FormTextarea v-model="newEquipment.effect" :rows="2" placeholder="请输入装备效果" />
+        <FormKeyValueInput
+          v-model="newEquipment.effect"
+          placeholder-key="效果名"
+          placeholder-value="效果内容"
+          add-button-text="添加效果"
+          empty-text="暂无效果条目"
+        />
       </div>
       <div class="form-row">
         <FormLabel label="描述" />
@@ -449,9 +483,13 @@ watch(
 
 .item-tag {
   margin-bottom: var(--spacing-xs);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 
   .tag-text {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     padding: 2px 8px;
     background: rgba(212, 175, 55, 0.15);
     border: 1px solid rgba(212, 175, 55, 0.3);
@@ -459,6 +497,29 @@ watch(
     font-size: 0.8rem;
     color: var(--accent-color);
   }
+}
+
+.effect-list {
+  margin-top: var(--spacing-xs);
+  display: grid;
+  gap: 4px;
+}
+
+.effect-row {
+  display: grid;
+  grid-template-columns: minmax(64px, max-content) 1fr;
+  gap: var(--spacing-xs);
+  font-size: 0.85rem;
+  color: var(--text-color);
+}
+
+.effect-key {
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.effect-value {
+  color: var(--text-color);
 }
 
 .item-description {
@@ -475,6 +536,10 @@ watch(
   margin-top: var(--spacing-sm);
   padding-top: var(--spacing-sm);
   border-top: 1px solid var(--border-color-light);
+
+  i {
+    margin-right: var(--spacing-xs);
+  }
 }
 
 .action-btn {

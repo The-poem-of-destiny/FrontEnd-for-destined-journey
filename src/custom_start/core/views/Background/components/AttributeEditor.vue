@@ -36,11 +36,11 @@ const emit = defineEmits<Emits>();
 
 // 属性配置
 const attributeConfig = [
-  { key: 'strength', label: '力量', icon: '💪' },
-  { key: 'dexterity', label: '敏捷', icon: '🏃' },
-  { key: 'constitution', label: '体质', icon: '❤️' },
-  { key: 'intelligence', label: '智力', icon: '🧠' },
-  { key: 'mind', label: '精神', icon: '✨' },
+  { key: 'strength', label: '力量', icon: 'fa-solid fa-dumbbell' },
+  { key: 'dexterity', label: '敏捷', icon: 'fa-solid fa-person-running' },
+  { key: 'constitution', label: '体质', icon: 'fa-solid fa-heart-pulse' },
+  { key: 'intelligence', label: '智力', icon: 'fa-solid fa-brain' },
+  { key: 'mind', label: '精神', icon: 'fa-solid fa-wand-magic-sparkles' },
 ] as const;
 
 // 计算总属性点
@@ -61,7 +61,11 @@ const updateAttribute = (key: keyof Attributes, value: number) => {
   <div class="attribute-editor" :class="{ 'is-disabled': disabled }">
     <div class="attribute-grid">
       <div v-for="attr in attributeConfig" :key="attr.key" class="attribute-item">
-        <FormLabel :label="`${attr.icon} ${attr.label}`" />
+        <FormLabel :label="attr.label">
+          <template #icon>
+            <i :class="['label-icon', attr.icon]" aria-hidden="true"></i>
+          </template>
+        </FormLabel>
         <FormNumber
           :model-value="modelValue[attr.key]"
           :min="min"
@@ -89,6 +93,10 @@ const updateAttribute = (key: keyof Attributes, value: number) => {
   &.is-disabled {
     opacity: 0.6;
     pointer-events: none;
+  }
+
+  :deep(.label-icon) {
+    color: var(--accent-color);
   }
 }
 

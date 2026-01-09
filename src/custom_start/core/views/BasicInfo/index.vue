@@ -8,7 +8,6 @@ import {
   FormStepper,
   FormTextarea,
 } from '../../components/Form';
-import { randomGenerateBus, resetPageBus } from '../../composables';
 import {
   ATTRIBUTES,
   BASE_STAT,
@@ -51,56 +50,6 @@ const levelTierName = computed(() => {
 
   return tierName;
 });
-
-// 使用 EventBus 监听随机生成和重置事件
-randomGenerateBus.on(() => randomGenerate());
-resetPageBus.on(() => resetPage());
-
-// 随机生成基本信息
-const randomGenerate = () => {
-  // 随机性别（排除自定义）
-  const genderList = genders.value.filter(g => g !== '自定义');
-  character.value.gender = genderList[Math.floor(Math.random() * genderList.length)] || '男';
-
-  // 随机年龄 (18-100)
-  character.value.age = Math.floor(Math.random() * 83) + 18;
-
-  // 随机种族（排除自定义）
-  const races = raceOptions.value.filter(r => r !== '自定义');
-  character.value.race = races[Math.floor(Math.random() * races.length)] || '人类';
-
-  // 随机身份（排除自定义）
-  const identities = identityOptions.value.filter(i => i !== '自定义');
-  character.value.identity =
-    identities[Math.floor(Math.random() * identities.length)] || '自由平民';
-
-  // 随机等级 (1-10)
-  character.value.level = Math.floor(Math.random() * MAX_LEVEL) + MIN_LEVEL;
-
-  // 随机出生地（排除自定义）
-  const locations = startLocations.value.filter(l => l !== '自定义');
-  character.value.startLocation =
-    locations[Math.floor(Math.random() * locations.length)] || '自定义';
-
-  console.log('基本信息已随机生成');
-};
-
-// 重置页面
-const resetPage = () => {
-  character.value.name = '';
-  character.value.gender = '男';
-  character.value.customGender = '';
-  character.value.age = 18;
-  character.value.race = '人类';
-  character.value.customRace = '';
-  character.value.identity = '自由平民';
-  character.value.customIdentity = '';
-  character.value.level = 1;
-  character.value.startLocation = '大陆东南部区域-索伦蒂斯王国';
-  character.value.customStartLocation = '';
-
-  console.log('基本信息已重置');
-};
 </script>
 
 <template>

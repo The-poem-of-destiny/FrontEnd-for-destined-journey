@@ -1,5 +1,6 @@
 export { default as FormArrayInput } from './FormArrayInput.vue';
 export { default as FormInput } from './FormInput.vue';
+export { default as FormKeyValueInput } from './FormKeyValueInput.vue';
 export { default as FormLabel } from './FormLabel.vue';
 export { default as FormNumber } from './FormNumber.vue';
 export { default as FormRadio } from './FormRadio.vue';

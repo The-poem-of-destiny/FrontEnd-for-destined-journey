@@ -3,27 +3,6 @@ import { RARITY_MAP } from '../data/constants';
 import type { Background, CharacterConfig, DestinedOne, Equipment, Item, Skill } from '../types';
 
 /**
- * 解析货币描述，提取金币、银币、铜币数量
- */
-function parseCurrency(description: string): { gold: number; silver: number; copper: number } {
-  const result = { gold: 0, silver: 0, copper: 0 };
-
-  // 匹配金币
-  const goldMatch = description.match(/(\d+)金币/);
-  if (goldMatch) result.gold = parseInt(goldMatch[1]);
-
-  // 匹配银币
-  const silverMatch = description.match(/(\d+)银币/);
-  if (silverMatch) result.silver = parseInt(silverMatch[1]);
-
-  // 匹配铜币
-  const copperMatch = description.match(/(\d+)铜币/);
-  if (copperMatch) result.copper = parseInt(copperMatch[1]);
-
-  return result;
-}
-
-/**
  * 将角色数据写入到 MVU 变量中
  * 使用 lodash 的 _.set 直接操作 stat_data，然后通过 replaceMvuData 写回
  */
@@ -44,7 +23,7 @@ export async function writeCharacterToMvu(
   // 命运点数
   _.set(mvuData, 'stat_data.命定系统.命运点数', character.destinyPoints);
 
-  // 技能列表：使用 _.fromPairs + _.map 将数组转为以 name 为键的对象
+  // 新 schema: 主角.技能
   const skillsData = _.fromPairs(
     _.map(presetSkills, skill => [
       skill.name,
@@ -52,57 +31,30 @@ export async function writeCharacterToMvu(
         品质: _.get(RARITY_MAP, skill.rarity, '普通'),
         类型: skill.type,
         消耗: skill.consume || '',
-        标签: skill.tag,
-        效果: skill.effect,
+        标签: skill.tag || [],
+        效果: skill.effect || {},
         描述: skill.description,
       },
     ]),
   );
-  _.set(mvuData, 'stat_data.角色.技能列表', skillsData);
+  _.set(mvuData, 'stat_data.主角.技能', skillsData);
 
-  // 货币初始化
-  let goldTotal = 0;
-  let silverTotal = 0;
-  let copperTotal = 0;
-
-  // 分离货币和普通道具
-  const [currencyItems, normalItems] = _.partition(presetItems, item => item.type === '货币');
-
-  // 计算货币总额
-  const currencyTotals = _.reduce(
-    currencyItems,
-    (acc, item) => {
-      const currency = parseCurrency(item.description);
-      return {
-        gold: acc.gold + currency.gold,
-        silver: acc.silver + currency.silver,
-        copper: acc.copper + currency.copper,
-      };
-    },
-    { gold: 0, silver: 0, copper: 0 },
-  );
-  goldTotal = currencyTotals.gold;
-  silverTotal = currencyTotals.silver;
-  copperTotal = currencyTotals.copper;
-
-  // 背包数据
+  // 新 schema: 主角.背包 / 主角.金钱
   const bagData = _.fromPairs(
-    _.map(normalItems, item => [
+    _.map(presetItems, item => [
       item.name,
       {
         品质: _.get(RARITY_MAP, item.rarity, '普通'),
         数量: item.quantity || 1,
         类型: item.type,
-        标签: item.tag,
-        效果: item.effect,
+        标签: item.tag || [],
+        效果: item.effect || {},
         描述: item.description,
       },
     ]),
   );
-  _.set(mvuData, 'stat_data.背包', bagData);
-  _.set(mvuData, 'stat_data.货币.金币', goldTotal);
-  _.set(mvuData, 'stat_data.货币.银币', silverTotal);
-  _.set(mvuData, 'stat_data.货币.铜币', copperTotal);
+  _.set(mvuData, 'stat_data.主角.背包', bagData);
+  _.set(mvuData, 'stat_data.主角.金钱', Math.max(0, Math.round(character.money)));
 
   // 命定之人
   const destinedOnesData = _.fromPairs(
@@ -116,9 +68,10 @@ export async function writeCharacterToMvu(
             {
               品质: _.get(RARITY_MAP, eq.rarity || '', '普通'),
               类型: eq.type || '',
-              标签: eq.tag || '',
-              效果: eq.effect || '',
+              标签: eq.tag || [],
+              效果: eq.effect || {},
               描述: eq.description || '',
+              位置: eq.position || '',
             },
           ])
           .value(),
@@ -132,8 +85,8 @@ export async function writeCharacterToMvu(
             品质: _.get(RARITY_MAP, skill.rarity, '普通'),
             类型: skill.type,
             消耗: skill.consume || '',
-            标签: skill.tag,
-            效果: skill.effect,
+            标签: skill.tag || [],
+            效果: skill.effect || {},
             描述: skill.description,
           },
         ]),
@@ -142,7 +95,8 @@ export async function writeCharacterToMvu(
       return [
         one.name,
         {
-          是否在场: '是',
+          // 新 schema: 命定之人字段
+          是否在场: true,
           生命层级: one.lifeLevel,
           等级: one.level,
           种族: one.race,
@@ -150,8 +104,8 @@ export async function writeCharacterToMvu(
           职业: [...one.career],
           性格: one.personality,
           喜爱: one.like,
-          外貌特质: one.app,
-          衣物装饰: one.cloth,
+          外貌: one.app,
+          着装: one.cloth,
           属性: {
             力量: one.attributes.strength,
             敏捷: one.attributes.dexterity,
@@ -160,11 +114,18 @@ export async function writeCharacterToMvu(
             精神: one.attributes.mind,
           },
           登神长阶: {
-            是否开启: one.stairway.isOpen ? '是' : '否',
+            是否开启: one.stairway.isOpen,
+            要素: one.stairway.elements ?? {},
+            权能: one.stairway.powers ?? {},
+            法则: one.stairway.laws ?? {},
+            神位: one.stairway.godlyRank ?? '',
+            神国: one.stairway.godKingdom
+              ? { 名称: one.stairway.godKingdom.name, 描述: one.stairway.godKingdom.description }
+              : { 名称: '', 描述: '' },
           },
-          是否缔结契约: one.isContract ? '是' : '否',
+          是否缔结契约: one.isContract,
           好感度: one.affinity,
-          评价: one.comment || '',
+          心里话: one.comment || '',
           背景故事: one.backgroundInfo || '',
           装备: equipData,
           技能: skillData,
@@ -231,8 +192,13 @@ export function generateAIPrompt(
       lines.push(`- 名称: ${eq.name}`);
       lines.push(`  类型: ${eq.type}`);
       lines.push(`  品质: ${RARITY_MAP[eq.rarity] || eq.rarity}`);
-      if (eq.tag) lines.push(`  标签: ${eq.tag}`);
-      lines.push(`  效果: ${eq.effect}`);
+      if (eq.tag && eq.tag.length > 0) lines.push(`  标签: ${eq.tag.join('、')}`);
+      if (!_.isEmpty(eq.effect)) {
+        lines.push('  效果:');
+        _.forEach(eq.effect, (value, key) => {
+          lines.push(`    - ${key}: ${value}`);
+        });
+      }
       if (eq.description) lines.push(`  描述: ${eq.description}`);
       // 在项目之间添加空行（末尾不加）
       if (index < equipments.length - 1) lines.push('');
@@ -249,8 +215,13 @@ export function generateAIPrompt(
       if (item.type) lines.push(`  类型: ${item.type}`);
       if (item.rarity) lines.push(`  品质: ${RARITY_MAP[item.rarity] || item.rarity}`);
       if (item.quantity) lines.push(`  数量: ${item.quantity}`);
-      if (item.tag) lines.push(`  标签: ${item.tag}`);
-      if (item.effect) lines.push(`  效果: ${item.effect}`);
+      if (item.tag && item.tag.length > 0) lines.push(`  标签: ${item.tag.join('、')}`);
+      if (!_.isEmpty(item.effect)) {
+        lines.push('  效果:');
+        _.forEach(item.effect, (value, key) => {
+          lines.push(`    - ${key}: ${value}`);
+        });
+      }
       if (item.description) lines.push(`  描述: ${item.description}`);
       // 在项目之间添加空行（末尾不加）
       if (index < customItems.length - 1) lines.push('');
@@ -266,9 +237,14 @@ export function generateAIPrompt(
       lines.push(`- 名称: ${skill.name || '未命名'}`);
       if (skill.type) lines.push(`  类型: ${skill.type}`);
       if (skill.rarity) lines.push(`  品质: ${RARITY_MAP[skill.rarity] || skill.rarity}`);
-      if (skill.tag) lines.push(`  标签: ${skill.tag}`);
+      if (skill.tag && skill.tag.length > 0) lines.push(`  标签: ${skill.tag.join('、')}`);
       if (skill.consume) lines.push(`  消耗: ${skill.consume}`);
-      if (skill.effect) lines.push(`  效果: ${skill.effect}`);
+      if (!_.isEmpty(skill.effect)) {
+        lines.push('  效果:');
+        _.forEach(skill.effect, (value, key) => {
+          lines.push(`    - ${key}: ${value}`);
+        });
+      }
       if (skill.description) lines.push(`  描述: ${skill.description}`);
       // 在项目之间添加空行（末尾不加）
       if (index < customSkills.length - 1) lines.push('');
@@ -307,8 +283,13 @@ export function generateAIPrompt(
             lines.push(`    - 名称: ${eq.name}`);
             if (eq.type) lines.push(`      类型: ${eq.type}`);
             if (eq.rarity) lines.push(`      品质: ${RARITY_MAP[eq.rarity] || eq.rarity}`);
-            if (eq.tag) lines.push(`      标签: ${eq.tag}`);
-            if (eq.effect) lines.push(`      效果: ${eq.effect}`);
+            if (eq.tag && eq.tag.length > 0) lines.push(`      标签: ${eq.tag.join('、')}`);
+            if (!_.isEmpty(eq.effect)) {
+              lines.push('      效果:');
+              _.forEach(eq.effect, (value, key) => {
+                lines.push(`        - ${key}: ${value}`);
+              });
+            }
             if (eq.description) lines.push(`      描述: ${eq.description}`);
             // 在装备之间添加空行（末尾不加）
             if (eqIndex < validEquips.length - 1) lines.push('');
@@ -319,7 +300,7 @@ export function generateAIPrompt(
         lines.push(`  登神长阶: 已开启`);
         if (one.stairway.elements?.描述) lines.push(`    描述: ${one.stairway.elements.描述}`);
       }
-      if (one.comment) lines.push(`  评价: ${one.comment}`);
+      if (one.comment) lines.push(`  心里话: ${one.comment}`);
       if (one.backgroundInfo) lines.push(`  背景: ${one.backgroundInfo}`);
       if (one.skills.length > 0) {
         lines.push(`  技能:`);
@@ -327,9 +308,14 @@ export function generateAIPrompt(
           lines.push(`    - 名称: ${sk.name}`);
           if (sk.type) lines.push(`      类型: ${sk.type}`);
           if (sk.rarity) lines.push(`      品质: ${RARITY_MAP[sk.rarity] || sk.rarity}`);
-          if (sk.tag) lines.push(`      标签: ${sk.tag}`);
+          if (sk.tag && sk.tag.length > 0) lines.push(`      标签: ${sk.tag.join('、')}`);
           if (sk.consume) lines.push(`      消耗: ${sk.consume}`);
-          if (sk.effect) lines.push(`      效果: ${sk.effect}`);
+          if (!_.isEmpty(sk.effect)) {
+            lines.push('      效果:');
+            _.forEach(sk.effect, (value, key) => {
+              lines.push(`        - ${key}: ${value}`);
+            });
+          }
           if (sk.description) lines.push(`      描述: ${sk.description}`);
           // 在技能之间添加空行（末尾不加）
           if (skIndex < one.skills.length - 1) lines.push('');

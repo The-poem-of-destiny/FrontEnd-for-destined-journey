@@ -13,9 +13,9 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const categories = [
-  { key: 'equipment', label: '装备', icon: '⚔️' },
-  { key: 'item', label: '道具', icon: '🎒' },
-  { key: 'skill', label: '技能', icon: '✨' },
+  { key: 'equipment', label: '装备', icon: 'fa-solid fa-shield-halved' },
+  { key: 'item', label: '道具', icon: 'fa-solid fa-box-open' },
+  { key: 'skill', label: '技能', icon: 'fa-solid fa-wand-magic' },
 ] as const;
 
 const handleTabClick = (key: CategoryType) => {
@@ -32,7 +32,9 @@ const handleTabClick = (key: CategoryType) => {
       :class="{ active: modelValue === category.key }"
       @click="handleTabClick(category.key as CategoryType)"
     >
-      <span class="tab-icon">{{ category.icon }}</span>
+      <span class="tab-icon" aria-hidden="true">
+        <i :class="category.icon"></i>
+      </span>
       <span class="tab-label">{{ category.label }}</span>
     </button>
   </div>

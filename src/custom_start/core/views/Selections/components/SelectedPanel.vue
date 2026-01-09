@@ -1,13 +1,11 @@
 <script setup lang="ts">
+import { useStorePoints } from '../../../composables/use-store-points';
 import type { Equipment, Item, Skill } from '../../../types';
 
 interface Props {
   equipments: Equipment[];
   items: Item[];
   skills: Skill[];
-  availablePoints: number;
-  totalPoints: number;
-  consumedPoints: number;
 }
 
 interface Emits {
@@ -17,6 +15,8 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+
+const { availablePoints, totalPoints, consumedPoints } = useStorePoints();
 
 const handleRemove = (item: Equipment | Item | Skill, type: 'equipment' | 'item' | 'skill') => {
   emit('remove', item, type);
@@ -60,7 +60,10 @@ const totalCost = computed(() =>
       <!-- 装备列表 -->
       <div v-if="equipments.length > 0" class="section">
         <div class="section-title">
-          <span>⚔️ 装备</span>
+          <span class="section-label">
+            <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+            <span>装备</span>
+          </span>
           <span class="count">({{ equipments.length }})</span>
         </div>
         <div class="item-list">
@@ -70,7 +73,7 @@ const totalCost = computed(() =>
               <div class="item-cost">{{ item.cost }} 点</div>
             </div>
             <button class="remove-btn" @click="handleRemove(item, 'equipment')">
-              <i class="fas fa-xmark"></i>
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -79,7 +82,10 @@ const totalCost = computed(() =>
       <!-- 道具列表 -->
       <div v-if="items.length > 0" class="section">
         <div class="section-title">
-          <span>🎒 道具</span>
+          <span class="section-label">
+            <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+            <span>道具</span>
+          </span>
           <span class="count">({{ items.length }})</span>
         </div>
         <div class="item-list">
@@ -92,7 +98,7 @@ const totalCost = computed(() =>
               <div class="item-cost">{{ item.cost }} 点</div>
             </div>
             <button class="remove-btn" @click="handleRemove(item, 'item')">
-              <i class="fas fa-xmark"></i>
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -101,7 +107,10 @@ const totalCost = computed(() =>
       <!-- 技能列表 -->
       <div v-if="skills.length > 0" class="section">
         <div class="section-title">
-          <span>✨ 技能</span>
+          <span class="section-label">
+            <i class="fa-solid fa-wand-magic" aria-hidden="true"></i>
+            <span>技能</span>
+          </span>
           <span class="count">({{ skills.length }})</span>
         </div>
         <div class="item-list">
@@ -111,7 +120,7 @@ const totalCost = computed(() =>
               <div class="item-cost">{{ item.cost }} 点</div>
             </div>
             <button class="remove-btn" @click="handleRemove(item, 'skill')">
-              <i class="fas fa-xmark"></i>
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -119,7 +128,7 @@ const totalCost = computed(() =>
 
       <!-- 空状态 -->
       <div v-if="totalCount === 0" class="empty-state">
-        <div class="empty-icon">🎯</div>
+        <div class="empty-icon"><i class="fa-solid fa-bullseye" aria-hidden="true"></i></div>
         <div class="empty-text">还没有选择任何物品</div>
       </div>
     </div>
@@ -234,6 +243,17 @@ const totalCost = computed(() =>
         margin-bottom: var(--spacing-sm);
         padding-bottom: var(--spacing-xs);
         border-bottom: 1px solid var(--border-color-light);
+
+        .section-label {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--spacing-xs);
+
+          i {
+            font-size: 1rem;
+            color: var(--accent-color);
+          }
+        }
 
         .count {
           font-size: 0.9rem;

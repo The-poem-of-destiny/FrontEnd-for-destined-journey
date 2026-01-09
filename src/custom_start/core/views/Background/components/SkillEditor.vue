@@ -3,7 +3,14 @@
  * 技能编辑器组件
  */
 import { computed, ref, watch } from 'vue';
-import { FormInput, FormLabel, FormSelect, FormTextarea } from '../../../components/Form';
+import {
+  FormArrayInput,
+  FormInput,
+  FormKeyValueInput,
+  FormLabel,
+  FormSelect,
+  FormTextarea,
+} from '../../../components/Form';
 import {
   getRarityColor,
   getRarityLabel,
@@ -15,10 +22,10 @@ import {
 export interface SkillItem {
   name: string;
   type: string;
-  tag: string;
+  tag: string[];
   rarity: string;
   consume: string;
-  effect: string;
+  effect: Record<string, string>;
   description: string;
 }
 
@@ -50,10 +57,10 @@ const editingIndex = ref<number | null>(null);
 const newSkill = ref<SkillItem>({
   name: '',
   type: SKILL_TYPE_OPTIONS[0].value,
-  tag: '',
+  tag: [],
   rarity: 'common',
   consume: '',
-  effect: '',
+  effect: {},
   description: '',
 });
 
@@ -73,10 +80,10 @@ const resetNewSkill = () => {
   newSkill.value = {
     name: '',
     type: SKILL_TYPE_OPTIONS[0].value,
-    tag: '',
+    tag: [],
     rarity: 'common',
     consume: '',
-    effect: '',
+    effect: {},
     description: '',
   };
 };
@@ -88,9 +95,9 @@ const addSkill = () => {
   const newItem: SkillItem = {
     ...newSkill.value,
     name: newSkill.value.name.trim(),
-    tag: newSkill.value.tag?.trim() || '',
+    tag: newSkill.value.tag.filter(tag => tag.trim() !== ''),
     consume: newSkill.value.consume?.trim() || '',
-    effect: newSkill.value.effect?.trim() || '',
+    effect: { ...newSkill.value.effect },
     description: newSkill.value.description?.trim() || '',
   };
 
@@ -124,9 +131,9 @@ const saveEdit = () => {
   newArray[editingIndex.value] = {
     ...editingSkill.value,
     name: editingSkill.value.name.trim(),
-    tag: editingSkill.value.tag?.trim() || '',
+    tag: editingSkill.value.tag.filter(tag => tag.trim() !== ''),
     consume: editingSkill.value.consume?.trim() || '',
-    effect: editingSkill.value.effect?.trim() || '',
+    effect: { ...editingSkill.value.effect },
     description: editingSkill.value.description?.trim() || '',
   };
 
@@ -190,7 +197,12 @@ watch(
               </div>
               <div class="form-row">
                 <FormLabel label="标签" />
-                <FormInput v-model="editingSkill.tag" placeholder="例如：[火系][范围][持续]" />
+                <FormArrayInput
+                  v-model="editingSkill.tag"
+                  placeholder="输入标签后按回车添加"
+                  add-button-text="添加标签"
+                  empty-text="暂无标签"
+                />
               </div>
               <div class="form-row">
                 <FormLabel label="消耗" />
@@ -201,10 +213,12 @@ watch(
               </div>
               <div class="form-row">
                 <FormLabel label="效果" />
-                <FormTextarea
+                <FormKeyValueInput
                   v-model="editingSkill.effect"
-                  :rows="3"
-                  placeholder="请输入技能效果"
+                  placeholder-key="效果名"
+                  placeholder-value="效果内容"
+                  add-button-text="添加效果"
+                  empty-text="暂无效果条目"
                 />
               </div>
               <div class="form-row">
@@ -244,8 +258,8 @@ watch(
               </span>
             </div>
 
-            <div v-if="item.tag" class="item-tag">
-              <span class="tag-text">{{ item.tag }}</span>
+            <div v-if="item.tag && item.tag.length > 0" class="item-tag">
+              <span v-for="tag in item.tag" :key="tag" class="tag-text">{{ tag }}</span>
             </div>
 
             <div v-if="item.consume" class="item-consume">
@@ -253,9 +267,14 @@ watch(
               <span class="consume-text">{{ item.consume }}</span>
             </div>
 
-            <div v-if="item.effect" class="item-effect">
+            <div v-if="Object.keys(item.effect || {}).length > 0" class="item-effect">
               <span class="effect-label">效果：</span>
-              <span class="effect-text">{{ item.effect }}</span>
+              <div class="effect-list">
+                <div v-for="(value, key) in item.effect" :key="key" class="effect-row">
+                  <span class="effect-key">{{ key }}：</span>
+                  <span class="effect-value">{{ value }}</span>
+                </div>
+              </div>
             </div>
 
             <div v-if="item.description" class="item-description">
@@ -270,7 +289,8 @@ watch(
                 :disabled="disabled"
                 @click="startEdit(index)"
               >
-                ✏️ 编辑
+                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                编辑
               </button>
               <button
                 type="button"
@@ -279,7 +299,8 @@ watch(
                 :disabled="disabled"
                 @click="removeSkill(index)"
               >
-                🗑️ 删除
+                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                删除
               </button>
             </div>
           </template>
@@ -289,7 +310,7 @@ watch(
 
     <!-- 空状态 -->
     <div v-else class="empty-state">
-      <span class="empty-icon">✨</span>
+      <span class="empty-icon"><i class="fa-solid fa-wand-magic" aria-hidden="true"></i></span>
       <span class="empty-text">暂无技能，点击下方按钮添加</span>
     </div>
 
@@ -297,7 +318,9 @@ watch(
     <div v-if="showAddForm && canAddMore" class="add-form">
       <div class="add-form-header">
         <span class="form-title">添加新技能</span>
-        <button type="button" class="close-btn" @click="toggleAddForm">✕</button>
+        <button type="button" class="close-btn" @click="toggleAddForm">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
       </div>
       <div class="form-row">
         <FormLabel label="技能名称" required />
@@ -315,7 +338,12 @@ watch(
       </div>
       <div class="form-row">
         <FormLabel label="标签" />
-        <FormInput v-model="newSkill.tag" placeholder="例如：[火系][范围][持续]" />
+        <FormArrayInput
+          v-model="newSkill.tag"
+          placeholder="输入标签后按回车添加"
+          add-button-text="添加标签"
+          empty-text="暂无标签"
+        />
       </div>
       <div class="form-row">
         <FormLabel label="消耗" />
@@ -323,7 +351,13 @@ watch(
       </div>
       <div class="form-row">
         <FormLabel label="效果" />
-        <FormTextarea v-model="newSkill.effect" :rows="3" placeholder="请输入技能效果" />
+        <FormKeyValueInput
+          v-model="newSkill.effect"
+          placeholder-key="效果名"
+          placeholder-value="效果内容"
+          add-button-text="添加效果"
+          empty-text="暂无效果条目"
+        />
       </div>
       <div class="form-row">
         <FormLabel label="描述" />
@@ -454,9 +488,13 @@ watch(
 
 .item-tag {
   margin-bottom: var(--spacing-xs);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 
   .tag-text {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     padding: 2px 8px;
     background: rgba(212, 175, 55, 0.15);
     border: 1px solid rgba(212, 175, 55, 0.3);
@@ -493,6 +531,29 @@ watch(
   }
 }
 
+.effect-list {
+  margin-top: var(--spacing-xs);
+  display: grid;
+  gap: 4px;
+}
+
+.effect-row {
+  display: grid;
+  grid-template-columns: minmax(64px, max-content) 1fr;
+  gap: var(--spacing-xs);
+  font-size: 0.85rem;
+  color: var(--text-color);
+}
+
+.effect-key {
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.effect-value {
+  color: var(--text-color);
+}
+
 .item-description {
   font-size: 0.85rem;
   color: var(--text-light);
@@ -507,6 +568,10 @@ watch(
   margin-top: var(--spacing-sm);
   padding-top: var(--spacing-sm);
   border-top: 1px solid var(--border-color-light);
+
+  i {
+    margin-right: var(--spacing-xs);
+  }
 }
 
 .action-btn {

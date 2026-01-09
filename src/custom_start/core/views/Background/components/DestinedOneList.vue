@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { parseMacroDeep, useExpandableCards, useSelectableList } from '../../../composables';
+import { useCharacterStore } from '../../../store/character';
 import type { DestinedOne } from '../../../types';
 
 interface Props {
   items: DestinedOne[];
-  selectedItems: DestinedOne[];
-  availablePoints: number;
 }
 
 interface Emits {
@@ -16,10 +15,16 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
+const characterStore = useCharacterStore();
+
+const availablePoints = computed(() => {
+  return characterStore.character.reincarnationPoints - characterStore.consumedPoints;
+});
+
 // 使用通用可选列表逻辑
 const { isSelected, canSelect } = useSelectableList(
-  () => props.selectedItems,
-  () => props.availablePoints,
+  () => characterStore.selectedDestinedOnes,
+  () => availablePoints.value,
 );
 
 // 使用通用折叠状态管理
@@ -159,8 +164,16 @@ watch(
             <div v-for="(equip, index) in item.equip" :key="index" class="equipment-item">
               <div class="equip-name">{{ equip.name }}</div>
               <div v-if="equip.type" class="equip-info">类型：{{ equip.type }}</div>
-              <div v-if="equip.tag" class="equip-info">标签：{{ equip.tag }}</div>
-              <div v-if="equip.effect" class="equip-info">效果：{{ equip.effect }}</div>
+              <div v-if="equip.tag && equip.tag.length > 0" class="equip-info">
+                标签：{{ equip.tag.join('、') }}
+              </div>
+              <div v-if="Object.keys(equip.effect || {}).length > 0" class="equip-info">
+                效果：
+                <span v-for="(value, key) in equip.effect" :key="key" class="effect-inline">
+                  {{ key }}：{{ value }}
+                </span>
+              </div>
+              <div v-else class="equip-info">效果：无</div>
               <div v-if="equip.description" class="equip-desc">{{ equip.description }}</div>
             </div>
           </div>
@@ -174,9 +187,16 @@ watch(
                 <span class="skill-name">{{ skill.name }}</span>
                 <span class="skill-type">{{ skill.type }}</span>
               </div>
-              <div v-if="skill.tag" class="skill-tag">{{ skill.tag }}</div>
+              <div v-if="skill.tag && skill.tag.length > 0" class="skill-tag">
+                {{ skill.tag.join('、') }}
+              </div>
               <div v-if="skill.consume" class="skill-consume">消耗：{{ skill.consume }}</div>
-              <div class="skill-effect">{{ skill.effect }}</div>
+              <div v-if="Object.keys(skill.effect || {}).length > 0" class="skill-effect">
+                <span v-for="(value, key) in skill.effect" :key="key" class="effect-inline">
+                  {{ key }}：{{ value }}
+                </span>
+              </div>
+              <div v-else class="skill-effect">无效果</div>
               <div class="skill-desc">{{ skill.description }}</div>
             </div>
           </div>
@@ -459,6 +479,17 @@ watch(
   font-size: 0.8rem;
   color: var(--text-light);
   margin-bottom: var(--spacing-xs);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.effect-inline {
+  padding: 2px 6px;
+  background: rgba(212, 175, 55, 0.12);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--text-color);
 }
 
 .equip-desc,

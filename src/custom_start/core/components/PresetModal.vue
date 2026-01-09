@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useCharacterStore } from '../store/character';
 import {
   applyPresetToStore,
@@ -11,6 +11,7 @@ import {
   savePreset,
   type CharacterPreset,
 } from '../utils/preset-manager';
+import { scrollToIframe } from '../utils/scroll';
 
 const props = defineProps<{
   visible: boolean;
@@ -37,16 +38,6 @@ const presetToDelete = ref<string | null>(null);
 // 刷新预设列表
 const refreshPresetList = () => {
   presetList.value = listPresets();
-};
-
-// 滚动到 iframe 位置（让父页面滚动到 iframe 可见区域）
-const scrollToIframe = () => {
-  nextTick(() => {
-    const frameElement = window.frameElement;
-    if (frameElement) {
-      frameElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  });
 };
 
 // 监听弹窗显示状态

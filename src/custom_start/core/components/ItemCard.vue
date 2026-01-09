@@ -59,6 +59,9 @@ const isSkill = (item: Equipment | Item | Skill): item is Skill => {
 const isItem = (item: Equipment | Item | Skill): item is Item => {
   return 'quantity' in item;
 };
+
+const formatEffectEntries = (effect?: Record<string, string>) =>
+  effect ? Object.entries(effect) : [];
 </script>
 
 <template>
@@ -86,9 +89,11 @@ const isItem = (item: Equipment | Item | Skill): item is Item => {
         <span class="info-value">{{ item.type }}</span>
       </div>
 
-      <div v-if="'tag' in item && item.tag" class="item-info">
+      <div v-if="'tag' in item && item.tag && item.tag.length > 0" class="item-info">
         <span class="info-label">标签:</span>
-        <span class="info-value tag">{{ item.tag }}</span>
+        <div class="tag-list">
+          <span v-for="tag in item.tag" :key="tag" class="tag-chip">{{ tag }}</span>
+        </div>
       </div>
 
       <div v-if="isItem(item) && item.quantity" class="item-info">
@@ -101,9 +106,18 @@ const isItem = (item: Equipment | Item | Skill): item is Item => {
         <span class="info-value consume">{{ item.consume }}</span>
       </div>
 
-      <div v-if="'effect' in item && item.effect" class="item-effect">
+      <div v-if="'effect' in item && Object.keys(item.effect || {}).length > 0" class="item-effect">
         <div class="effect-label">效果:</div>
-        <div class="effect-content">{{ item.effect }}</div>
+        <div class="effect-grid">
+          <div
+            v-for="([key, value], index) in formatEffectEntries(item.effect)"
+            :key="`${key}-${index}`"
+            class="effect-row"
+          >
+            <span class="effect-key">{{ key }}</span>
+            <span class="effect-value">{{ value }}</span>
+          </div>
+        </div>
       </div>
 
       <div class="item-description">{{ item.description }}</div>
@@ -207,12 +221,6 @@ const isItem = (item: Equipment | Item | Skill): item is Item => {
       color: var(--text-color);
       flex: 1;
 
-      &.tag {
-        font-family: monospace;
-        font-size: 0.85rem;
-        color: var(--accent-color);
-      }
-
       &.quantity {
         font-family: monospace;
         font-size: 0.9rem;
@@ -225,6 +233,23 @@ const isItem = (item: Equipment | Item | Skill): item is Item => {
         font-size: 0.85rem;
         color: #2196f3;
       }
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .tag-chip {
+      padding: 2px 8px;
+      font-size: 0.8rem;
+      border-radius: 999px;
+      background: rgba(212, 175, 55, 0.15);
+      color: var(--accent-color);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      font-family: var(--font-mono);
     }
   }
 
@@ -242,9 +267,24 @@ const isItem = (item: Equipment | Item | Skill): item is Item => {
       margin-bottom: var(--spacing-xs);
     }
 
-    .effect-content {
+    .effect-grid {
+      display: grid;
+      grid-template-columns: minmax(80px, 120px) 1fr;
+      gap: 6px 12px;
       font-size: 0.85rem;
-      line-height: 1.5;
+      color: var(--text-color);
+    }
+
+    .effect-row {
+      display: contents;
+    }
+
+    .effect-key {
+      color: var(--text-light);
+      font-weight: 600;
+    }
+
+    .effect-value {
       color: var(--text-color);
     }
   }

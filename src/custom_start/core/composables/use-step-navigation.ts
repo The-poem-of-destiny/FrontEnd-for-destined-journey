@@ -1,7 +1,6 @@
 /**
  * 步骤导航 Composable
  */
-import { useEventBus } from '@vueuse/core';
 import type { ComputedRef, Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -12,13 +11,6 @@ import {
   STEP_TO_ROUTE,
   TOTAL_STEPS,
 } from '../router/route-constants';
-
-/**
- * 导航事件总线
- * 用于跨组件通信，替代 provide/inject 的事件触发器
- */
-export const randomGenerateBus = useEventBus<void>('random-generate');
-export const resetPageBus = useEventBus<void>('reset-page');
 
 /**
  * 步骤导航返回类型

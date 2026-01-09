@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import CategorySelectionLayout from '../../components/CategorySelectionLayout.vue';
-import { randomGenerateBus, resetPageBus } from '../../composables';
 import { getBackgrounds } from '../../data/backgrounds';
 import { getAllDestinedOnes } from '../../data/destined-ones';
 import { useCharacterStore } from '../../store/character';
@@ -66,68 +65,12 @@ const handleUpdateCustomDescription = (value: string) => {
   customContentStore.updateCustomBackgroundDescription(value);
 };
 
-// 命运点数兑换
-const handleExchangeDestinyPoints = (reincarnationPoints: number) => {
-  characterStore.exchangeDestinyPoints(reincarnationPoints);
-};
-
-// 随机生成
-const handleRandomGenerate = () => {
-  // 随机选择一个命定之人
-  if (currentDestinedOnes.value.length > 0) {
-    const randomIndex = Math.floor(Math.random() * currentDestinedOnes.value.length);
-    const randomDestinedOne = currentDestinedOnes.value[randomIndex];
-
-    if (availablePoints.value >= randomDestinedOne.cost) {
-      // 清空已选命定之人
-      characterStore.selectedDestinedOnes.splice(0);
-      characterStore.addDestinedOne(randomDestinedOne);
-    }
-  }
-
-  // 随机选择一个背景（排除自定义开局）
-  if (currentBackgrounds.value.length > 0) {
-    // 过滤掉【自定义开局】
-    const validBackgrounds = currentBackgrounds.value.filter(bg => bg.name !== '【自定义开局】');
-
-    if (validBackgrounds.length > 0) {
-      const randomIndex = Math.floor(Math.random() * validBackgrounds.length);
-      const randomBackground = validBackgrounds[randomIndex];
-      characterStore.setBackground(randomBackground);
-    }
-  }
-};
-
-// 重置页面
-const handleReset = () => {
-  characterStore.selectedDestinedOnes.splice(0);
-  characterStore.setBackground(null);
-  customContentStore.updateCustomBackgroundDescription('');
-
-  // 重置命运点数和已兑换的转生点数
-  characterStore.setDestinyPoints(0);
-  characterStore.resetExchangedPoints();
-
-  // 重置到第一个分类
-  if (destinedOneLevels.value.length > 0) {
-    currentLevel.value = destinedOneLevels.value[0];
-  }
-
-  if (backgroundCategories.value.length > 0) {
-    currentBackgroundCategory.value = backgroundCategories.value[0];
-  }
-};
-
 // 清空所有选择
 const handleClearAll = () => {
-  characterStore.selectedDestinedOnes.splice(0);
+  characterStore.clearDestinedOnes();
   characterStore.setBackground(null);
   customContentStore.updateCustomBackgroundDescription('');
 };
-
-// 使用 EventBus 监听随机生成和重置事件
-randomGenerateBus.on(() => handleRandomGenerate());
-resetPageBus.on(() => handleReset());
 
 // 初始化
 onMounted(() => {
@@ -156,8 +99,6 @@ onMounted(() => {
       <div class="destined-ones-content">
         <DestinedOneList
           :items="currentDestinedOnes"
-          :selected-items="characterStore.selectedDestinedOnes"
-          :available-points="availablePoints"
           @select="handleSelectDestinedOne"
           @deselect="handleDeselectDestinedOne"
         />
@@ -168,11 +109,7 @@ onMounted(() => {
     <CustomDestinedOneForm @add="handleAddCustomDestinedOne" />
 
     <!-- 命运点数兑换 -->
-    <DestinyPointsExchange
-      :available-points="availablePoints"
-      :current-destiny-points="characterStore.character.destinyPoints"
-      @exchange="handleExchangeDestinyPoints"
-    />
+    <DestinyPointsExchange />
 
     <!-- 初始剧情区域 - 使用通用布局组件 -->
     <section class="background-section">
@@ -236,7 +173,7 @@ onMounted(() => {
                 <span class="item-name">{{ one.name }}</span>
                 <span class="item-cost">{{ one.cost }} 点</span>
                 <button class="remove-btn" @click="handleDeselectDestinedOne(one)">
-                  <i class="fas fa-xmark"></i>
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                 </button>
               </div>
             </div>

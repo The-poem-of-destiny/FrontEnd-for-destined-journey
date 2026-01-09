@@ -10,7 +10,7 @@ import {
   getTierAttributeBonus,
   INITIAL_REINCARNATION_POINTS,
 } from '../data/base-info';
-import { getActiveSkills, getPassiveSkills } from '../data/skills';
+import { getSkills } from '../data/skills';
 import type {
   Attributes,
   Background,
@@ -48,6 +48,7 @@ export const useCharacterStore = defineStore('character', () => {
     },
     reincarnationPoints: INITIAL_REINCARNATION_POINTS, // 转生点数
     destinyPoints: 0, // 命运点数
+    money: 0,
   });
 
   // 选择的装备、道具、技能
@@ -83,6 +84,8 @@ export const useCharacterStore = defineStore('character', () => {
       _.sumBy(selectedSkills.value, 'cost'),
       // 命定之人消耗
       _.sumBy(selectedDestinedOnes.value, 'cost'),
+      // 金钱兑换消耗 (1:10)
+      Math.ceil(character.value.money / 10),
       // 兑换命运点数消耗的转生点数
       exchangedReincarnationPoints.value,
     ]);
@@ -138,6 +141,7 @@ export const useCharacterStore = defineStore('character', () => {
       },
       reincarnationPoints: INITIAL_REINCARNATION_POINTS,
       destinyPoints: 0,
+      money: 0,
     };
   };
 
@@ -209,11 +213,12 @@ export const useCharacterStore = defineStore('character', () => {
     exchangedReincarnationPoints.value += reincarnationPoints;
   };
 
-  const setDestinyPoints = (points: number) => {
-    character.value.destinyPoints = Math.max(0, points);
+  const resetExchangedPoints = () => {
+    exchangedReincarnationPoints.value = 0;
   };
 
-  const resetExchangedPoints = () => {
+  const resetDestinyExchange = () => {
+    character.value.destinyPoints = 0;
     exchangedReincarnationPoints.value = 0;
   };
 
@@ -260,22 +265,11 @@ export const useCharacterStore = defineStore('character', () => {
       const raceSpecificCategories = _.without(_.keys(getRaceCosts.value), '自定义');
 
       // 获取技能数据
-      const activeSkills = getActiveSkills();
-      const passiveSkills = getPassiveSkills();
+      const skillGroups = getSkills();
 
       // 查找技能所属分类的辅助函数
       const findSkillCategory = (skillName: string): string => {
-        // 在主动技能中查找
-        const activeCategory = _.findKey(activeSkills, skills =>
-          _.some(skills, s => s.name === skillName),
-        );
-        if (activeCategory) return activeCategory;
-
-        // 在被动技能中查找
-        const passiveCategory = _.findKey(passiveSkills, skills =>
-          _.some(skills, s => s.name === skillName),
-        );
-        return passiveCategory || '';
+        return _.findKey(skillGroups, skills => _.some(skills, s => s.name === skillName)) || '';
       };
 
       // 移除不符合当前种族的技能
@@ -332,7 +326,7 @@ export const useCharacterStore = defineStore('character', () => {
     removeDestinedOne,
     setBackground,
     exchangeDestinyPoints,
-    setDestinyPoints,
     resetExchangedPoints,
+    resetDestinyExchange,
   };
 });

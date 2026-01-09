@@ -3,11 +3,11 @@ import { onMounted } from 'vue';
 
 import PresetModal from '../components/PresetModal.vue';
 import { useJourney, usePoints, usePresetModal, useStepNavigation } from '../composables';
-import { STEP_CONFIGS, TOTAL_STEPS } from '../router/route-constants';
+import { STEP_CONFIGS } from '../router/route-constants';
 import { useCharacterStore } from '../store';
 import { findMatchingPreset } from '../utils/preset-manager';
+import { scrollToIframe } from '../utils/scroll';
 
-import ActionButtons from './component/ActionButtons.vue';
 import ContentArea from './component/ContentArea.vue';
 import HeaderControls from './component/HeaderControls.vue';
 import NavigationButtons from './component/NavigationButtons.vue';
@@ -35,16 +35,6 @@ const showSaveConfirm = ref(false);
 
 // 步骤标题（用于 Steps 组件）
 const stepTitles = STEP_CONFIGS.map(c => ({ title: c.shortTitle }));
-
-// 滚动到 iframe 位置
-const scrollToIframe = () => {
-  nextTick(() => {
-    const frameElement = window.frameElement;
-    if (frameElement) {
-      frameElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  });
-};
 
 // 组件挂载时检查是否有预设
 onMounted(() => {
@@ -116,8 +106,6 @@ const nextButtonText = computed(() => {
     <HeaderControls @open-preset="openManageModal" />
 
     <Steps :steps="stepTitles" :step="currentStep" />
-
-    <ActionButtons v-if="currentStep !== TOTAL_STEPS" />
 
     <ContentArea :transition-name="transitionName" />
 

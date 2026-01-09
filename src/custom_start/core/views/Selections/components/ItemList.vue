@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import ItemCard from '../../../components/ItemCard.vue';
 import { useSelectableList } from '../../../composables';
+import { useStorePoints } from '../../../composables/use-store-points';
 import type { Equipment, Item, Skill } from '../../../types';
 
 interface Props {
   items: (Equipment | Item | Skill)[];
   selectedItems: (Equipment | Item | Skill)[];
-  availablePoints: number;
 }
 
 interface Emits {
@@ -17,10 +17,12 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
+const { availablePoints } = useStorePoints();
+
 // 使用通用可选列表逻辑
 const { isSelected, isDisabled } = useSelectableList(
   () => props.selectedItems,
-  () => props.availablePoints,
+  () => availablePoints.value,
 );
 
 const handleSelect = (item: Equipment | Item | Skill) => {
@@ -35,7 +37,7 @@ const handleDeselect = (item: Equipment | Item | Skill) => {
 <template>
   <div class="item-list">
     <div v-if="items.length === 0" class="empty-state">
-      <div class="empty-icon">📦</div>
+      <div class="empty-icon"><i class="fa-solid fa-box-open" aria-hidden="true"></i></div>
       <div class="empty-text">该分类下暂无物品</div>
     </div>
     <div v-else class="item-grid">

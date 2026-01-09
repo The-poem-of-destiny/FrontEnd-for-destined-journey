@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { klona } from 'klona';
 import { computed, ref, watch } from 'vue';
+import ConfirmModal from '../../../components/ConfirmModal.vue';
 import {
   FormArrayInput,
   FormInput,
@@ -26,12 +27,12 @@ const isExpanded = ref(false);
 
 // 层级与等级的映射关系
 const LEVEL_GRADE_MAP: Record<number, { name: string; minGrade: number; maxGrade: number }> = {
-  1: { name: '第一层级 (普通层级)', minGrade: 1, maxGrade: 4 },
-  2: { name: '第二层级 (中坚层级)', minGrade: 5, maxGrade: 8 },
-  3: { name: '第三层级 (精英层级)', minGrade: 9, maxGrade: 12 },
-  4: { name: '第四层级 (史诗层级)', minGrade: 13, maxGrade: 16 },
-  5: { name: '第五层级 (传说层级)', minGrade: 17, maxGrade: 20 },
-  6: { name: '第六层级 (神话层级)', minGrade: 21, maxGrade: 24 },
+  1: { name: '第一层级 (普通)', minGrade: 1, maxGrade: 4 },
+  2: { name: '第二层级 (中坚)', minGrade: 5, maxGrade: 8 },
+  3: { name: '第三层级 (精英)', minGrade: 9, maxGrade: 12 },
+  4: { name: '第四层级 (史诗)', minGrade: 13, maxGrade: 16 },
+  5: { name: '第五层级 (传说)', minGrade: 17, maxGrade: 20 },
+  6: { name: '第六层级 (神话)', minGrade: 21, maxGrade: 24 },
   7: { name: '第七层级 (神祗)', minGrade: 25, maxGrade: 25 },
 };
 // 契约选项
@@ -118,6 +119,10 @@ const itemSkills = computed({
   set: (v: SkillItem[]) => customContentStore.updateCustomDestinedOneForm('itemSkills', v),
 });
 
+// 确认弹窗状态
+const showResetConfirm = ref(false);
+const showAddConfirm = ref(false);
+
 // 计算属性
 const calculatedCost = computed(() => calculateDestinedCost(itemLevel.value));
 const currentLevelInfo = computed(() => LEVEL_GRADE_MAP[itemLevel.value]);
@@ -145,15 +150,42 @@ const resetForm = () => {
   if (levelInfo) itemLifeLevel.value = levelInfo.name;
 };
 
+// 请求清空确认
+const requestReset = () => {
+  showResetConfirm.value = true;
+};
+
+// 确认清空
+const confirmReset = () => {
+  showResetConfirm.value = false;
+  resetForm();
+};
+
+// 取消清空
+const cancelReset = () => {
+  showResetConfirm.value = false;
+};
+
+// 请求添加确认
+const requestAdd = () => {
+  if (!isValid.value) return;
+  showAddConfirm.value = true;
+};
+
+// 取消添加
+const cancelAdd = () => {
+  showAddConfirm.value = false;
+};
+
 // 解析登神长阶
 const parseStairway = (str: string) => {
   if (!str.trim()) return { isOpen: false };
   return { isOpen: true, elements: { 描述: str } };
 };
 
-// 添加自定义命定之人
-const handleAdd = () => {
-  if (!isValid.value) return;
+// 添加自定义命定之人（确认后执行）
+const confirmAdd = () => {
+  showAddConfirm.value = false;
 
   const newItem: DestinedOne = {
     name: itemName.value.trim(),
@@ -270,16 +302,22 @@ const handleAdd = () => {
         <FormTextarea v-model="itemLike" placeholder="描述喜好和习惯..." :rows="2" />
       </div>
 
-      <!-- 外貌特质 -->
+      <!-- 外貌 -->
       <div class="form-row">
-        <FormLabel label="外貌特质" />
+        <FormLabel label="外貌" />
         <FormTextarea v-model="itemApp" placeholder="描述外貌特征..." :rows="2" />
       </div>
 
-      <!-- 衣物装饰 -->
+      <!-- 衣物 -->
       <div class="form-row">
-        <FormLabel label="衣物装饰" />
+        <FormLabel label="着装" />
         <FormTextarea v-model="itemCloth" placeholder="描述穿着打扮..." :rows="2" />
+      </div>
+
+      <!-- 属性 -->
+      <div class="form-row">
+        <FormLabel label="属性" />
+        <AttributeEditor v-model="itemAttributes" :min="1" :max="20" />
       </div>
 
       <!-- 装备 -->
@@ -288,10 +326,10 @@ const handleAdd = () => {
         <EquipmentEditor v-model="itemEquip" :max-items="10" />
       </div>
 
-      <!-- 属性 -->
+      <!-- 技能 -->
       <div class="form-row">
-        <FormLabel label="属性" />
-        <AttributeEditor v-model="itemAttributes" :min="1" :max="20" />
+        <FormLabel label="技能" />
+        <SkillEditor v-model="itemSkills" :max-items="10" />
       </div>
 
       <!-- 登神长阶 -->
@@ -320,9 +358,9 @@ const handleAdd = () => {
         <FormNumber v-model="itemAffinity" :min="-100" :max="100" placeholder="49" />
       </div>
 
-      <!-- 评价 -->
+      <!-- 心里话 -->
       <div class="form-row">
-        <FormLabel label="评价" />
+        <FormLabel label="心里话" />
         <FormTextarea v-model="itemComment" placeholder="该角色对你的评价..." :rows="2" />
       </div>
 
@@ -332,18 +370,36 @@ const handleAdd = () => {
         <FormTextarea v-model="itemBackgroundInfo" placeholder="描述背景故事..." :rows="3" />
       </div>
 
-      <!-- 技能 -->
-      <div class="form-row">
-        <FormLabel label="技能" />
-        <SkillEditor v-model="itemSkills" :max-items="10" />
-      </div>
-
       <!-- 操作按钮 -->
       <div class="form-actions">
-        <button class="btn-reset" @click="resetForm">清空</button>
-        <button class="btn-submit" :disabled="!isValid" @click="handleAdd">添加到已选项目</button>
+        <button class="btn-reset" @click="requestReset">清空</button>
+        <button class="btn-submit" :disabled="!isValid" @click="requestAdd">添加到已选项目</button>
       </div>
     </div>
+
+    <!-- 清空确认弹窗 -->
+    <ConfirmModal
+      :visible="showResetConfirm"
+      title="确认清空"
+      message="确定要清空所有已填写的内容吗？此操作不可撤销。"
+      confirm-text="确认清空"
+      cancel-text="取消"
+      type="danger"
+      @confirm="confirmReset"
+      @cancel="cancelReset"
+    />
+
+    <!-- 添加确认弹窗 -->
+    <ConfirmModal
+      :visible="showAddConfirm"
+      title="确认添加"
+      :message="`确定要将「${itemName}」添加到已选项目吗？`"
+      confirm-text="确认添加"
+      cancel-text="取消"
+      type="info"
+      @confirm="confirmAdd"
+      @cancel="cancelAdd"
+    />
   </div>
 </template>
 

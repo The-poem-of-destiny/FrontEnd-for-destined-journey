@@ -6,19 +6,18 @@ export interface Item {
   name: string;
   cost: number;
   type: string;
-  tag: string;
+  tag?: string[];
   rarity: Rarity;
   quantity?: number;
-  effect: string;
+  effect: Record<string, string>;
   description: string;
   isCustom?: boolean; // 标识是否为自定义数据
 }
 
-// 货币类型
-export type Currency = Omit<Item, 'tag' | 'effect' | 'quantity'>;
-
 // 装备类型
-export type Equipment = Omit<Item, 'quantity'>;
+export type Equipment = Omit<Item, 'quantity'> & {
+  position?: string;
+};
 
 // 技能类型
 export type Skill = Omit<Item, 'quantity'> & {
@@ -115,4 +114,5 @@ export interface CharacterConfig {
   attributePoints: Record<keyof Attributes, number>;
   reincarnationPoints: number; // 转生点数
   destinyPoints: number; // 命运点数
+  money: number; // 金钱
 }

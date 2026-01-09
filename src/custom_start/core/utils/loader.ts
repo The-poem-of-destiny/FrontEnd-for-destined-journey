@@ -24,16 +24,16 @@ async function loadJsonData<T>(filename: string, dataName: string): Promise<T> {
   try {
     const response = await fetch(getCacheBustedUrl(`${DATA_BASE_PATH}/${filename}`));
     if (!response.ok) {
-      console.log(`📝 未找到自定义数据文件 (${filename})`);
+      console.log(`未找到自定义数据文件 (${filename})`);
       return {} as T;
     }
 
     const text = await response.text();
     const data = JSON5.parse(text);
-    console.log(`✅ 成功加载自定义${dataName}数据`);
+    console.log(`成功加载自定义${dataName}数据`);
     return data;
   } catch (error) {
-    console.log(`📝 未找到自定义${dataName}数据或格式错误:`, error);
+    console.log(`未找到自定义${dataName}数据或格式错误:`, error);
     return {} as T;
   }
 }
@@ -57,33 +57,9 @@ export async function loadCustomItems(): Promise<Record<string, Item[]>> {
 /**
  * 加载自定义技能数据
  * 从 public/assets/data 目录加载用户自定义的技能数据
- * 兼容中英文字段名
  */
-export async function loadCustomSkills(): Promise<{
-  ActiveSkills?: Record<string, Skill[]>;
-  PassiveSkills?: Record<string, Skill[]>;
-}> {
-  const data = await loadJsonData<any>('skills.json', '技能');
-
-  // 将中文字段名转换为英文（兼容两种格式）
-  const result: {
-    ActiveSkills?: Record<string, Skill[]>;
-    PassiveSkills?: Record<string, Skill[]>;
-  } = {};
-
-  if (data.主动技能) {
-    result.ActiveSkills = data.主动技能;
-  } else if (data.ActiveSkills) {
-    result.ActiveSkills = data.ActiveSkills;
-  }
-
-  if (data.被动技能) {
-    result.PassiveSkills = data.被动技能;
-  } else if (data.PassiveSkills) {
-    result.PassiveSkills = data.PassiveSkills;
-  }
-
-  return result;
+export async function loadCustomSkills(): Promise<Record<string, Skill[]>> {
+  return loadJsonData<Record<string, Skill[]>>('skills.json', '技能');
 }
 
 /**

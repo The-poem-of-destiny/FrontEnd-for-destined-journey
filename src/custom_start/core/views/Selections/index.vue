@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import CategorySelectionLayout from '../../components/CategorySelectionLayout.vue';
-import { randomGenerateBus, resetPageBus } from '../../composables';
 import { getRaceCosts } from '../../data/base-info';
 import { getEquipments } from '../../data/equipments';
 import { getInitialItems } from '../../data/Items';
-import { getActiveSkills, getPassiveSkills } from '../../data/skills';
+import { getSkills } from '../../data/skills';
 import { useCharacterStore } from '../../store/character';
 import type { Equipment, Item, Rarity, Skill } from '../../types';
 
 import CategoryTabs, { type CategoryType } from './components/CategoryTabs.vue';
 import CustomItemForm from './components/CustomItemForm.vue';
 import ItemList from './components/ItemList.vue';
+import MoneyExchangeCard from './components/MoneyExchangeCard.vue';
 import RarityFilter from './components/RarityFilter.vue';
 import SelectedPanel from './components/SelectedPanel.vue';
 
@@ -37,8 +37,7 @@ const getCategoryDisplayName = (name: string): string => {
 
 const equipments = computed(() => getEquipments());
 const initialItems = computed(() => getInitialItems());
-const activeSkills = computed(() => getActiveSkills());
-const passiveSkills = computed(() => getPassiveSkills());
+const skillGroups = computed(() => getSkills());
 
 // 获取当前分类下的子分类列表
 const subCategories = computed(() => {
@@ -48,75 +47,37 @@ const subCategories = computed(() => {
     case 'item':
       return Object.keys(initialItems.value);
     case 'skill':
-      return ['主动技能', '被动技能'];
+      return orderedSkillCategories.value;
     default:
       return [];
   }
 });
 
-// 检查技能子分类是否可用（基于种族限制）
-const isSkillSubCategoryAvailable = (subCategory: string): boolean => {
-  // 获取当前角色的种族
+// 检查技能分类是否可用（基于种族限制）
+const isSkillCategoryAvailable = (category: string): boolean => {
+  if (currentCategory.value !== 'skill') return true;
+
   const currentRace =
     characterStore.character.race === '自定义'
       ? characterStore.character.customRace
       : characterStore.character.race;
 
-  // 获取所有种族列表
   const raceSpecificCategories = Object.keys(getRaceCosts.value).filter(race => race !== '自定义');
 
-  if (raceSpecificCategories.includes(subCategory)) {
-    return currentRace === subCategory;
+  if (raceSpecificCategories.includes(category)) {
+    return currentRace === category;
   }
 
-  // 其他分类默认可用
   return true;
 };
 
-// 获取技能的子分类（战技、法术、祷告、其它），并将被禁用的分类排到底部
-const skillSubCategories = computed(() => {
+const orderedSkillCategories = computed(() => {
   if (currentCategory.value !== 'skill') return [];
 
-  let categories: string[] = [];
-  if (currentSubCategory.value === '主动技能') {
-    categories = Object.keys(activeSkills.value);
-  } else if (currentSubCategory.value === '被动技能') {
-    categories = Object.keys(passiveSkills.value);
-  }
-
-  // 使用 _.partition 将分类分为可用和不可用两组，可用的在前
-  const [available, unavailable] = _.partition(categories, isSkillSubCategoryAvailable);
+  const categories = Object.keys(skillGroups.value);
+  const [available, unavailable] = _.partition(categories, isSkillCategoryAvailable);
   return [...available, ...unavailable];
 });
-
-// 当前选中的技能子分类
-const currentSkillSubCategory = ref<string>('');
-
-// 当技能子分类改变时，初始化第一个可用的子分类
-watch([currentCategory, currentSubCategory], () => {
-  if (currentCategory.value === 'skill' && currentSubCategory.value) {
-    // 找到第一个可用的子分类
-    const firstAvailable = skillSubCategories.value.find(cat => isSkillSubCategoryAvailable(cat));
-    currentSkillSubCategory.value = firstAvailable || '';
-  }
-});
-
-// 监听种族变化
-watch(
-  () => [characterStore.character.race, characterStore.character.customRace],
-  () => {
-    // 如果当前选中的技能子分类不可用，切换到第一个可用的
-    if (currentCategory.value === 'skill' && currentSkillSubCategory.value) {
-      if (!isSkillSubCategoryAvailable(currentSkillSubCategory.value)) {
-        const firstAvailable = skillSubCategories.value.find(cat =>
-          isSkillSubCategoryAvailable(cat),
-        );
-        currentSkillSubCategory.value = firstAvailable || '';
-      }
-    }
-  },
-  { deep: true },
-);
 
 // 当分类改变时，重置子分类和品质筛选
 watch(currentCategory, () => {
@@ -128,6 +89,19 @@ watch(currentCategory, () => {
 onMounted(() => {
   currentSubCategory.value = subCategories.value[0] || '';
 });
+
+// 监听种族变化，确保当前技能分类可用
+watch(
+  () => [characterStore.character.race, characterStore.character.customRace],
+  () => {
+    if (currentCategory.value !== 'skill') return;
+
+    if (!isSkillCategoryAvailable(currentSubCategory.value)) {
+      currentSubCategory.value = subCategories.value[0] || '';
+    }
+  },
+  { deep: true },
+);
 
 // 获取当前要显示的物品列表（应用品质筛选）
 const currentItems = computed<(Equipment | Item | Skill)[]>(() => {
@@ -141,15 +115,7 @@ const currentItems = computed<(Equipment | Item | Skill)[]>(() => {
       sourceItems = (initialItems.value[currentSubCategory.value] || []) as Item[];
       break;
     case 'skill':
-      if (currentSubCategory.value === '主动技能') {
-        sourceItems = currentSkillSubCategory.value
-          ? activeSkills.value[currentSkillSubCategory.value] || []
-          : Object.values(activeSkills.value).flat();
-      } else if (currentSubCategory.value === '被动技能') {
-        sourceItems = currentSkillSubCategory.value
-          ? passiveSkills.value[currentSkillSubCategory.value] || []
-          : Object.values(passiveSkills.value).flat();
-      }
+      sourceItems = skillGroups.value[currentSubCategory.value] || [];
       break;
   }
 
@@ -173,11 +139,6 @@ const currentSelectedItems = computed<(Equipment | Item | Skill)[]>(() => {
     default:
       return [];
   }
-});
-
-// 计算可用点数
-const availablePoints = computed(() => {
-  return characterStore.character.reincarnationPoints - characterStore.consumedPoints;
 });
 
 // 选择物品
@@ -233,56 +194,6 @@ const handleClearAll = () => {
   characterStore.clearSelections();
 };
 
-// 随机选择当前分类的物品
-const handleRandomGenerate = () => {
-  // 清空当前分类的选择
-  switch (currentCategory.value) {
-    case 'equipment':
-      characterStore.selectedEquipments.splice(0);
-      break;
-    case 'item':
-      characterStore.selectedItems.splice(0);
-      break;
-    case 'skill':
-      characterStore.selectedSkills.splice(0);
-      break;
-  }
-
-  // 从当前物品列表中随机选择几个物品
-  const items = currentItems.value;
-  if (items.length === 0) return;
-
-  // 随机选择 1-3 个物品
-  const count = Math.min(Math.floor(Math.random() * 3) + 1, items.length);
-  const selectedIndices = new Set<number>();
-
-  while (selectedIndices.size < count) {
-    const randomIndex = Math.floor(Math.random() * items.length);
-    if (!selectedIndices.has(randomIndex)) {
-      selectedIndices.add(randomIndex);
-      const item = items[randomIndex];
-
-      // 检查是否有足够的点数
-      if (item.cost <= availablePoints.value) {
-        handleSelectItem(item);
-      }
-    }
-  }
-};
-
-// 重置当前页面
-const handleReset = () => {
-  characterStore.clearSelections();
-  currentCategory.value = 'equipment';
-  currentSubCategory.value = subCategories.value[0] || '';
-  currentSkillSubCategory.value = '';
-  currentRarity.value = 'all';
-};
-
-// 使用 EventBus 监听随机生成和重置事件
-randomGenerateBus.on(() => handleRandomGenerate());
-resetPageBus.on(() => handleReset());
-
 // 添加自定义物品
 const handleAddCustomItem = (
   item: Equipment | Item | Skill,
@@ -316,28 +227,6 @@ const handleAddCustomItem = (
           :categories="subCategories"
           :category-name-formatter="getCategoryDisplayName"
         >
-          <!-- 技能的二级分类插槽 -->
-          <template #sub-category>
-            <div
-              v-if="currentCategory === 'skill' && skillSubCategories.length > 0"
-              class="sub-category-list"
-            >
-              <button
-                v-for="subCat in skillSubCategories"
-                :key="subCat"
-                class="sub-category-item"
-                :class="{
-                  active: currentSkillSubCategory === subCat,
-                  disabled: !isSkillSubCategoryAvailable(subCat),
-                }"
-                :disabled="!isSkillSubCategoryAvailable(subCat)"
-                @click="isSkillSubCategoryAvailable(subCat) && (currentSkillSubCategory = subCat)"
-              >
-                {{ subCat }}
-              </button>
-            </div>
-          </template>
-
           <!-- 品质筛选 -->
           <template #filter>
             <RarityFilter v-model="currentRarity" />
@@ -348,7 +237,6 @@ const handleAddCustomItem = (
             <ItemList
               :items="currentItems"
               :selected-items="currentSelectedItems"
-              :available-points="availablePoints"
               @select="handleSelectItem"
               @deselect="handleDeselectItem"
             />
@@ -358,6 +246,7 @@ const handleAddCustomItem = (
 
       <!-- 自定义物品区域 -->
       <div class="custom-area">
+        <MoneyExchangeCard />
         <CustomItemForm @add="handleAddCustomItem" />
       </div>
 
@@ -367,9 +256,6 @@ const handleAddCustomItem = (
           :equipments="characterStore.selectedEquipments"
           :items="characterStore.selectedItems"
           :skills="characterStore.selectedSkills"
-          :available-points="availablePoints"
-          :total-points="characterStore.character.reincarnationPoints"
-          :consumed-points="characterStore.consumedPoints"
           @remove="handleRemoveFromPanel"
           @clear="handleClearAll"
         />
@@ -393,57 +279,10 @@ const handleAddCustomItem = (
   flex-direction: column;
 }
 
-// 二级分类样式（技能的子分类）
-.sub-category-list {
-  margin-left: var(--spacing-md);
-  margin-top: var(--spacing-xs);
-  margin-bottom: var(--spacing-xs);
+.custom-area {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.sub-category-item {
-  padding: 4px var(--spacing-sm);
-  background: var(--card-bg);
-  border: 1px solid var(--border-color-light);
-  border-left: 3px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  font-size: 0.85rem;
-  color: var(--text-light);
-  text-align: left;
-  white-space: normal;
-  word-wrap: break-word;
-  word-break: break-word;
-  line-height: 1.3;
-
-  &:hover:not(.disabled) {
-    border-left-color: var(--accent-color);
-    background: rgba(212, 175, 55, 0.05);
-    color: var(--text-color);
-  }
-
-  &.active {
-    background: rgba(212, 175, 55, 0.15);
-    border-left-color: var(--accent-color);
-    color: var(--accent-color);
-    font-weight: 600;
-  }
-
-  &.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    background: var(--input-bg);
-    color: var(--text-light);
-    border-left-color: var(--border-color-light);
-
-    &:hover {
-      background: var(--input-bg);
-      border-left-color: var(--border-color-light);
-    }
-  }
+  gap: var(--spacing-md);
 }
 
 // 下半部分：已选面板

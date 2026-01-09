@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { FormInput, FormLabel, FormNumber, FormTextarea } from '../../../components/Form';
+import ConfirmModal from '../../../components/ConfirmModal.vue';
+import {
+  FormArrayInput,
+  FormInput,
+  FormKeyValueInput,
+  FormLabel,
+  FormNumber,
+  FormTextarea,
+} from '../../../components/Form';
 import { useCustomContentStore } from '../../../store/customContent';
 import type { Equipment, Item, Rarity, Skill } from '../../../types';
 import { calculateCostByPosition, getCostRange } from '../../../utils/cost-calculator';
@@ -17,6 +25,10 @@ const customContentStore = useCustomContentStore();
 
 // 折叠状态
 const isExpanded = ref(false);
+
+// 确认弹窗状态
+const showResetConfirm = ref(false);
+const showAddConfirm = ref(false);
 
 // 表单数据
 const categoryType = computed({
@@ -42,12 +54,13 @@ const itemRarity = computed({
 
 const itemTag = computed({
   get: () => customContentStore.customItemForm.itemTag,
-  set: (value: string) => customContentStore.updateCustomItemForm('itemTag', value),
+  set: (value: string[]) => customContentStore.updateCustomItemForm('itemTag', value),
 });
 
 const itemEffect = computed({
   get: () => customContentStore.customItemForm.itemEffect,
-  set: (value: string) => customContentStore.updateCustomItemForm('itemEffect', value),
+  set: (value: Record<string, string>) =>
+    customContentStore.updateCustomItemForm('itemEffect', value),
 });
 
 const itemDescription = computed({
@@ -85,7 +98,7 @@ const isValid = computed(() => {
   return (
     itemName.value.trim() !== '' &&
     customItemType.value.trim() !== '' &&
-    itemEffect.value.trim() !== ''
+    Object.keys(itemEffect.value || {}).length > 0
   );
 });
 
@@ -94,17 +107,44 @@ const resetForm = () => {
   customContentStore.resetCustomItemForm();
 };
 
-// 添加自定义物品
-const handleAdd = () => {
+// 请求清空确认
+const requestReset = () => {
+  showResetConfirm.value = true;
+};
+
+// 确认清空
+const confirmReset = () => {
+  showResetConfirm.value = false;
+  resetForm();
+};
+
+// 取消清空
+const cancelReset = () => {
+  showResetConfirm.value = false;
+};
+
+// 请求添加确认
+const requestAdd = () => {
   if (!isValid.value) return;
+  showAddConfirm.value = true;
+};
+
+// 取消添加
+const cancelAdd = () => {
+  showAddConfirm.value = false;
+};
+
+// 添加自定义物品（确认后执行）
+const confirmAdd = () => {
+  showAddConfirm.value = false;
 
   const baseItem = {
     name: itemName.value.trim(),
     cost: calculatedCost.value,
     type: customItemType.value.trim(),
-    tag: itemTag.value.trim(),
+    tag: itemTag.value,
     rarity: itemRarity.value,
-    effect: itemEffect.value.trim(),
+    effect: itemEffect.value,
     description: itemDescription.value.trim() || '自定义物品',
     isCustom: true, // 标记为自定义数据
   };
@@ -200,9 +240,11 @@ const handleAdd = () => {
       <!-- 标签 -->
       <div class="form-row">
         <FormLabel label="标签" />
-        <FormInput
+        <FormArrayInput
           v-model="itemTag"
-          placeholder="例如：[关联属性][目标类型][核心功能][威力: XXX][可选机制]"
+          placeholder="输入标签后按回车添加"
+          add-button-text="添加标签"
+          empty-text="暂无标签，点击下方按钮添加"
         />
       </div>
 
@@ -221,7 +263,13 @@ const handleAdd = () => {
       <!-- 效果 -->
       <div class="form-row">
         <FormLabel label="效果" required />
-        <FormTextarea v-model="itemEffect" placeholder="请描述物品的效果..." :rows="3" />
+        <FormKeyValueInput
+          v-model="itemEffect"
+          placeholder-key="效果名"
+          placeholder-value="效果内容"
+          add-button-text="添加效果"
+          empty-text="暂无效果条目，点击下方按钮添加"
+        />
       </div>
 
       <!-- 描述 -->
@@ -232,10 +280,34 @@ const handleAdd = () => {
 
       <!-- 操作按钮 -->
       <div class="form-actions">
-        <button class="btn-reset" @click="resetForm">清空</button>
-        <button class="btn-submit" :disabled="!isValid" @click="handleAdd">添加到已选项目</button>
+        <button class="btn-reset" @click="requestReset">清空</button>
+        <button class="btn-submit" :disabled="!isValid" @click="requestAdd">添加到已选项目</button>
       </div>
     </div>
+
+    <!-- 清空确认弹窗 -->
+    <ConfirmModal
+      :visible="showResetConfirm"
+      title="确认清空"
+      message="确定要清空所有已填写的内容吗？此操作不可撤销。"
+      confirm-text="确认清空"
+      cancel-text="取消"
+      type="danger"
+      @confirm="confirmReset"
+      @cancel="cancelReset"
+    />
+
+    <!-- 添加确认弹窗 -->
+    <ConfirmModal
+      :visible="showAddConfirm"
+      title="确认添加"
+      :message="`确定要将「${itemName}」添加到已选项目吗？`"
+      confirm-text="确认添加"
+      cancel-text="取消"
+      type="info"
+      @confirm="confirmAdd"
+      @cancel="cancelAdd"
+    />
   </div>
 </template>
 

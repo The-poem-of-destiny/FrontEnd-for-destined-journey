@@ -12,7 +12,8 @@ withDefaults(defineProps<Props>(), {
 
 <template>
   <label :for="htmlFor" class="form-label" :class="{ 'is-required': required }">
-    {{ label }}
+    <slot name="icon"></slot>
+    <span>{{ label }}</span>
     <span v-if="required" class="required-mark">*</span>
   </label>
 </template>

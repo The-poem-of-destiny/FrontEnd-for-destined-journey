@@ -95,7 +95,10 @@ const rarityColorMap: Record<string, string> = {
 
         <!-- 基本信息 -->
         <section class="doc-section">
-          <h3 class="section-title">📋 基本信息</h3>
+          <h3 class="section-title">
+            <i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>
+            <span>基本信息</span>
+          </h3>
           <div class="doc-text">
             <p><strong>姓名：</strong>{{ characterStore.character.name || '（未设置）' }}</p>
             <p><strong>性别：</strong>{{ displayGender }}</p>
@@ -104,12 +107,16 @@ const rarityColorMap: Record<string, string> = {
             <p><strong>身份：</strong>{{ displayIdentity }}</p>
             <p><strong>出生地：</strong>{{ displayLocation }}</p>
             <p><strong>等级：</strong>Lv.{{ characterStore.character.level }}</p>
+            <p><strong>金钱：</strong>{{ characterStore.character.money }} G</p>
           </div>
         </section>
 
         <!-- 属性 -->
         <section class="doc-section">
-          <h3 class="section-title">⚔️ 角色属性</h3>
+          <h3 class="section-title">
+            <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+            <span>角色属性</span>
+          </h3>
           <div class="doc-text attributes">
             <p v-for="(value, attr) in characterStore.finalAttributes" :key="attr">
               <strong>{{ attr }}：</strong>
@@ -122,7 +129,10 @@ const rarityColorMap: Record<string, string> = {
 
         <!-- 装备 -->
         <section class="doc-section">
-          <h3 class="section-title">🛡️ 装备 ({{ characterStore.selectedEquipments.length }})</h3>
+          <h3 class="section-title">
+            <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+            <span>装备 ({{ characterStore.selectedEquipments.length }})</span>
+          </h3>
           <div v-if="characterStore.selectedEquipments.length > 0" class="doc-text">
             <div
               v-for="(item, index) in characterStore.selectedEquipments"
@@ -135,9 +145,18 @@ const rarityColorMap: Record<string, string> = {
                 <span class="item-cost">[{{ item.cost }} 点]</span>
               </p>
               <p class="item-meta">
-                类型：{{ item.type }}<span v-if="item.tag"> | 标签：{{ item.tag }}</span>
+                类型：{{ item.type }}
+                <span v-if="item.tag && item.tag.length > 0">
+                  | 标签：{{ item.tag.join('、') }}</span
+                >
               </p>
-              <p class="item-desc">效果：{{ item.effect }}</p>
+              <p v-if="Object.keys(item.effect || {}).length > 0" class="item-desc">
+                效果：
+                <span v-for="(value, key) in item.effect" :key="key" class="effect-inline">
+                  {{ key }}：{{ value }}
+                </span>
+              </p>
+              <p v-else class="item-desc">效果：无</p>
               <p v-if="item.description" class="item-flavor">{{ item.description }}</p>
             </div>
           </div>
@@ -146,7 +165,10 @@ const rarityColorMap: Record<string, string> = {
 
         <!-- 道具 -->
         <section class="doc-section">
-          <h3 class="section-title">🎒 道具 ({{ characterStore.selectedItems.length }})</h3>
+          <h3 class="section-title">
+            <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+            <span>道具 ({{ characterStore.selectedItems.length }})</span>
+          </h3>
           <div v-if="characterStore.selectedItems.length > 0" class="doc-text">
             <div
               v-for="(item, index) in characterStore.selectedItems"
@@ -160,9 +182,18 @@ const rarityColorMap: Record<string, string> = {
                 <span class="item-cost">[{{ item.cost }} 点]</span>
               </p>
               <p class="item-meta">
-                类型：{{ item.type }}<span v-if="item.tag"> | 标签：{{ item.tag }}</span>
+                类型：{{ item.type }}
+                <span v-if="item.tag && item.tag.length > 0">
+                  | 标签：{{ item.tag.join('、') }}</span
+                >
               </p>
-              <p class="item-desc">效果：{{ item.effect }}</p>
+              <p v-if="Object.keys(item.effect || {}).length > 0" class="item-desc">
+                效果：
+                <span v-for="(value, key) in item.effect" :key="key" class="effect-inline">
+                  {{ key }}：{{ value }}
+                </span>
+              </p>
+              <p v-else class="item-desc">效果：无</p>
               <p v-if="item.description" class="item-flavor">{{ item.description }}</p>
             </div>
           </div>
@@ -171,7 +202,10 @@ const rarityColorMap: Record<string, string> = {
 
         <!-- 技能 -->
         <section class="doc-section">
-          <h3 class="section-title">✨ 技能 ({{ characterStore.selectedSkills.length }})</h3>
+          <h3 class="section-title">
+            <i class="fa-solid fa-wand-magic" aria-hidden="true"></i>
+            <span>技能 ({{ characterStore.selectedSkills.length }})</span>
+          </h3>
           <div v-if="characterStore.selectedSkills.length > 0" class="doc-text">
             <div
               v-for="(skill, index) in characterStore.selectedSkills"
@@ -185,10 +219,18 @@ const rarityColorMap: Record<string, string> = {
               </p>
               <p class="item-meta">
                 类型：{{ skill.type }}
-                <span v-if="skill.tag"> | 标签：{{ skill.tag }}</span>
+                <span v-if="skill.tag && skill.tag.length > 0">
+                  | 标签：{{ skill.tag.join('、') }}</span
+                >
                 <span v-if="skill.consume"> | 消耗：{{ skill.consume }}</span>
               </p>
-              <p class="item-desc">效果：{{ skill.effect }}</p>
+              <p v-if="Object.keys(skill.effect || {}).length > 0" class="item-desc">
+                效果：
+                <span v-for="(value, key) in skill.effect" :key="key" class="effect-inline">
+                  {{ key }}：{{ value }}
+                </span>
+              </p>
+              <p v-else class="item-desc">效果：无</p>
               <p v-if="skill.description" class="item-flavor">{{ skill.description }}</p>
             </div>
           </div>
@@ -198,7 +240,8 @@ const rarityColorMap: Record<string, string> = {
         <!-- 命定之人 -->
         <section class="doc-section">
           <h3 class="section-title">
-            🌟 命定之人 ({{ characterStore.selectedDestinedOnes.length }})
+            <i class="fa-solid fa-user-astronaut" aria-hidden="true"></i>
+            <span>命定之人 ({{ characterStore.selectedDestinedOnes.length }})</span>
           </h3>
           <div v-if="characterStore.selectedDestinedOnes.length > 0" class="doc-text">
             <div
@@ -235,7 +278,10 @@ const rarityColorMap: Record<string, string> = {
 
         <!-- 初始开局 -->
         <section class="doc-section">
-          <h3 class="section-title">📖 初始开局剧情</h3>
+          <h3 class="section-title">
+            <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+            <span>初始开局剧情</span>
+          </h3>
           <div v-if="characterStore.selectedBackground" class="doc-text">
             <p class="item-title">
               <strong>{{ characterStore.selectedBackground.name }}</strong>
@@ -281,9 +327,13 @@ const rarityColorMap: Record<string, string> = {
         <!-- 提示信息 -->
         <div v-if="remainingPoints !== 0" class="final-notice">
           <div v-if="remainingPoints < 0" class="notice warning">
-            ⚠️ 警告：转生点数不足 {{ Math.abs(remainingPoints) }} 点，请返回调整
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span>警告：转生点数不足 {{ Math.abs(remainingPoints) }} 点，请返回调整</span>
           </div>
-          <div v-else class="notice info">💡 提示：还有 {{ remainingPoints }} 点转生点数未使用</div>
+          <div v-else class="notice info">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <span>提示：还有 {{ remainingPoints }} 点转生点数未使用</span>
+          </div>
         </div>
       </div>
     </div>
@@ -401,10 +451,17 @@ const rarityColorMap: Record<string, string> = {
 }
 
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
   font-size: 1.2rem;
   color: var(--title-color);
   margin: 0 0 var(--spacing-md) 0;
   font-weight: 700;
+
+  i {
+    color: var(--accent-color);
+  }
 }
 
 .doc-text {
@@ -479,6 +536,16 @@ const rarityColorMap: Record<string, string> = {
 
   .item-desc {
     margin-bottom: var(--spacing-xs) !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .effect-inline {
+    padding: 2px 6px;
+    background: rgba(212, 175, 55, 0.12);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
   }
 
   .item-flavor {
@@ -524,6 +591,10 @@ const rarityColorMap: Record<string, string> = {
   margin-top: var(--spacing-lg);
 
   .notice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
     font-size: 0.95rem;

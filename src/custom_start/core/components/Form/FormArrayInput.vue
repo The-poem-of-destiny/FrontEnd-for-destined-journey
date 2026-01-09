@@ -138,7 +138,7 @@ const handleKeydown = (event: KeyboardEvent) => {
               :disabled="disabled"
               @click="startEdit(index)"
             >
-              ✏️
+              <i class="fa-solid fa-pen"></i>
             </button>
             <button
               type="button"
@@ -147,7 +147,7 @@ const handleKeydown = (event: KeyboardEvent) => {
               :disabled="disabled || index === 0"
               @click="moveItem(index, 'up')"
             >
-              ↑
+              <i class="fa-solid fa-arrow-up"></i>
             </button>
             <button
               type="button"
@@ -156,7 +156,7 @@ const handleKeydown = (event: KeyboardEvent) => {
               :disabled="disabled || index === modelValue.length - 1"
               @click="moveItem(index, 'down')"
             >
-              ↓
+              <i class="fa-solid fa-arrow-down"></i>
             </button>
             <button
               type="button"
@@ -165,7 +165,7 @@ const handleKeydown = (event: KeyboardEvent) => {
               :disabled="!canRemove"
               @click="removeItem(index)"
             >
-              ✕
+              <i class="fa-solid fa-xmark"></i>
             </button>
           </div>
         </div>
@@ -174,7 +174,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 
     <!-- 空状态 -->
     <div v-else class="empty-state">
-      <span class="empty-icon">📋</span>
+      <span class="empty-icon"><i class="fa-solid fa-clipboard-list"></i></span>
       <span class="empty-text">{{ emptyText }}</span>
     </div>
 
