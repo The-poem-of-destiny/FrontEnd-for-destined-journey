@@ -106,7 +106,11 @@ function watch_it(compiler: webpack.Compiler) {
 
     compiler.hooks.done.tap('updater', () => {
       console.info('\n[Listener] 检测到完成编译, 推送更新事件...');
-      io.emit('iframe_updated');
+      if (compiler.options.plugins.find(plugin => plugin instanceof HtmlWebpackPlugin)) {
+        io.emit('message_iframe_updated');
+      } else {
+        io.emit('script_iframe_updated');
+      }
     });
   }
 }
@@ -114,11 +118,12 @@ function watch_it(compiler: webpack.Compiler) {
 function dump_schema(compiler: webpack.Compiler) {
   const execute = () => {
     exec('pnpm dump', { cwd: __dirname });
+    console.info('\x1b[36m[schema_dump]\x1b[0m 已将所有 schema.ts 转换为 schema.json');
   };
   const execute_debounced = _.debounce(execute, 500, { leading: true, trailing: false });
 
   if (!compiler.options.watch) {
-    execute();
+    execute_debounced();
   } else {
     watch('src', {
       awaitWriteFinish: true,
