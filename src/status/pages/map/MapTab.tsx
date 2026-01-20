@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import OpenSeadragon from 'openseadragon';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DrawStroke, useCanvasDraw } from '../../core/hooks/use-canvas-draw';
@@ -13,20 +14,24 @@ import {
   markerIconOptions,
 } from '../../core/utils/map-constants';
 import { Collapse } from '../../shared/components';
-import { withMvuData, WithMvuDataProps } from '../../shared/hoc';
 import styles from './MapTab.module.scss';
 
-const MapTabContent: FC<WithMvuDataProps> = ({ data: _data }) => {
+export const MapTab: FC = () => {
   const [drawMode, setDrawMode] = useState(false);
   const [drawStrokes, setDrawStrokes] = useState<DrawStroke[]>([]);
   const [drawColor, setDrawColor] = useState(DEFAULT_DRAW_COLOR);
   const [mapSourceKey, setMapSourceKey] = useState<'small' | 'large'>('small');
   const [markerSearch, setMarkerSearch] = useState('');
+  // 编辑中的临时本地状态，避免每次输入都更新主状态
+  const [editingName, setEditingName] = useState('');
+  const [editingGroup, setEditingGroup] = useState('');
+  const [editingDescription, setEditingDescription] = useState('');
   const inlineContainerRef = useRef<HTMLDivElement | null>(null);
   const inlineCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewerRef = useRef<OpenSeadragon.Viewer | null>(null);
   const redrawRef = useRef<() => void>(() => undefined);
   const resizeCanvasRef = useRef<() => void>(() => undefined);
+  const prevMarkerCountRef = useRef<number>(0);
 
   const markerClassNames = useMemo(
     () => ({
@@ -50,22 +55,50 @@ const MapTabContent: FC<WithMvuDataProps> = ({ data: _data }) => {
     setActiveMarkerId,
     markerAddMode,
     setMarkerAddMode,
-    updateMarker,
+    updateMarker: updateMarkerBase,
     deleteMarker,
     addMarkerAt,
     focusMarker,
     syncMarkerOverlaysRef,
+    updateSingleMarkerRef,
     overlayMapRef,
   } = useMapMarkers({
     viewerRef,
     classNames: markerClassNames,
   });
 
+  // 包装 updateMarker，仅更新状态，不立即刷新 DOM
+  const updateMarker = useCallback(
+    (id: string, patch: Partial<MapMarker>) => {
+      updateMarkerBase(id, patch);
+    },
+    [updateMarkerBase],
+  );
+
+  // 在失焦时刷新单个标记的 DOM 显示
+  const flushMarkerUpdate = useCallback(
+    (id: string) => {
+      requestAnimationFrame(() => {
+        updateSingleMarkerRef.current(id);
+      });
+    },
+    [updateSingleMarkerRef],
+  );
+
   const markerColorOptions = drawColorOptions;
 
   const activeMarker = useMemo(() => {
     return mapMarkers.find(marker => marker.id === activeMarkerId) ?? null;
   }, [mapMarkers, activeMarkerId]);
+
+  // 当选中标记变化时，同步本地编辑状态
+  useEffect(() => {
+    if (activeMarker) {
+      setEditingName(activeMarker.name);
+      setEditingGroup(activeMarker.group ?? '');
+      setEditingDescription(activeMarker.description ?? '');
+    }
+  }, [activeMarkerId]); // 只在切换标记时同步，不监听 activeMarker 避免循环
 
   const filteredMarkers = useMemo(() => {
     const keyword = markerSearch.trim().toLowerCase();
@@ -161,7 +194,7 @@ const MapTabContent: FC<WithMvuDataProps> = ({ data: _data }) => {
       } catch (error) {
         console.error('[StatusMap] 保存地图涂画失败:', error);
       }
-    }, 300);
+    }, 1000);
 
     return () => window.clearTimeout(timer);
   }, [drawStrokes]);
@@ -173,7 +206,7 @@ const MapTabContent: FC<WithMvuDataProps> = ({ data: _data }) => {
       } catch (error) {
         console.error('[StatusMap] 保存地图标记失败:', error);
       }
-    }, 300);
+    }, 1000);
 
     return () => window.clearTimeout(timer);
   }, [mapMarkers]);
@@ -198,9 +231,14 @@ const MapTabContent: FC<WithMvuDataProps> = ({ data: _data }) => {
     },
   });
 
+  // 只在标记数量变化时（添加/删除）才触发完整同步
   useEffect(() => {
-    syncMarkerOverlaysRef.current();
-  }, [mapMarkers, activeMarkerId, syncMarkerOverlaysRef]);
+    const currentCount = mapMarkers.length;
+    if (currentCount !== prevMarkerCountRef.current) {
+      syncMarkerOverlaysRef.current();
+      prevMarkerCountRef.current = currentCount;
+    }
+  }, [mapMarkers, syncMarkerOverlaysRef]);
 
   useEffect(() => {
     if (drawMode && markerAddMode) {
@@ -289,7 +327,7 @@ const MapTabContent: FC<WithMvuDataProps> = ({ data: _data }) => {
             <div className={styles.markerPanelHeader}>
               <span>标记编辑</span>
               <span className={styles.markerPanelHint}>
-                {markerAddMode ? '点击地图添加标记' : '支持搜索、拖拽与编辑'}
+                {markerAddMode ? '点击地图添加标记' : '支持搜索与编辑'}
               </span>
             </div>
           }
@@ -354,10 +392,12 @@ const MapTabContent: FC<WithMvuDataProps> = ({ data: _data }) => {
                     <label className={styles.formLabel}>名称</label>
                     <input
                       className={styles.formInput}
-                      value={activeMarker.name}
-                      onChange={event =>
-                        updateMarker(activeMarker.id, { name: event.target.value })
-                      }
+                      value={editingName}
+                      onChange={event => setEditingName(event.target.value)}
+                      onBlur={() => {
+                        updateMarker(activeMarker.id, { name: editingName });
+                        flushMarkerUpdate(activeMarker.id);
+                      }}
                       placeholder="输入标记名称"
                     />
                   </div>
@@ -365,10 +405,12 @@ const MapTabContent: FC<WithMvuDataProps> = ({ data: _data }) => {
                     <label className={styles.formLabel}>分组</label>
                     <input
                       className={styles.formInput}
-                      value={activeMarker.group ?? ''}
-                      onChange={event =>
-                        updateMarker(activeMarker.id, { group: event.target.value })
-                      }
+                      value={editingGroup}
+                      onChange={event => setEditingGroup(event.target.value)}
+                      onBlur={() => {
+                        updateMarker(activeMarker.id, { group: editingGroup });
+                        flushMarkerUpdate(activeMarker.id);
+                      }}
                       placeholder="例如：城邦 / 遗迹"
                     />
                   </div>
@@ -382,7 +424,10 @@ const MapTabContent: FC<WithMvuDataProps> = ({ data: _data }) => {
                           className={`${styles.iconButton} ${
                             activeMarker.icon === icon ? styles.iconButtonActive : ''
                           }`}
-                          onClick={() => updateMarker(activeMarker.id, { icon })}
+                          onClick={() => {
+                            updateMarker(activeMarker.id, { icon });
+                            flushMarkerUpdate(activeMarker.id);
+                          }}
                         >
                           <i className={icon} />
                           <span className={styles.iconButtonLabel}>{markerIconLabels[icon]}</span>
@@ -401,7 +446,10 @@ const MapTabContent: FC<WithMvuDataProps> = ({ data: _data }) => {
                             activeMarker.color === color ? styles.markerColorButtonActive : ''
                           }`}
                           style={{ backgroundColor: color }}
-                          onClick={() => updateMarker(activeMarker.id, { color })}
+                          onClick={() => {
+                            updateMarker(activeMarker.id, { color });
+                            flushMarkerUpdate(activeMarker.id);
+                          }}
                         />
                       ))}
                     </div>
@@ -410,10 +458,12 @@ const MapTabContent: FC<WithMvuDataProps> = ({ data: _data }) => {
                     <label className={styles.formLabel}>描述</label>
                     <textarea
                       className={styles.formTextarea}
-                      value={activeMarker.description ?? ''}
-                      onChange={event =>
-                        updateMarker(activeMarker.id, { description: event.target.value })
-                      }
+                      value={editingDescription}
+                      onChange={event => setEditingDescription(event.target.value)}
+                      onBlur={() => {
+                        updateMarker(activeMarker.id, { description: editingDescription });
+                        flushMarkerUpdate(activeMarker.id);
+                      }}
                       placeholder="输入标记说明"
                     />
                   </div>
@@ -455,5 +505,3 @@ const MapTabContent: FC<WithMvuDataProps> = ({ data: _data }) => {
     </div>
   );
 };
-
-export const MapTab = withMvuData({ baseClassName: styles.mapTab })(MapTabContent);
