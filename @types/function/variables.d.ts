@@ -32,12 +32,7 @@ type VariableOptionExtension = {
   /** 指定要操作变量的扩展 ID */
   extension_id: string;
 };
-type VariableOption =
-  | VariableOptionNormal
-  | VariableOptionCharacter
-  | VariableOptionMessage
-  | VariableOptionScript
-  | VariableOptionExtension;
+type VariableOption = VariableOptionNormal | VariableOptionCharacter | VariableOptionMessage | VariableOptionScript | VariableOptionExtension;
 
 /**
  * 获取变量表
@@ -150,10 +145,7 @@ declare function updateVariablesWith(
  * await insertOrAssignVariables({爱城华恋: {好感度: 10}, 神乐光: {好感度: 5, 认知度: 0}}, {type: 'chat'});
  * // 执行后变量: `{爱城华恋: {好感度: 10}, 神乐光: {好感度: 5, 认知度: 0}}`
  */
-declare function insertOrAssignVariables(
-  variables: Record<string, any>,
-  option: VariableOption,
-): Record<string, any>;
+declare function insertOrAssignVariables(variables: Record<string, any>, option: VariableOption): Record<string, any>;
 
 /**
  * 插入新变量, 如果变量已经存在则什么也不做
@@ -170,10 +162,7 @@ declare function insertOrAssignVariables(
  * await insertVariables({爱城华恋: {好感度: 10}, 神乐光: {好感度: 5, 认知度: 0}}, {type: 'chat'});
  * // 执行后变量: `{爱城华恋: {好感度: 5}, 神乐光: {好感度: 5, 认知度: 0}}`
  */
-declare function insertVariables(
-  variables: Record<string, any>,
-  option: VariableOption,
-): Record<string, any>;
+declare function insertVariables(variables: Record<string, any>, option: VariableOption): Record<string, any>;
 
 /**
  * 删除变量, 如果变量不存在则什么也不做
