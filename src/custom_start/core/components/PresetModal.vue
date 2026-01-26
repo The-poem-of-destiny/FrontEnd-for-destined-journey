@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useCharacterStore } from '../store/character';
+import { useCustomContentStore } from '../store/customContent';
 import {
   applyPresetToStore,
   createPresetFromStore,
@@ -25,6 +26,7 @@ const emit = defineEmits<{
 }>();
 
 const characterStore = useCharacterStore();
+const customContentStore = useCustomContentStore();
 
 // 预设列表
 const presetList = ref<CharacterPreset[]>([]);
@@ -100,6 +102,9 @@ const presetToOverwrite = ref<string | null>(null);
 // 加载预设
 const handleLoadPreset = (preset: CharacterPreset) => {
   applyPresetToStore(preset, characterStore);
+  const isCustomBackground = preset.background?.name === '【自定义开局】';
+  const description = isCustomBackground ? (preset.background?.description ?? '') : '';
+  customContentStore.updateCustomBackgroundDescription(description);
   emit('loaded', preset);
   emit('close');
 };

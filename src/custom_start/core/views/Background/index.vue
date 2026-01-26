@@ -57,12 +57,29 @@ const handleAddCustomDestinedOne = (destinedOne: DestinedOne) => {
 
 // 背景操作
 const handleSelectBackground = (background: Background) => {
+  if (background.name === '【自定义开局】') {
+    const customDescription = customContentStore.customBackgroundDescription?.trim();
+    const mergedBackground = {
+      ...background,
+      description: customDescription ? customDescription : background.description,
+    };
+    characterStore.setBackground(mergedBackground);
+    return;
+  }
   characterStore.setBackground(background);
+  customContentStore.updateCustomBackgroundDescription('');
 };
 
 // 更新自定义开局描述
 const handleUpdateCustomDescription = (value: string) => {
   customContentStore.updateCustomBackgroundDescription(value);
+
+  if (characterStore.selectedBackground?.name === '【自定义开局】') {
+    characterStore.setBackground({
+      ...characterStore.selectedBackground,
+      description: value,
+    });
+  }
 };
 
 // 清空所有选择
