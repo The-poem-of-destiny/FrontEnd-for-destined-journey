@@ -110,7 +110,7 @@ import {
 const SPECIAL_RECOMMEND_CORES: Record<string, SpecialRecommendConfig> = {
   '命定系统-null核心(H一串)': { note: '纯私货' },
   '命定系统-读者核心(Angtuck)': { note: '故事的读者，不明存在-九十九夜梦' },
-  '命定系统-奶龙核心(K1nn)': { note: '奶龙好玩' },
+  '命定系统-小夜莺核心(fishfish)': { note: '你说的对，但是诗灵是一款由...' },
 };
 
 const emit = defineEmits<{
