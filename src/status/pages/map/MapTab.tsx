@@ -73,6 +73,7 @@ export const MapTab: FC = () => {
     focusMarker,
     syncMarkerOverlaysRef,
     updateSingleMarkerRef,
+    updateCardPositionRef,
     overlayMapRef,
   } = useMapMarkers({
     viewerRef,
@@ -237,6 +238,8 @@ export const MapTab: FC = () => {
     },
     onUpdate: () => {
       redrawRef.current();
+      // 移动端：地图移动时更新可见卡片位置
+      updateCardPositionRef.current();
     },
     onBeforeOpen: () => {
       setIsMapLoading(true);

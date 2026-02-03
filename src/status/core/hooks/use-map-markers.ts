@@ -48,6 +48,7 @@ interface UseMapMarkersResult {
   ) => { nx: number; ny: number } | null;
   syncMarkerOverlaysRef: React.RefObject<() => void>;
   updateSingleMarkerRef: React.RefObject<(id: string) => void>;
+  updateCardPositionRef: React.RefObject<() => void>;
   viewerRef: React.RefObject<OpenSeadragon.Viewer | null>;
   overlayMapRef: React.RefObject<Map<string, HTMLElement>>;
 }
@@ -66,6 +67,7 @@ export const useMapMarkers = ({
   const cardMapRef = useRef<Map<string, HTMLElement>>(new Map());
   const syncMarkerOverlaysRef = useRef<() => void>(() => undefined);
   const updateSingleMarkerRef = useRef<(id: string) => void>(() => undefined);
+  const updateCardPositionRef = useRef<() => void>(() => undefined);
   const createMarkerElementRef = useRef<(marker: MapMarker) => HTMLElement>(null!);
   const updateMarkerElementRef = useRef<
     (element: HTMLElement, marker: MapMarker, isActive: boolean) => void
@@ -360,6 +362,48 @@ export const useMapMarkers = ({
       document.body.appendChild(container);
     }
     return container;
+  }, []);
+
+  // 更新卡片位置（根据标记元素位置重新计算）
+  const updateCardPosition = useCallback(() => {
+    const visibleId = visibleCardIdRef.current;
+    if (!visibleId) return;
+
+    const cardMap = cardMapRef.current;
+    const overlayMap = overlayMapRef.current;
+    const card = cardMap.get(visibleId);
+    const markerElement = overlayMap.get(visibleId);
+    if (!card || !markerElement) return;
+
+    // 检查卡片是否显示
+    if (card.style.display === 'none') return;
+
+    // 计算标记在视口中的位置
+    const markerRect = markerElement.getBoundingClientRect();
+
+    // 获取卡片实际尺寸
+    const cardRect = card.getBoundingClientRect();
+    const cardWidth = cardRect.width || 300;
+
+    // 边距常量
+    const margin = 10;
+    const gap = 10; // 卡片与标记的间距
+
+    // 计算水平位置：优先居中，超出左右边界时调整
+    let leftPos = markerRect.left + markerRect.width / 2 - cardWidth / 2;
+
+    // 水平边界检测：防止卡片超出视口左右
+    if (leftPos < margin) {
+      leftPos = margin;
+    } else if (leftPos + cardWidth > window.innerWidth - margin) {
+      leftPos = window.innerWidth - cardWidth - margin;
+    }
+
+    // 垂直位置：卡片显示在标记上方
+    const bottomPos = window.innerHeight - markerRect.top + gap;
+
+    card.style.left = `${leftPos}px`;
+    card.style.bottom = `${bottomPos}px`;
   }, []);
 
   // 显示卡片并定位
@@ -691,6 +735,10 @@ export const useMapMarkers = ({
     updateSingleMarkerRef.current = updateSingleMarker;
   }, [updateSingleMarker]);
 
+  useEffect(() => {
+    updateCardPositionRef.current = updateCardPosition;
+  }, [updateCardPosition]);
+
   // 当 activeMarkerId 变化时，仅更新激活状态而不重新同步 overlay
   useEffect(() => {
     updateActiveState();
@@ -715,6 +763,7 @@ export const useMapMarkers = ({
     getNormalizedPointFromClient,
     syncMarkerOverlaysRef,
     updateSingleMarkerRef,
+    updateCardPositionRef,
     viewerRef,
     overlayMapRef,
   };
