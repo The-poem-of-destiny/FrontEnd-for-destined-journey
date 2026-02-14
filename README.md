@@ -2,11 +2,12 @@
 
 ## 作者
 
-Kitaikuyo，秋天的咸鱼，FL已躺平，yoyo514
+yoyo514,Hilo
 
 ## 概述
 
-角色卡**命定之诗与黄昏之歌**的前端代码仓库，使用了青空莉的 [酒馆助手编写模板](https://github.com/StageDog/tavern_helper_template)
+角色卡**命定之诗与黄昏之歌**的前端代码仓库，使用了青空莉的
+[酒馆助手编写模板](https://github.com/StageDog/tavern_helper_template)
 
 保留的模板说明文档 (不会更新): [模板说明](docs.md)
 
