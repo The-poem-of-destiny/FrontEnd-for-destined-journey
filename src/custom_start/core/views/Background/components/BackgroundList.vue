@@ -58,28 +58,31 @@ const checkRequirement = (required_value: string | undefined, current_value: str
   return required_value === current_value;
 };
 
+// 检查地点要求是否满足
+const checkLocationRequirement = (
+  required_value: string | undefined,
+  current_value: string,
+): boolean => {
+  if (!required_value) {
+    return true;
+  }
+  // 完全匹配，或当前地点是要求地点的子地点
+  return current_value === required_value || current_value.startsWith(required_value + '-');
+};
+
 // 检查是否满足所有要求（任一不满足则无法选择）
 const meetsRequirements = (item: Background): boolean => {
-  const requirements = [
-    { type: 'race', required: item.requiredRace, current: props.characterRace },
-    { type: 'location', required: item.requiredLocation, current: props.characterLocation },
-    { type: 'identity', required: item.requiredIdentity, current: props.characterIdentity },
-  ];
-
-  for (const req of requirements) {
-    switch (req.type) {
-      case 'race':
-      case 'location':
-      case 'identity':
-        if (!checkRequirement(req.required, req.current)) {
-          return false;
-        }
-        break;
-      default:
-        break;
-    }
+  // 种族和身份使用精确匹配
+  if (!checkRequirement(item.requiredRace, props.characterRace)) {
+    return false;
   }
-
+  if (!checkRequirement(item.requiredIdentity, props.characterIdentity)) {
+    return false;
+  }
+  // 地点使用层级前缀匹配
+  if (!checkLocationRequirement(item.requiredLocation, props.characterLocation)) {
+    return false;
+  }
   return true;
 };
 
@@ -168,6 +171,7 @@ watch(
           label="地区要求"
           :required-value="item.requiredLocation"
           :current-value="characterLocation"
+          match-mode="prefix"
         />
         <RequirementBadge
           v-if="item.requiredIdentity"

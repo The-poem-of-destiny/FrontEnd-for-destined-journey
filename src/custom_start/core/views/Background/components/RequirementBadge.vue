@@ -11,12 +11,23 @@ interface Props {
   requiredValue: string;
   /** 当前角色的实际值 */
   currentValue: string;
+  /** 匹配模式：'exact' 精确匹配（默认），'prefix' 前缀匹配（用于层级地点） */
+  matchMode?: 'exact' | 'prefix';
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  matchMode: 'exact',
+});
 
 // 检查是否满足要求
 const isMet = computed(() => {
+  if (props.matchMode === 'prefix') {
+    // 完全匹配，或当前地点是要求地点的子地点
+    return (
+      props.currentValue === props.requiredValue ||
+      props.currentValue.startsWith(props.requiredValue + '-')
+    );
+  }
   return props.currentValue === props.requiredValue;
 });
 </script>
