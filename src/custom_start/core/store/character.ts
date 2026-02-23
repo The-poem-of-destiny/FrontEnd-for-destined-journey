@@ -2,13 +2,14 @@ import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import {
   ATTRIBUTES,
-  BASE_STAT,
   calculateAPByLevel,
   generateInitialPoints,
   getIdentityCosts,
   getRaceCosts,
   getTierAttributeBonus,
   INITIAL_REINCARNATION_POINTS,
+  MAX_BASE_POINTS_PER_ATTR,
+  MAX_BASE_POINTS_TOTAL,
 } from '../data/base-info';
 import { getSkills } from '../data/skills';
 import type {
@@ -39,6 +40,13 @@ export const useCharacterStore = defineStore('character', () => {
     startLocation: '大陆东南部区域-索伦蒂斯王国',
     customStartLocation: '',
     level: 1,
+    basePoints: {
+      力量: 0,
+      敏捷: 0,
+      体质: 0,
+      智力: 0,
+      精神: 0,
+    },
     attributePoints: {
       力量: 0,
       敏捷: 0,
@@ -98,6 +106,20 @@ export const useCharacterStore = defineStore('character', () => {
     character.value.attributePoints[attr] = Math.max(0, points);
   };
 
+  // 基础点操作
+  const addBasePoint = (attr: keyof Attributes) => {
+    if (remainingBP.value > 0 && character.value.basePoints[attr] < MAX_BASE_POINTS_PER_ATTR) {
+      character.value.basePoints[attr]++;
+    }
+  };
+
+  const removeBasePoint = (attr: keyof Attributes) => {
+    if (character.value.basePoints[attr] > 0) {
+      character.value.basePoints[attr]--;
+    }
+  };
+
+  // 额外点操作
   const addAttributePoint = (attr: keyof Attributes) => {
     if (remainingAP.value > 0) {
       character.value.attributePoints[attr]++;
@@ -129,6 +151,13 @@ export const useCharacterStore = defineStore('character', () => {
       startLocation: '大陆东南部区域-索伦蒂斯王国',
       customStartLocation: '',
       level: 1,
+      basePoints: {
+        力量: 0,
+        敏捷: 0,
+        体质: 0,
+        智力: 0,
+        精神: 0,
+      },
       attributePoints: {
         力量: 0,
         敏捷: 0,
@@ -226,7 +255,12 @@ export const useCharacterStore = defineStore('character', () => {
     character.value.destinyPoints = 0;
   };
 
-  // 属性点相关计算
+  // 基础点相关计算
+  const usedBP = computed(() => _.sum(_.values(character.value.basePoints)));
+  const maxBP = computed(() => MAX_BASE_POINTS_TOTAL);
+  const remainingBP = computed(() => maxBP.value - usedBP.value);
+
+  // 额外点相关计算
   const usedAP = computed(() => _.sum(_.values(character.value.attributePoints)));
   const maxAP = computed(() => calculateAPByLevel(character.value.level));
   const remainingAP = computed(() => maxAP.value - usedAP.value);
@@ -237,7 +271,7 @@ export const useCharacterStore = defineStore('character', () => {
     return _.fromPairs(
       _.map(ATTRIBUTES, attr => [
         attr,
-        BASE_STAT + tierBonus + character.value.attributePoints[attr],
+        character.value.basePoints[attr] + tierBonus + character.value.attributePoints[attr],
       ]),
     ) as unknown as Attributes;
   });
@@ -247,7 +281,7 @@ export const useCharacterStore = defineStore('character', () => {
   watch(
     () => character.value.level,
     () => {
-      // 等级变化时，重置所有属性点分配
+      // 等级变化时，仅重置额外点分配（基础点不受等级影响）
       character.value.attributePoints = {
         力量: 0,
         敏捷: 0,
@@ -307,6 +341,9 @@ export const useCharacterStore = defineStore('character', () => {
     selectedPartners,
     selectedBackground,
 
+    usedBP,
+    maxBP,
+    remainingBP,
     usedAP,
     maxAP,
     remainingAP,
@@ -314,6 +351,8 @@ export const useCharacterStore = defineStore('character', () => {
 
     updateCharacterField,
     updateAttribute,
+    addBasePoint,
+    removeBasePoint,
     addAttributePoint,
     removeAttributePoint,
     rollInitialPoints,

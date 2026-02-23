@@ -1,4 +1,4 @@
-import { BASE_STAT, getLevelTierName, getTierAttributeBonus } from '../data/base-info';
+import { getLevelTierName, getTierAttributeBonus } from '../data/base-info';
 import { RARITY_MAP } from '../data/constants';
 import type { Background, CharacterConfig, Equipment, Item, Partner, Skill } from '../types';
 
@@ -165,9 +165,11 @@ export function generateAIPrompt(
     character.startLocation === '自定义' ? character.customStartLocation : character.startLocation;
 
   const tierBonus = getTierAttributeBonus(character.level);
-  const formatAttr = (extra: number) => {
-    const total = BASE_STAT + tierBonus + extra;
-    return `${BASE_STAT}(基础) + ${tierBonus}(层级) + ${extra}(额外) = ${total}`;
+  const formatAttr = (attr: keyof typeof character.basePoints) => {
+    const base = character.basePoints[attr];
+    const extra = character.attributePoints[attr];
+    const total = base + tierBonus + extra;
+    return `${base}(基础) + ${tierBonus}(层级) + ${extra}(额外) = ${total}`;
   };
 
   // 基本信息
@@ -182,11 +184,11 @@ export function generateAIPrompt(
   lines.push(`等级: Lv.${character.level}`);
   lines.push('');
   lines.push('【角色属性】');
-  lines.push(`力量: ${formatAttr(character.attributePoints.力量)}`);
-  lines.push(`敏捷: ${formatAttr(character.attributePoints.敏捷)}`);
-  lines.push(`体质: ${formatAttr(character.attributePoints.体质)}`);
-  lines.push(`智力: ${formatAttr(character.attributePoints.智力)}`);
-  lines.push(`精神: ${formatAttr(character.attributePoints.精神)}`);
+  lines.push(`力量: ${formatAttr('力量')}`);
+  lines.push(`敏捷: ${formatAttr('敏捷')}`);
+  lines.push(`体质: ${formatAttr('体质')}`);
+  lines.push(`智力: ${formatAttr('智力')}`);
+  lines.push(`精神: ${formatAttr('精神')}`);
 
   // 装备列表
   if (equipments.length > 0) {

@@ -11,13 +11,13 @@ import {
 } from '../../components/Form';
 import {
   ATTRIBUTES,
-  BASE_STAT,
   getGenders,
   getIdentityCosts,
   getLevelTierName,
   getRaceCosts,
   getStartLocationsCascader,
   getTierAttributeBonus,
+  MAX_BASE_POINTS_PER_ATTR,
   MAX_LEVEL,
   MIN_LEVEL,
 } from '../../data/base-info';
@@ -25,7 +25,7 @@ import { useCharacterStore } from '../../store';
 
 const characterStore = useCharacterStore();
 const { character } = storeToRefs(characterStore);
-const { addAttributePoint, removeAttributePoint } = characterStore;
+const { addBasePoint, removeBasePoint, addAttributePoint, removeAttributePoint } = characterStore;
 
 // 从外部数据获取选项列表
 const genders = getGenders;
@@ -160,13 +160,25 @@ const levelTierName = computed(() => {
         </div>
       </div>
 
-      <!-- 初始属性分配面板 -->
+      <!-- 属性分配面板 -->
       <div class="attributes-panel">
         <div class="panel-header">
-          <h3>初始属性分配</h3>
-          <div class="ap-info">
-            <span
-              >剩余AP:
+          <h3>属性分配</h3>
+          <div class="points-summary">
+            <span class="points-badge">
+              基础点:
+              <strong
+                :class="{
+                  error: characterStore.remainingBP < 0,
+                  success: characterStore.remainingBP === 0,
+                }"
+                >{{ characterStore.remainingBP }}</strong
+              >
+              / {{ characterStore.maxBP }}
+              <span class="points-hint">（单项≤{{ MAX_BASE_POINTS_PER_ATTR }}）</span>
+            </span>
+            <span v-if="characterStore.maxAP > 0" class="points-badge">
+              额外点:
               <strong
                 :class="{
                   error: characterStore.remainingAP < 0,
@@ -174,40 +186,92 @@ const levelTierName = computed(() => {
                 }"
                 >{{ characterStore.remainingAP }}</strong
               >
-              / {{ characterStore.maxAP }}</span
-            >
+              / {{ characterStore.maxAP }}
+            </span>
           </div>
         </div>
 
         <div class="panel-content">
-          <div class="attributes-grid">
-            <div v-for="attr in ATTRIBUTES" :key="attr" class="attribute-item">
+          <!-- 表头 -->
+          <div class="attr-table-header">
+            <span class="col-name">属性</span>
+            <span class="col-base">基础点</span>
+            <span class="col-tier">层级</span>
+            <span v-if="characterStore.maxAP > 0" class="col-extra">额外点</span>
+            <span class="col-result">总属性</span>
+          </div>
+
+          <!-- 每个属性一行 -->
+          <div v-for="attr in ATTRIBUTES" :key="attr" class="attr-row">
+            <span class="col-name">{{ attr }}</span>
+
+            <!-- 基础点 stepper -->
+            <div class="col-base">
+              <span class="mobile-label">基础点</span>
+              <FormStepper
+                :model-value="character.basePoints[attr]"
+                :min="0"
+                :max="MAX_BASE_POINTS_PER_ATTR"
+                :disable-increment="
+                  characterStore.remainingBP <= 0 ||
+                  character.basePoints[attr] >= MAX_BASE_POINTS_PER_ATTR
+                "
+                @increment="addBasePoint(attr)"
+                @decrement="removeBasePoint(attr)"
+              />
+            </div>
+
+            <!-- 层级固定值 -->
+            <div class="col-tier">
+              <span class="mobile-label">层级</span>
+              <span class="tier-value">{{ tierAttributeBonus }}</span>
+            </div>
+
+            <!-- 额外点 stepper -->
+            <div v-if="characterStore.maxAP > 0" class="col-extra">
+              <span class="mobile-label">额外点</span>
               <FormStepper
                 :model-value="character.attributePoints[attr]"
-                :label="attr"
                 :min="0"
                 :max="characterStore.maxAP"
                 :disable-increment="characterStore.remainingAP <= 0"
                 @increment="addAttributePoint(attr)"
                 @decrement="removeAttributePoint(attr)"
               />
-              <div class="attribute-display">
-                {{ BASE_STAT }} <span class="dim">(基础)</span> + {{ tierAttributeBonus }}
-                <span class="dim">(层级)</span> + {{ character.attributePoints[attr] }}
-                <span class="dim">(额外)</span> =
-                <strong class="final-value">{{ characterStore.finalAttributes[attr] }}</strong>
-              </div>
+            </div>
+
+            <!-- 最终值 -->
+            <div class="col-result">
+              <span class="mobile-label">总属性</span>
+              <span class="final-value">{{ characterStore.finalAttributes[attr] }}</span>
             </div>
           </div>
 
+          <!-- 状态提示 -->
           <div v-if="availableReincarnationPoints < 0" class="status-message error">
             ⚠️ 转生点数不足！
           </div>
-          <div v-else-if="characterStore.remainingAP === 0" class="status-message success">
+          <div
+            v-else-if="characterStore.remainingBP === 0 && characterStore.remainingAP === 0"
+            class="status-message success"
+          >
             ✓ 属性点已全部分配
           </div>
-          <div v-else-if="characterStore.remainingAP > 0" class="status-message info">
-            还有 {{ characterStore.remainingAP }} 点未分配
+          <div
+            v-else-if="characterStore.remainingBP > 0 || characterStore.remainingAP > 0"
+            class="status-message info"
+          >
+            <span v-if="characterStore.remainingBP > 0"
+              >基础点剩余 {{ characterStore.remainingBP }}</span
+            >
+            <span
+              v-if="characterStore.remainingBP > 0 && characterStore.remainingAP > 0"
+              class="sep"
+              >｜</span
+            >
+            <span v-if="characterStore.remainingAP > 0"
+              >额外点剩余 {{ characterStore.remainingAP }}</span
+            >
           </div>
         </div>
       </div>
@@ -273,20 +337,15 @@ const levelTierName = computed(() => {
 
 .attributes-panel {
   margin: var(--spacing-2xl) 0 0;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
 
   .panel-header {
     padding: var(--spacing-md) var(--spacing-lg);
-    background: linear-gradient(to bottom, var(--primary-bg), var(--card-bg));
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
 
     h3 {
       margin: 0;
@@ -295,13 +354,24 @@ const levelTierName = computed(() => {
       font-weight: 700;
     }
 
-    .ap-info {
-      font-size: 1rem;
+    .points-summary {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      flex-wrap: wrap;
+    }
+
+    .points-badge {
+      font-size: 0.9rem;
       color: var(--text-color);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      background: var(--primary-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
 
       strong {
         color: var(--accent-color);
-        font-size: 1.2rem;
+        font-size: 1.1rem;
 
         &.error {
           color: var(--error-color);
@@ -311,6 +381,11 @@ const levelTierName = computed(() => {
           color: var(--success-color);
         }
       }
+
+      .points-hint {
+        font-size: 0.75rem;
+        opacity: 0.7;
+      }
     }
   }
 
@@ -318,36 +393,98 @@ const levelTierName = computed(() => {
     padding: var(--spacing-lg);
   }
 
-  .attributes-grid {
+  // 移动端标签（桌面端隐藏）
+  .mobile-label {
+    display: none;
+  }
+
+  .attr-table-header {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
-  }
-
-  .attribute-item {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-  }
-
-  .attribute-display {
+    grid-template-columns: 50px auto 40px auto 50px;
+    gap: var(--spacing-md);
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
     font-size: 0.8rem;
+    font-weight: 600;
     color: var(--text-color-secondary);
+    border-bottom: 1px solid var(--border-color);
     text-align: center;
-    padding: var(--spacing-xs) 0;
-    background: var(--primary-bg);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-color);
 
-    .dim {
-      opacity: 0.7;
+    .col-name {
+      text-align: left;
+    }
+
+    .col-result {
+      text-align: right;
+    }
+  }
+
+  .attr-row {
+    display: grid;
+    grid-template-columns: 50px auto 40px auto 50px;
+    gap: var(--spacing-md);
+    align-items: center;
+    padding: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-color-light, rgba(255, 255, 255, 0.05));
+    transition: background var(--transition-fast);
+
+    &:hover {
+      background: var(--primary-bg);
+    }
+
+    &:last-of-type {
+      border-bottom: none;
+    }
+
+    .col-name {
+      font-weight: 600;
+      color: var(--title-color);
+      font-size: 1rem;
+    }
+
+    .col-base,
+    .col-extra {
+      display: flex;
+      justify-content: center;
+    }
+
+    .col-tier {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .tier-value {
+      font-weight: 600;
+      color: var(--text-color-secondary);
+      font-size: 1rem;
+    }
+
+    .col-result {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
     }
 
     .final-value {
+      font-weight: 700;
+      font-size: 1.1rem;
       color: var(--accent-color);
-      font-weight: bold;
     }
+
+    // 去掉 stepper 自带的 label（本行已有属性名列）
+    :deep(.form-stepper) {
+      .stepper-label {
+        display: none;
+      }
+    }
+  }
+
+  // 无额外点时的列布局（4列）
+  .attr-table-header:not(:has(+ .attr-row .col-extra)),
+  .attr-row:not(:has(.col-extra)) {
+    grid-template-columns: 50px auto 40px 50px;
   }
 
   .status-message {
@@ -357,6 +494,12 @@ const levelTierName = computed(() => {
     font-weight: 600;
     font-size: 1rem;
     border: 1px solid;
+    margin-top: var(--spacing-md);
+
+    .sep {
+      margin: 0 var(--spacing-xs);
+      opacity: 0.5;
+    }
 
     &.error {
       background: rgba(211, 47, 47, 0.1);
@@ -411,8 +554,50 @@ const levelTierName = computed(() => {
       align-items: stretch;
     }
 
-    .attributes-grid {
-      grid-template-columns: 1fr;
+    .attr-table-header {
+      display: none;
+    }
+
+    .mobile-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-color-secondary);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .attr-row {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md) var(--spacing-sm);
+
+      .col-name {
+        grid-column: 1 / -1;
+        font-size: 1.1rem;
+        padding-bottom: var(--spacing-xs);
+        border-bottom: 1px solid var(--border-color-light, rgba(255, 255, 255, 0.05));
+      }
+
+      .col-base,
+      .col-extra,
+      .col-tier,
+      .col-result {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .col-result {
+        align-items: flex-end;
+      }
+    }
+
+    // 无额外点时移动端改为3列（基础点、层级、总属性）
+    .attr-row:not(:has(.col-extra)) {
+      grid-template-columns: 1fr auto 1fr;
+
+      .col-result {
+        align-items: flex-end;
+      }
     }
   }
 }

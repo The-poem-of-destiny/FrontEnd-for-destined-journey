@@ -229,11 +229,58 @@ const CharacterFields = [
   'startLocation',
   'customStartLocation',
   'level',
+  'basePoints',
   'attributePoints',
   'reincarnationPoints',
   'destinyPoints',
   'money',
 ] as const;
+
+/** 空属性点模板 */
+const EmptyAttrPoints = { 力量: 0, 敏捷: 0, 体质: 0, 智力: 0, 精神: 0 };
+
+/** 旧版额外点公式比新版多算的基础值 */
+const OldBaseAPOffset = 5;
+/** 属性键列表 */
+const AttrKeys = ['力量', '敏捷', '体质', '智力', '精神'] as const;
+
+/**
+ * 兼容旧版预设数据
+ *
+ * 迁移策略：从旧 attributePoints 中总共扣除5点（每项各减1，不足则减到0），
+ * basePoints 初始化为全零由玩家重新分配
+ */
+function migratePresetCharacter(char: Record<string, unknown>): Record<string, unknown> {
+  if (!('basePoints' in char)) {
+    // 从旧 attributePoints 扣除多算的5点
+    const oldAttr = char.attributePoints as Record<string, number> | undefined;
+    if (oldAttr) {
+      let remaining = OldBaseAPOffset;
+      const newAttr = { ...oldAttr };
+
+      // 每个属性各减1点（循环扣除，保证公平）
+      for (const key of AttrKeys) {
+        if (remaining <= 0) break;
+        const deduct = Math.min(newAttr[key] || 0, 1);
+        newAttr[key] = (newAttr[key] || 0) - deduct;
+        remaining -= deduct;
+      }
+
+      // 若还有剩余未扣完（某些属性为0），从有余量的属性继续扣
+      for (const key of AttrKeys) {
+        if (remaining <= 0) break;
+        const deduct = Math.min(newAttr[key] || 0, remaining);
+        newAttr[key] = (newAttr[key] || 0) - deduct;
+        remaining -= deduct;
+      }
+
+      return { ...char, attributePoints: newAttr, basePoints: { ...EmptyAttrPoints } };
+    }
+
+    return { ...char, basePoints: { ...EmptyAttrPoints } };
+  }
+  return char;
+}
 
 /**
  * 将预设数据应用到 store
@@ -259,12 +306,17 @@ export function applyPresetToStore(
   characterStore.resetCharacter();
   characterStore.clearAllSelections();
 
-  // 2. 应用角色基本信息
+  // 2. 兼容旧预设：补充 basePoints 默认值
+  const migratedCharacter = migratePresetCharacter(
+    preset.character as unknown as Record<string, unknown>,
+  );
+
+  // 3. 应用角色基本信息
   _.forEach(CharacterFields, field => {
-    if (_.has(preset.character, field)) {
+    if (_.has(migratedCharacter, field)) {
       characterStore.updateCharacterField(
         field as keyof CharacterConfig,
-        _.get(preset.character, field),
+        _.get(migratedCharacter, field),
       );
     }
   });

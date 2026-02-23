@@ -88,21 +88,20 @@ export const ATTRIBUTES: (keyof Attributes)[] = ['力量', '敏捷', '体质', '
 export const MAX_LEVEL = 10;
 export const MIN_LEVEL = 1;
 
-// 基础属性值
-export const BASE_STAT = 4;
+// 基础点常量
+/** 基础点总和上限 */
+export const MAX_BASE_POINTS_TOTAL = 25;
+/** 基础点单项上限 */
+export const MAX_BASE_POINTS_PER_ATTR = 6;
 
 /**
  * 根据等级计算可用的【额外】AP点数
+ * 额外点总和 = 等级 Lv - 1
  * @param level 角色等级
- * @returns 可自由分配的AP点数
+ * @returns 可自由分配的额外AP点数
  */
 export const calculateAPByLevel = (level: number): number => {
-  const baseAP = 5;
-
-  // 额外属性点 = 等级 - 1
-  const extraAP = Math.max(0, level - 1);
-
-  return baseAP + extraAP;
+  return Math.max(0, level - 1);
 };
 
 /**

@@ -105,6 +105,9 @@ export interface CharacterConfig {
   startLocation: string;
   customStartLocation: string;
   level: number;
+  /** 基础点分配（总和上限25，单项上限6） */
+  basePoints: Record<keyof Attributes, number>;
+  /** 额外点分配（总和 = Lv-1） */
   attributePoints: Record<keyof Attributes, number>;
   reincarnationPoints: number; // 转生点数
   destinyPoints: number; // 命运点数
