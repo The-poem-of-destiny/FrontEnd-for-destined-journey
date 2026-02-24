@@ -402,48 +402,7 @@ export function findMatchingPreset(characterStore: {
   return matchingPreset?.name ?? null;
 }
 
-// ===================== 导入/导出功能 =====================
-
-/** 导出文件格式版本 */
-const EXPORT_VERSION = 1;
-
-/**
- * 导出文件的数据结构
- */
-export interface PresetExportFile {
-  /** 格式版本 */
-  version: number;
-  /** 导出类型：single（单个预设）或 batch（批量导出） */
-  type: 'single' | 'batch';
-  /** 导出时间戳 */
-  exportedAt: number;
-  /** 预设列表 */
-  presets: CharacterPreset[];
-}
-
-/**
- * 导入冲突项
- */
-export interface ImportConflict {
-  /** 导入的预设数据 */
-  preset: CharacterPreset;
-  /** 用户选择的处理方式 */
-  resolution: 'overwrite' | 'rename' | 'skip';
-}
-
-/**
- * 导入结果
- */
-export interface ImportResult {
-  /** 成功导入的数量 */
-  imported: number;
-  /** 跳过的数量 */
-  skipped: number;
-  /** 覆盖的数量 */
-  overwritten: number;
-  /** 重命名的数量 */
-  renamed: number;
-}
+// 导入/导出
 
 /**
  * 触发浏览器下载文件
@@ -464,24 +423,19 @@ function downloadFile(content: string, fileName: string): void {
 
 /**
  * 导出单个预设为 JSON 文件
+ * 直接导出 CharacterPreset 对象
  * @param preset 要导出的预设
  */
 export function exportPreset(preset: CharacterPreset): void {
-  const exportData: PresetExportFile = {
-    version: EXPORT_VERSION,
-    type: 'single',
-    exportedAt: Date.now(),
-    presets: [klona(preset)],
-  };
-
-  const content = JSON.stringify(exportData, null, 2);
-  const fileName = `${preset.name}.preset.json`;
+  const content = JSON.stringify(klona(preset), null, 2);
+  const fileName = `destiny_${preset.name}.preset.json`;
   downloadFile(content, fileName);
   toastr.success(`预设「${preset.name}」已导出`);
 }
 
 /**
- * 导出所有预设为 JSON 文件
+ * 导出所有预设为单个 JSON 文件
+ * 直接导出 CharacterPreset[] 数组
  */
 export function exportAllPresets(): void {
   const presets = listPresets();
@@ -490,62 +444,48 @@ export function exportAllPresets(): void {
     return;
   }
 
-  const exportData: PresetExportFile = {
-    version: EXPORT_VERSION,
-    type: 'batch',
-    exportedAt: Date.now(),
-    presets: klona(presets),
-  };
-
-  const content = JSON.stringify(exportData, null, 2);
+  const content = JSON.stringify(klona(presets), null, 2);
   const date = new Date().toISOString().slice(0, 10);
-  const fileName = `所有预设_${date}.presets.json`;
+  const fileName = `destiny_all_${date}.presets.json`;
   downloadFile(content, fileName);
   toastr.success(`已导出 ${presets.length} 个预设`);
 }
 
 /**
- * 验证导入文件的格式
- * @param data 解析后的 JSON 数据
- * @returns 验证后的数据或 null（验证失败）
+ * 验证单个预设对象是否具备必需结构
+ * 检查：是普通对象、含 name 字符串字段、含 character 普通对象字段
  */
-export function validatePresetFile(data: unknown): PresetExportFile | null {
-  if (!_.isPlainObject(data)) {
-    toastr.error('导入失败：文件格式不正确');
-    return null;
+function isValidPreset(value: unknown): value is CharacterPreset {
+  if (!_.isPlainObject(value)) return false;
+  const obj = value as Record<string, unknown>;
+  return _.isString(obj.name) && _.isPlainObject(obj.character);
+}
+
+/**
+ * 解析导入文件的数据
+ * 自动识别两种格式：
+ * - CharacterPreset 对象（含 name + character）→ 包装为数组
+ * - CharacterPreset[] 数组 → 直接使用
+ * @param data 解析后的 JSON 数据
+ * @returns 预设数组或 null（解析失败）
+ */
+export function parsePresetFile(data: unknown): CharacterPreset[] | null {
+  // 格式一：单个预设对象
+  if (isValidPreset(data)) {
+    return [data];
   }
 
-  const file = data as Record<string, unknown>;
-
-  // 检查必要字段
-  if (!_.has(file, 'version') || !_.has(file, 'presets')) {
-    toastr.error('导入失败：缺少必要字段（version/presets）');
-    return null;
-  }
-
-  if (!_.isArray(file.presets)) {
-    toastr.error('导入失败：presets 字段格式不正确');
-    return null;
-  }
-
-  const presets = file.presets as Record<string, unknown>[];
-
-  // 验证每个预设的基本结构
-  const requiredFields = ['name', 'character'];
-  for (const preset of presets) {
-    const missing = _.filter(requiredFields, field => !_.has(preset, field));
-    if (!_.isEmpty(missing)) {
-      toastr.error(`导入失败：预设缺少必要字段（${missing.join(', ')}）`);
-      return null;
+  // 格式二：预设数组
+  if (_.isArray(data) && !_.isEmpty(data)) {
+    if (_.every(data, isValidPreset)) {
+      return data;
     }
+    toastr.error('导入失败：数组中存在格式不正确的预设');
+    return null;
   }
 
-  return {
-    version: file.version as number,
-    type: (file.type as 'single' | 'batch') || 'single',
-    exportedAt: (file.exportedAt as number) || Date.now(),
-    presets: presets as unknown as CharacterPreset[],
-  };
+  toastr.error('导入失败：文件格式不正确，需要预设对象或预设数组');
+  return null;
 }
 
 /**
@@ -584,122 +524,54 @@ export function readFileFromInput(): Promise<string> {
 }
 
 /**
- * 检测导入预设与现有预设的冲突
- * @param presets 要导入的预设列表
- * @returns 冲突列表和无冲突列表
+ * 统计导入预设中与现有预设同名的数量
  */
-export function detectConflicts(presets: CharacterPreset[]): {
-  conflicts: ImportConflict[];
-  noConflicts: CharacterPreset[];
-} {
-  const conflicts: ImportConflict[] = [];
-  const noConflicts: CharacterPreset[] = [];
+export function countConflicts(presets: CharacterPreset[]): number {
+  return _.filter(presets, preset => isPresetNameExists(preset.name)).length;
+}
+
+/**
+ * 批量导入预设
+ * 直接操作存储，避免逐个 savePreset 产生多次 toastr 和重复读写
+ * @param presets 要导入的预设列表
+ * @param overwrite 是否覆盖同名预设
+ * @returns 导入和跳过的数量
+ */
+export function importPresets(
+  presets: CharacterPreset[],
+  overwrite: boolean,
+): { imported: number; skipped: number } {
+  const storage = getPresetStorage();
+  let imported = 0;
+  let skipped = 0;
 
   _.forEach(presets, preset => {
-    if (isPresetNameExists(preset.name)) {
-      conflicts.push({ preset, resolution: 'overwrite' });
+    const existingIndex = _.findIndex(storage.presets, { name: preset.name });
+
+    if (existingIndex !== -1) {
+      if (!overwrite) {
+        skipped++;
+        return;
+      }
+      // 覆盖同名预设
+      storage.presets[existingIndex] = {
+        ...preset,
+        updatedAt: Date.now(),
+      };
     } else {
-      noConflicts.push(preset);
-    }
-  });
-
-  return { conflicts, noConflicts };
-}
-
-/**
- * 生成不冲突的重命名
- * @param name 原始名称
- * @returns 不冲突的新名称
- */
-export function generateUniqueName(name: string): string {
-  let suffix = 1;
-  let newName = `${name} (${suffix})`;
-  while (isPresetNameExists(newName)) {
-    suffix++;
-    newName = `${name} (${suffix})`;
-  }
-  return newName;
-}
-
-/**
- * 执行预设导入
- * 处理无冲突的预设和已解决冲突的预设
- * @param noConflicts 无冲突预设列表
- * @param resolvedConflicts 已解决的冲突列表
- * @returns 导入结果
- */
-export function executeImport(
-  noConflicts: CharacterPreset[],
-  resolvedConflicts: ImportConflict[],
-): ImportResult {
-  const result: ImportResult = {
-    imported: 0,
-    skipped: 0,
-    overwritten: 0,
-    renamed: 0,
-  };
-
-  // 导入无冲突的预设
-  _.forEach(noConflicts, preset => {
-    savePreset(
-      {
+      // 新增预设
+      storage.presets.push({
         ...preset,
         createdAt: preset.createdAt || Date.now(),
         updatedAt: Date.now(),
-      },
-      false,
-    );
-    result.imported++;
-  });
-
-  // 处理冲突预设
-  _.forEach(resolvedConflicts, ({ preset, resolution }) => {
-    switch (resolution) {
-      case 'overwrite':
-        savePreset(
-          {
-            ...preset,
-            updatedAt: Date.now(),
-          },
-          true,
-        );
-        result.overwritten++;
-        break;
-
-      case 'rename': {
-        const newName = generateUniqueName(preset.name);
-        savePreset(
-          {
-            ...preset,
-            name: newName,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          },
-          false,
-        );
-        result.renamed++;
-        break;
-      }
-
-      case 'skip':
-        result.skipped++;
-        break;
+      });
     }
+    imported++;
   });
 
-  // 汇总提示
-  const messages: string[] = [];
-  const total = result.imported + result.overwritten + result.renamed;
-  if (total > 0) messages.push(`成功导入 ${total} 个预设`);
-  if (result.overwritten > 0) messages.push(`覆盖 ${result.overwritten} 个`);
-  if (result.renamed > 0) messages.push(`重命名 ${result.renamed} 个`);
-  if (result.skipped > 0) messages.push(`跳过 ${result.skipped} 个`);
-
-  if (total > 0) {
-    toastr.success(messages.join('，'));
-  } else if (result.skipped > 0) {
-    toastr.info(`已跳过所有 ${result.skipped} 个冲突预设`);
+  if (imported > 0) {
+    savePresetStorage(storage);
   }
 
-  return result;
+  return { imported, skipped };
 }

@@ -4,20 +4,19 @@ import { useCharacterStore } from '../store/character';
 import { useCustomContentStore } from '../store/customContent';
 import {
   applyPresetToStore,
+  countConflicts,
   createPresetFromStore,
   deletePreset,
-  detectConflicts,
-  executeImport,
   exportAllPresets,
   exportPreset,
   formatPresetTime,
+  importPresets,
   isPresetNameExists,
   listPresets,
+  parsePresetFile,
   readFileFromInput,
   savePreset,
-  validatePresetFile,
   type CharacterPreset,
-  type ImportConflict,
 } from '../utils/preset-manager';
 import { scrollToIframe } from '../utils/scroll';
 
@@ -149,7 +148,7 @@ const showSaveSection = computed(() => {
   return props.mode !== 'load';
 });
 
-// ===================== 导入/导出功能 =====================
+// 导入/导出
 
 // 导出单个预设
 const handleExportPreset = (preset: CharacterPreset) => {
@@ -161,12 +160,11 @@ const handleExportAll = () => {
   exportAllPresets();
 };
 
-// 导入冲突弹窗相关状态
-const showConflictModal = ref(false);
-const importConflicts = ref<ImportConflict[]>([]);
-const importNoConflicts = ref<CharacterPreset[]>([]);
+// 待确认导入的预设和冲突数
+const pendingImportPresets = ref<CharacterPreset[]>([]);
+const pendingConflictCount = ref(0);
 
-// 处理导入
+// 处理导入：读取文件、解析、检测冲突
 const handleImport = async () => {
   try {
     const content = await readFileFromInput();
@@ -179,26 +177,20 @@ const handleImport = async () => {
       return;
     }
 
-    const exportFile = validatePresetFile(data);
-    if (!exportFile) return;
+    const presets = parsePresetFile(data);
+    if (!presets) return;
 
-    if (_.isEmpty(exportFile.presets)) {
-      toastr.warning('导入文件中没有预设数据');
-      return;
-    }
+    const conflictNum = countConflicts(presets);
 
-    // 检测冲突
-    const { conflicts, noConflicts } = detectConflicts(exportFile.presets);
-
-    if (_.isEmpty(conflicts)) {
+    if (conflictNum === 0) {
       // 无冲突，直接导入
-      executeImport(noConflicts, []);
+      const { imported } = importPresets(presets, false);
+      toastr.success(`成功导入 ${imported} 个预设`);
       refreshPresetList();
     } else {
-      // 有冲突，显示冲突处理弹窗
-      importConflicts.value = conflicts;
-      importNoConflicts.value = noConflicts;
-      showConflictModal.value = true;
+      // 有冲突，暂存待用户确认
+      pendingImportPresets.value = presets;
+      pendingConflictCount.value = conflictNum;
     }
   } catch (error: unknown) {
     // 用户取消选择文件不需要提示
@@ -208,46 +200,30 @@ const handleImport = async () => {
   }
 };
 
-// 更新冲突项的处理方式
-const updateConflictResolution = (index: number, resolution: ImportConflict['resolution']) => {
-  importConflicts.value[index].resolution = resolution;
+// 确认导入（覆盖冲突）
+const confirmImportOverwrite = () => {
+  const { imported } = importPresets(pendingImportPresets.value, true);
+  toastr.success(`成功导入 ${imported} 个预设（已覆盖同名预设）`);
+  pendingImportPresets.value = [];
+  pendingConflictCount.value = 0;
+  refreshPresetList();
 };
 
-// 全部覆盖
-const setAllOverwrite = () => {
-  _.forEach(importConflicts.value, conflict => {
-    conflict.resolution = 'overwrite';
-  });
-};
-
-// 全部跳过
-const setAllSkip = () => {
-  _.forEach(importConflicts.value, conflict => {
-    conflict.resolution = 'skip';
-  });
-};
-
-// 全部重命名
-const setAllRename = () => {
-  _.forEach(importConflicts.value, conflict => {
-    conflict.resolution = 'rename';
-  });
-};
-
-// 确认导入（处理冲突后）
-const confirmImport = () => {
-  executeImport(importNoConflicts.value, importConflicts.value);
-  showConflictModal.value = false;
-  importConflicts.value = [];
-  importNoConflicts.value = [];
+// 确认导入（跳过冲突）
+const confirmImportSkip = () => {
+  const { imported, skipped } = importPresets(pendingImportPresets.value, false);
+  const messages = [`成功导入 ${imported} 个预设`];
+  if (skipped > 0) messages.push(`跳过 ${skipped} 个同名预设`);
+  toastr.success(messages.join('，'));
+  pendingImportPresets.value = [];
+  pendingConflictCount.value = 0;
   refreshPresetList();
 };
 
 // 取消导入
 const cancelImport = () => {
-  showConflictModal.value = false;
-  importConflicts.value = [];
-  importNoConflicts.value = [];
+  pendingImportPresets.value = [];
+  pendingConflictCount.value = 0;
 };
 </script>
 
@@ -339,7 +315,8 @@ const cancelImport = () => {
                       ><i class="fa-solid fa-shield"></i> {{ preset.equipments.length }}</span
                     >
                     <span class="meta-item"
-                      ><i class="fa-solid fa-wand-sparkles"></i> {{ preset.skills.length }}</span
+                      ><i class="fa-solid fa-wand-magic-sparkles"></i>
+                      {{ preset.skills.length }}</span
                     >
                     <span class="meta-item"
                       ><i class="fa-solid fa-heart"></i> {{ preset.partners.length }}</span
@@ -389,8 +366,12 @@ const cancelImport = () => {
       </div>
     </div>
 
-    <!-- 导入冲突处理弹窗 -->
-    <div v-if="showConflictModal" class="modal-overlay conflict-overlay" @click.self="cancelImport">
+    <!-- 导入冲突确认弹窗 -->
+    <div
+      v-if="pendingImportPresets.length > 0"
+      class="modal-overlay conflict-overlay"
+      @click.self="cancelImport"
+    >
       <div class="modal-container conflict-container">
         <div class="modal-header">
           <h2 class="modal-title"><i class="fa-solid fa-triangle-exclamation"></i> 导入冲突</h2>
@@ -398,81 +379,18 @@ const cancelImport = () => {
         </div>
         <div class="modal-content">
           <p class="conflict-description">
-            以下 {{ importConflicts.length }} 个预设与现有预设名称冲突，请选择处理方式：
-          </p>
-
-          <!-- 批量操作 -->
-          <div class="batch-actions">
-            <button class="action-button batch-button" @click="setAllOverwrite">
-              <i class="fa-solid fa-arrows-rotate"></i> 全部覆盖
-            </button>
-            <button class="action-button batch-button" @click="setAllRename">
-              <i class="fa-solid fa-pen"></i> 全部重命名
-            </button>
-            <button class="action-button batch-button" @click="setAllSkip">
-              <i class="fa-solid fa-forward"></i> 全部跳过
-            </button>
-          </div>
-
-          <!-- 冲突列表 -->
-          <div class="conflict-list">
-            <div
-              v-for="(conflict, index) in importConflicts"
-              :key="conflict.preset.name"
-              class="conflict-item"
-            >
-              <div class="conflict-info">
-                <span class="conflict-name">{{ conflict.preset.name }}</span>
-                <span class="conflict-detail">
-                  <i class="fa-solid fa-user"></i>
-                  {{ conflict.preset.character.name || '未命名' }}
-                  · Lv.{{ conflict.preset.character.level }}
-                </span>
-              </div>
-              <div class="conflict-options">
-                <label class="conflict-option">
-                  <input
-                    type="radio"
-                    :name="`conflict-${index}`"
-                    value="overwrite"
-                    :checked="conflict.resolution === 'overwrite'"
-                    @change="updateConflictResolution(index, 'overwrite')"
-                  />
-                  <span class="option-label overwrite-label">覆盖</span>
-                </label>
-                <label class="conflict-option">
-                  <input
-                    type="radio"
-                    :name="`conflict-${index}`"
-                    value="rename"
-                    :checked="conflict.resolution === 'rename'"
-                    @change="updateConflictResolution(index, 'rename')"
-                  />
-                  <span class="option-label rename-label">重命名</span>
-                </label>
-                <label class="conflict-option">
-                  <input
-                    type="radio"
-                    :name="`conflict-${index}`"
-                    value="skip"
-                    :checked="conflict.resolution === 'skip'"
-                    @change="updateConflictResolution(index, 'skip')"
-                  />
-                  <span class="option-label skip-label">跳过</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- 无冲突项提示 -->
-          <p v-if="importNoConflicts.length > 0" class="no-conflict-hint">
-            <i class="fa-solid fa-circle-check"></i>
-            另有 {{ importNoConflicts.length }} 个预设无冲突，将直接导入
+            共 {{ pendingImportPresets.length }} 个预设，其中
+            {{ pendingConflictCount }} 个与现有预设同名，请选择处理方式：
           </p>
         </div>
         <div class="modal-footer conflict-footer">
           <button class="footer-button cancel-footer" @click="cancelImport">取消</button>
-          <button class="footer-button confirm-footer" @click="confirmImport">确认导入</button>
+          <button class="footer-button skip-footer" @click="confirmImportSkip">
+            <i class="fa-solid fa-forward"></i> 跳过冲突
+          </button>
+          <button class="footer-button confirm-footer" @click="confirmImportOverwrite">
+            <i class="fa-solid fa-arrows-rotate"></i> 覆盖冲突
+          </button>
         </div>
       </div>
     </div>
@@ -1041,21 +959,6 @@ const cancelImport = () => {
   .preset-actions {
     margin-left: 0;
     justify-content: flex-end;
-  }
-
-  .batch-actions {
-    flex-wrap: wrap;
-  }
-
-  .conflict-item {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--spacing-sm);
-  }
-
-  .conflict-options {
-    margin-left: 0;
-    justify-content: flex-start;
   }
 }
 </style>
