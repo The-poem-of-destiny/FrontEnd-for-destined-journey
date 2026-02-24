@@ -47,6 +47,7 @@
   border-radius: 2px;
   transition: background $transition-fast;
   word-break: break-word;
+  white-space: pre-line;
 
   &:hover {
     background: var(--theme-tab-hover-bg);

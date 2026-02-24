@@ -56,6 +56,7 @@
 .value {
   color: var(--theme-text-primary);
   @include text-wrap;
+  white-space: pre-line;
 }
 
 // 操作按钮区域

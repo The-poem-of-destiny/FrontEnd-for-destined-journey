@@ -6,6 +6,7 @@ export interface TabItem {
   label: string;
   icon: string;
   disabled?: boolean;
+  badge?: number;
 }
 
 interface TabBarProps {
@@ -31,6 +32,9 @@ export const TabBar: FC<TabBarProps> = ({ tabs, activeTab, onTabChange }) => {
           >
             <i className={tab.icon} />
             <span>{tab.label}</span>
+            {tab.badge != null && tab.badge > 0 && (
+              <span className={styles.badge}>{tab.badge > 99 ? '99+' : tab.badge}</span>
+            )}
           </button>
         ))}
       </div>

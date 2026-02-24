@@ -38,6 +38,7 @@
 .displayValue {
   color: var(--theme-text-primary);
   word-break: break-word;
+  white-space: pre-line;
 
   &.placeholder {
     color: var(--theme-text-muted);

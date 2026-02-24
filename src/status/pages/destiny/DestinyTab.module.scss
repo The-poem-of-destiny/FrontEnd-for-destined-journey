@@ -266,6 +266,7 @@
   color: var(--theme-text-primary);
   min-width: 0;
   word-break: break-word;
+  white-space: pre-line;
 }
 
 // 外貌与着装
@@ -290,6 +291,7 @@
   line-height: 1.4;
   min-width: 0;
   word-break: break-word;
+  white-space: pre-line;
 }
 
 @media (max-width: 540px) {
@@ -318,6 +320,7 @@
   color: var(--theme-text-primary);
   min-width: 0;
   word-break: break-word;
+  white-space: pre-line;
 }
 
 @media (max-width: 540px) {
@@ -444,6 +447,7 @@
   min-width: 0;
   word-break: break-word;
   overflow-wrap: anywhere;
+  white-space: pre-line;
 }
 
 // 背景故事
@@ -469,6 +473,7 @@
   min-width: 0;
   word-break: break-word;
   overflow-wrap: anywhere;
+  white-space: pre-line;
 }
 
 @media (max-width: 540px) {

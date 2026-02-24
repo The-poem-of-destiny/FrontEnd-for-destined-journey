@@ -38,4 +38,4 @@ export const TabsConfig: TabItem[] = [
 ];
 
 /** 默认激活的 Tab */
-export const DefaultTabId = 'quests';
+export const DefaultTabId = 'status';

@@ -211,12 +211,14 @@
   font-size: 11px;
   color: var(--theme-text-secondary);
   word-break: break-word;
+  white-space: pre-line;
 }
 
 .effectSource {
   font-size: 11px;
   color: var(--theme-text-muted);
   word-break: break-word;
+  white-space: pre-line;
 }
 
 .effectMeta {

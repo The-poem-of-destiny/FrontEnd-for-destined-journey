@@ -1,6 +1,6 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import { DefaultTabId, TabsConfig } from './config/tabs.config';
-import { useEditorSettingStore, useThemeStore } from './core/stores';
+import { useEditorSettingStore, useMvuDataStore, useThemeStore } from './core/stores';
 import { ContentArea, TabBar, TitleBar, Window } from './layout';
 import { DestinyTab, ItemsTab, MapTab, NewsTab, QuestsTab, SettingsTab, StatusTab } from './pages';
 
@@ -10,11 +10,18 @@ const App: FC = () => {
 
   const { loadSettings } = useEditorSettingStore();
   const { loadTheme } = useThemeStore();
+  const { data } = useMvuDataStore();
 
   useEffect(() => {
     loadSettings();
     loadTheme();
   }, [loadSettings, loadTheme]);
+
+  /** 带 badge 的 Tab 配置 */
+  const tabsWithBadge = useMemo(() => {
+    const questCount = _.size(data?.任务列表);
+    return TabsConfig.map(tab => (tab.id === 'quests' ? { ...tab, badge: questCount } : tab));
+  }, [data?.任务列表]);
 
   /**
    * 渲染当前 Tab 内容
@@ -63,7 +70,7 @@ const App: FC = () => {
     <Window>
       <TitleBar onSettingsClick={handleSettingsClick} />
       <TabBar
-        tabs={TabsConfig}
+        tabs={tabsWithBadge}
         activeTab={showSettings ? '' : activeTab}
         onTabChange={handleTabChange}
       />
