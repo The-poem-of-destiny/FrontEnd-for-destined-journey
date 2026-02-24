@@ -33,7 +33,7 @@ const ItemCategories = [
   {
     id: 'skills',
     label: '技能',
-    icon: 'fa-solid fa-wand-sparkles',
+    icon: 'fa-solid fa-wand-magic-sparkles',
     filterKey: '类型',
     pathPrefix: '主角.技能',
     itemCategory: 'skill' as const,
