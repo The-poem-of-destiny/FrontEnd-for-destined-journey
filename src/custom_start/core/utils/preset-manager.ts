@@ -401,3 +401,177 @@ export function findMatchingPreset(characterStore: {
   const matchingPreset = _.find(presets, preset => isStoreMatchingPreset(preset, characterStore));
   return matchingPreset?.name ?? null;
 }
+
+// 导入/导出
+
+/**
+ * 触发浏览器下载文件
+ * @param content 文件内容
+ * @param fileName 文件名
+ */
+function downloadFile(content: string, fileName: string): void {
+  const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * 导出单个预设为 JSON 文件
+ * 直接导出 CharacterPreset 对象
+ * @param preset 要导出的预设
+ */
+export function exportPreset(preset: CharacterPreset): void {
+  const content = JSON.stringify(klona(preset), null, 2);
+  const fileName = `destiny_${preset.name}.preset.json`;
+  downloadFile(content, fileName);
+  toastr.success(`预设「${preset.name}」已导出`);
+}
+
+/**
+ * 导出所有预设为单个 JSON 文件
+ * 直接导出 CharacterPreset[] 数组
+ */
+export function exportAllPresets(): void {
+  const presets = listPresets();
+  if (_.isEmpty(presets)) {
+    toastr.warning('没有可导出的预设');
+    return;
+  }
+
+  const content = JSON.stringify(klona(presets), null, 2);
+  const date = new Date().toISOString().slice(0, 10);
+  const fileName = `destiny_all_${date}.presets.json`;
+  downloadFile(content, fileName);
+  toastr.success(`已导出 ${presets.length} 个预设`);
+}
+
+/**
+ * 验证单个预设对象是否具备必需结构
+ * 检查：是普通对象、含 name 字符串字段、含 character 普通对象字段
+ */
+function isValidPreset(value: unknown): value is CharacterPreset {
+  if (!_.isPlainObject(value)) return false;
+  const obj = value as Record<string, unknown>;
+  return _.isString(obj.name) && _.isPlainObject(obj.character);
+}
+
+/**
+ * 解析导入文件的数据
+ * 自动识别两种格式：
+ * - CharacterPreset 对象（含 name + character）→ 包装为数组
+ * - CharacterPreset[] 数组 → 直接使用
+ * @param data 解析后的 JSON 数据
+ * @returns 预设数组或 null（解析失败）
+ */
+export function parsePresetFile(data: unknown): CharacterPreset[] | null {
+  // 格式一：单个预设对象
+  if (isValidPreset(data)) {
+    return [data];
+  }
+
+  // 格式二：预设数组
+  if (_.isArray(data) && !_.isEmpty(data)) {
+    if (_.every(data, isValidPreset)) {
+      return data;
+    }
+    toastr.error('导入失败：数组中存在格式不正确的预设');
+    return null;
+  }
+
+  toastr.error('导入失败：文件格式不正确，需要预设对象或预设数组');
+  return null;
+}
+
+/**
+ * 读取用户选择的文件内容
+ * @returns 文件内容的 Promise
+ */
+export function readFileFromInput(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.style.display = 'none';
+
+    input.addEventListener('change', () => {
+      const file = input.files?.[0];
+      if (!file) {
+        reject(new Error('未选择文件'));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('文件读取失败'));
+      reader.readAsText(file);
+    });
+
+    // 用户取消选择
+    input.addEventListener('cancel', () => {
+      reject(new Error('用户取消'));
+    });
+
+    document.body.appendChild(input);
+    input.click();
+    document.body.removeChild(input);
+  });
+}
+
+/**
+ * 统计导入预设中与现有预设同名的数量
+ */
+export function countConflicts(presets: CharacterPreset[]): number {
+  return _.filter(presets, preset => isPresetNameExists(preset.name)).length;
+}
+
+/**
+ * 批量导入预设
+ * 直接操作存储，避免逐个 savePreset 产生多次 toastr 和重复读写
+ * @param presets 要导入的预设列表
+ * @param overwrite 是否覆盖同名预设
+ * @returns 导入和跳过的数量
+ */
+export function importPresets(
+  presets: CharacterPreset[],
+  overwrite: boolean,
+): { imported: number; skipped: number } {
+  const storage = getPresetStorage();
+  let imported = 0;
+  let skipped = 0;
+
+  _.forEach(presets, preset => {
+    const existingIndex = _.findIndex(storage.presets, { name: preset.name });
+
+    if (existingIndex !== -1) {
+      if (!overwrite) {
+        skipped++;
+        return;
+      }
+      // 覆盖同名预设
+      storage.presets[existingIndex] = {
+        ...preset,
+        updatedAt: Date.now(),
+      };
+    } else {
+      // 新增预设
+      storage.presets.push({
+        ...preset,
+        createdAt: preset.createdAt || Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+    imported++;
+  });
+
+  if (imported > 0) {
+    savePresetStorage(storage);
+  }
+
+  return { imported, skipped };
+}
