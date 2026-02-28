@@ -1,40 +1,30 @@
 import { getFilteredEntries, getWorldBookName, updateWorldBook } from './worldbookload&update';
 
 // ========================
-// 类型定义
+// 统一 DLC 类型定义
 // ========================
 
 /** DLC 类别 */
 export type DLCCategory = '角色' | '事件' | '扩展';
 
-/** 单个世界书条目 */
+/** DLC 条目（单个世界书条目） */
 export interface DLCEntry {
   name: string;
   enabled: boolean;
 }
 
-/** 分组后的 DLC 选项（统一模型） */
+/** DLC 选项（分组后的 DLC 项） */
 export interface DLCOption {
-  /** 唯一标识，如 "[DLC][角色][薇薇拉]" */
-  groupKey: string;
-  /** DLC 类别 */
-  category: DLCCategory;
-  /** 显示名称，如 "薇薇拉" */
-  label: string;
-  /** 作者 */
-  author: string;
-  /** 其他信息 */
-  info: string;
-  /** 互斥目标数组 - [!xxx] 格式，开启时关闭包含 [xxx] 的 DLC */
-  exclusionTargets: string[];
-  /** 替换目标数组 - [>xxx] 格式，开启时禁用包含 [xxx] 的条目，关闭时恢复 */
-  replacementTargets: string[];
-  /** 前置需求数组 - [<xxx] 格式，需要 [xxx] DLC 处于开启状态 */
-  prerequisiteTargets: string[];
-  /** 该 DLC 下的所有条目 */
-  entries: DLCEntry[];
-  /** 是否启用（所有条目启用时为 true） */
-  enabled: boolean;
+  dlcKey: string; // 分组Key，如 "[DLC][角色][薇薇拉]"
+  category: DLCCategory; // 类别
+  label: string; // 显示名称，如 "薇薇拉"
+  author: string; // 作者
+  info: string; // 附加信息
+  exclusionTargets: string[]; // 互斥目标 [!xxx]
+  replacementTargets: string[]; // 替换目标 [>xxx]
+  prerequisiteTargets: string[]; // 前置需求 [<xxx]
+  entries: DLCEntry[]; // 该 DLC 下的所有条目
+  enabled: boolean; // 是否启用（所有条目启用时为 true）
 }
 
 /** 切换 DLC 的结果 */
@@ -45,30 +35,27 @@ export interface ToggleDLCResult {
   missingPrerequisites?: string[];
 }
 
-// ========================
-// 初始状态
-// ========================
-
+/** DLC 状态初始值 */
 export const initialDLCState = {
   dlcOptions: [] as DLCOption[],
   localSelections: new Map<string, boolean>(),
 };
 
 // ========================
-// 正则模式
+// 正则表达式
 // ========================
 
-/** 匹配所有 DLC 条目 */
+/** 匹配所有 DLC 条目 - 以 [DLC] 开头 */
 const DLC_PATTERN = /^\[DLC\]/;
 
-/** 提取 groupKey: [DLC][类别][名称] */
-const DLC_GROUP_KEY_PATTERN = /^(\[DLC\]\[[^\]]+\]\[[^\]]+\])/;
+/** 提取类别 - [DLC][角色|事件|扩展] */
+const DLC_CATEGORY_PATTERN = /^\[DLC\]\[(角色|事件|扩展)\]/;
 
-/** 提取类别（第二个方括号内容） */
-const DLC_CATEGORY_PATTERN = /^\[DLC\]\[([^\]]+)\]/;
+/** 提取分组Key - [DLC][类别][名称]（不含关系标记） */
+const DLC_KEY_PATTERN = /^(\[DLC\]\[(?:角色|事件|扩展)\]\[[^\]]+\])/;
 
-/** 提取显示名称（第三个方括号内容） */
-const DLC_LABEL_PATTERN = /^\[DLC\]\[[^\]]+\]\[([^\]]+)\]/;
+/** 提取显示名称 - [DLC][类别][名称] 中的名称 */
+const DLC_LABEL_PATTERN = /^\[DLC\]\[(?:角色|事件|扩展)\]\[([^\]]+)\]/;
 
 /** 互斥目标 [!xxx] */
 const EXCLUSION_PATTERN = /\[!([^\]]+)\]/g;
@@ -79,11 +66,11 @@ const REPLACEMENT_PATTERN = /\[>([^\]]+)\]/g;
 /** 前置需求 [<xxx] */
 const PREREQUISITE_PATTERN = /\[<([^\]]+)\]/g;
 
-/** 作者信息 - 匹配最后一个 "(xxx)" */
+/** 作者信息 - 最后一个括号 */
 const AUTHOR_PATTERN = /\(([^)]+)\)(?=[^()]*$)/;
 
 // ========================
-// 工具函数
+// 排序
 // ========================
 
 /**
@@ -100,81 +87,68 @@ export function sortDLCOptions(options: DLCOption[]): DLCOption[] {
   return [...options].sort((a, b) => pinyinCompare(a.label, b.label));
 }
 
-/**
- * 转义正则表达式特殊字符
- */
-function escapeRegExp(string: string): string {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 // ========================
 // 解析函数
 // ========================
 
 /**
- * 从条目名称中提取 groupKey
- * @param entryName 如 "[DLC][角色][薇薇拉][!xxx]薇薇拉-本体(K1nn)"
+ * 从条目名称中提取分组 Key
+ * @param entryName 如 "[DLC][角色][薇薇拉]薇薇拉-本体(Author)"
  * @returns 如 "[DLC][角色][薇薇拉]"，不匹配则返回 null
  */
-function extractGroupKey(entryName: string): string | null {
-  const match = entryName.match(DLC_GROUP_KEY_PATTERN);
+function extractDLCKey(entryName: string): string | null {
+  const match = entryName.match(DLC_KEY_PATTERN);
   return match ? match[1] : null;
 }
 
 /**
- * 从 groupKey 中提取类别
- * @param groupKey 如 "[DLC][角色][薇薇拉]"
- * @returns 如 "角色"
+ * 从条目名称中提取类别
+ * @param entryName 如 "[DLC][角色][薇薇拉]..."
+ * @returns 如 "角色"，不匹配则返回 null
  */
-function extractCategory(groupKey: string): DLCCategory | null {
-  const match = groupKey.match(DLC_CATEGORY_PATTERN);
-  if (!match) return null;
-  const cat = match[1];
-  if (cat === '角色' || cat === '事件' || cat === '扩展') {
-    return cat;
-  }
-  return null;
+function extractDLCCategory(entryName: string): DLCCategory | null {
+  const match = entryName.match(DLC_CATEGORY_PATTERN);
+  return match ? (match[1] as DLCCategory) : null;
 }
 
 /**
- * 从 groupKey 中提取显示名称
- * @param groupKey 如 "[DLC][角色][薇薇拉]"
+ * 从分组 Key 中提取显示名称
+ * @param dlcKey 如 "[DLC][角色][薇薇拉]"
  * @returns 如 "薇薇拉"
  */
-function extractLabel(groupKey: string): string {
-  const match = groupKey.match(DLC_LABEL_PATTERN);
-  return match ? match[1] : groupKey;
+function extractDLCLabel(dlcKey: string): string {
+  const match = dlcKey.match(DLC_LABEL_PATTERN);
+  return match ? match[1] : dlcKey;
 }
 
 /**
- * 使用正则全局匹配提取目标数组
+ * 从条目名称中提取指定模式的所有目标（通用提取器）
  */
-function extractTargetsWithPattern(text: string, pattern: RegExp): string[] {
+function extractTargetsFromEntry(entryName: string, pattern: RegExp): string[] {
   const targets: string[] = [];
   const regex = new RegExp(pattern.source, 'g');
   let match;
-  while ((match = regex.exec(text)) !== null) {
+  while ((match = regex.exec(entryName)) !== null) {
     targets.push(match[1]);
   }
   return targets;
 }
 
 /**
- * 从条目数组中合并提取所有目标（去重）
+ * 从条目数组中提取所有目标并去重（通用合并器）
  */
-function extractMergedTargets(entries: DLCEntry[], pattern: RegExp): string[] {
+function extractTargetsFromEntries(entries: DLCEntry[], pattern: RegExp): string[] {
   const allTargets = new Set<string>();
   for (const entry of entries) {
-    const targets = extractTargetsWithPattern(entry.name, pattern);
-    targets.forEach(t => allTargets.add(t));
+    for (const target of extractTargetsFromEntry(entry.name, pattern)) {
+      allTargets.add(target);
+    }
   }
   return Array.from(allTargets);
 }
 
 /**
- * 从条目数组中提取作者和信息
- * @param entries DLC 下的所有条目
- * @returns { author, info }
+ * 从条目数组中提取作者和附加信息
  */
 function extractAuthorInfo(entries: DLCEntry[]): { author: string; info: string } {
   for (const entry of entries) {
@@ -209,17 +183,22 @@ export async function loadDLCOptions(): Promise<{
   const bookName = getWorldBookName();
   const entries = await getFilteredEntries(DLC_PATTERN, bookName);
 
-  // 按 groupKey 分组条目
+  // 按 dlcKey 分组条目
   const groups = new Map<string, DLCEntry[]>();
+  const categoryMap = new Map<string, DLCCategory>();
 
   for (const entry of entries as { name: string; enabled: boolean }[]) {
-    const groupKey = extractGroupKey(entry.name);
-    if (!groupKey) continue;
+    const dlcKey = extractDLCKey(entry.name);
+    if (!dlcKey) continue;
 
-    if (!groups.has(groupKey)) {
-      groups.set(groupKey, []);
+    const category = extractDLCCategory(entry.name);
+    if (!category) continue;
+
+    if (!groups.has(dlcKey)) {
+      groups.set(dlcKey, []);
+      categoryMap.set(dlcKey, category);
     }
-    groups.get(groupKey)!.push({
+    groups.get(dlcKey)!.push({
       name: entry.name,
       enabled: entry.enabled,
     });
@@ -227,32 +206,26 @@ export async function loadDLCOptions(): Promise<{
 
   // 构建 DLC 选项列表
   const dlcOptions: DLCOption[] = [];
-  for (const [groupKey, groupEntries] of groups) {
-    const category = extractCategory(groupKey);
-    if (!category) continue;
-
+  for (const [dlcKey, groupEntries] of groups) {
     const allEnabled = groupEntries.every(e => e.enabled);
     const { author, info } = extractAuthorInfo(groupEntries);
-
     dlcOptions.push({
-      groupKey,
-      category,
-      label: extractLabel(groupKey),
+      dlcKey,
+      category: categoryMap.get(dlcKey)!,
+      label: extractDLCLabel(dlcKey),
       author,
       info,
-      exclusionTargets: extractMergedTargets(groupEntries, EXCLUSION_PATTERN),
-      replacementTargets: extractMergedTargets(groupEntries, REPLACEMENT_PATTERN),
-      prerequisiteTargets: extractMergedTargets(groupEntries, PREREQUISITE_PATTERN),
+      exclusionTargets: extractTargetsFromEntries(groupEntries, EXCLUSION_PATTERN),
+      replacementTargets: extractTargetsFromEntries(groupEntries, REPLACEMENT_PATTERN),
+      prerequisiteTargets: extractTargetsFromEntries(groupEntries, PREREQUISITE_PATTERN),
       entries: groupEntries,
       enabled: allEnabled,
     });
   }
 
-  // 排序
   const sortedOptions = sortDLCOptions(dlcOptions);
 
-  // 初始化本地选择列表
-  const localSelections = new Map(sortedOptions.map(opt => [opt.groupKey, opt.enabled]));
+  const localSelections = new Map(sortedOptions.map(dlc => [dlc.dlcKey, dlc.enabled]));
 
   return { dlcOptions: sortedOptions, localSelections, bookName };
 }
@@ -262,7 +235,7 @@ export async function loadDLCOptions(): Promise<{
 // ========================
 
 /**
- * 检查前置需求是否满足（跨类别查找）
+ * 检查前置需求是否满足（跨类别）
  */
 function checkPrerequisites(
   dlcOptions: DLCOption[],
@@ -272,10 +245,10 @@ function checkPrerequisites(
   const missingPrerequisites: string[] = [];
 
   for (const target of prerequisiteTargets) {
-    // 跨所有类别查找包含 [target] 的 DLC
-    const prerequisiteDLC = dlcOptions.find(opt => opt.groupKey.includes(`[${target}]`));
+    // 在所有 DLC 中查找包含 [target] 的项
+    const prerequisiteDLC = dlcOptions.find(dlc => dlc.dlcKey.includes(`[${target}]`));
     if (prerequisiteDLC) {
-      const isEnabled = localSelections.get(prerequisiteDLC.groupKey) ?? false;
+      const isEnabled = localSelections.get(prerequisiteDLC.dlcKey) ?? false;
       if (!isEnabled) {
         missingPrerequisites.push(target);
       }
@@ -291,23 +264,23 @@ function checkPrerequisites(
 }
 
 /**
- * 切换 DLC 启用状态（统一处理所有类别的互斥/前置/级联逻辑）
+ * 切换 DLC 启用状态（跨类别关系处理）
  *
- * 处理三种关系（跨类别生效）：
- * 1. 互斥 [!xxx]：开启时关闭包含 [xxx] 的 DLC
+ * 处理三种关系：
+ * 1. 互斥 [!xxx]：开启时关闭包含 [xxx] 的 DLC（跨类别）
  * 2. 替换 [>xxx]：开启时关闭包含 [xxx] 的条目（保存时处理）
- * 3. 前置需求 [<xxx]：开启时检查 [xxx] DLC 是否已开启
+ * 3. 前置需求 [<xxx]：开启时检查 [xxx] DLC 是否已开启（跨类别）
  */
 export function toggleDLC(
   localSelections: Map<string, boolean>,
   dlcOptions: DLCOption[],
-  groupKey: string,
+  dlcKey: string,
 ): ToggleDLCResult {
   const newSelections = new Map(localSelections);
-  const currentEnabled = newSelections.get(groupKey) ?? false;
+  const currentEnabled = newSelections.get(dlcKey) ?? false;
   const newEnabled = !currentEnabled;
 
-  const targetDLC = dlcOptions.find(opt => opt.groupKey === groupKey);
+  const targetDLC = dlcOptions.find(dlc => dlc.dlcKey === dlcKey);
 
   // 启用时检查前置需求
   if (newEnabled && targetDLC) {
@@ -329,17 +302,17 @@ export function toggleDLC(
     }
   }
 
-  newSelections.set(groupKey, newEnabled);
+  newSelections.set(dlcKey, newEnabled);
 
   // 启用时处理互斥逻辑（跨类别）
   if (newEnabled && targetDLC) {
     for (const exclusionTarget of targetDLC.exclusionTargets) {
-      for (const opt of dlcOptions) {
+      for (const dlc of dlcOptions) {
         if (
-          opt.groupKey !== groupKey &&
-          (opt.label === exclusionTarget || opt.groupKey.includes(`[${exclusionTarget}]`))
+          dlc.dlcKey !== dlcKey &&
+          (dlc.label === exclusionTarget || dlc.dlcKey.includes(`[${exclusionTarget}]`))
         ) {
-          newSelections.set(opt.groupKey, false);
+          newSelections.set(dlc.dlcKey, false);
         }
       }
     }
@@ -347,11 +320,11 @@ export function toggleDLC(
 
   // 禁用时级联禁用依赖此 DLC 的其他 DLC（跨类别）
   if (!newEnabled && targetDLC) {
-    for (const opt of dlcOptions) {
-      if (opt.groupKey !== groupKey) {
-        const isEnabled = newSelections.get(opt.groupKey) ?? false;
-        if (isEnabled && opt.prerequisiteTargets.includes(targetDLC.label)) {
-          newSelections.set(opt.groupKey, false);
+    for (const dlc of dlcOptions) {
+      if (dlc.dlcKey !== dlcKey) {
+        const isEnabled = newSelections.get(dlc.dlcKey) ?? false;
+        if (isEnabled && dlc.prerequisiteTargets.includes(targetDLC.label)) {
+          newSelections.set(dlc.dlcKey, false);
         }
       }
     }
@@ -374,9 +347,9 @@ export function hasDLCChanges(
   dlcOptions: DLCOption[],
   localSelections: Map<string, boolean>,
 ): boolean {
-  for (const opt of dlcOptions) {
-    const localEnabled = localSelections.get(opt.groupKey) ?? false;
-    if (localEnabled !== opt.enabled) {
+  for (const dlc of dlcOptions) {
+    const localEnabled = localSelections.get(dlc.dlcKey) ?? false;
+    if (localEnabled !== dlc.enabled) {
       return true;
     }
   }
@@ -388,41 +361,41 @@ export function hasDLCChanges(
 // ========================
 
 /**
- * 收集所有被启用 DLC 的互斥目标
+ * 收集所有被启用 DLC 的互斥目标（需要禁用的目标）
  */
 function collectExclusionTargetsToDisable(
   dlcOptions: DLCOption[],
   localSelections: Map<string, boolean>,
 ): string[] {
   const targets: string[] = [];
-  for (const opt of dlcOptions) {
-    const isEnabled = localSelections.get(opt.groupKey) ?? false;
-    if (isEnabled && opt.exclusionTargets.length > 0) {
-      targets.push(...opt.exclusionTargets);
+  for (const dlc of dlcOptions) {
+    const isEnabled = localSelections.get(dlc.dlcKey) ?? false;
+    if (isEnabled && dlc.exclusionTargets.length > 0) {
+      targets.push(...dlc.exclusionTargets);
     }
   }
   return [...new Set(targets)];
 }
 
 /**
- * 收集所有被启用 DLC 的替换目标
+ * 收集所有被启用 DLC 的替换目标（需要禁用的条目）
  */
 function collectReplacementTargetsToDisable(
   dlcOptions: DLCOption[],
   localSelections: Map<string, boolean>,
 ): string[] {
   const targets: string[] = [];
-  for (const opt of dlcOptions) {
-    const isEnabled = localSelections.get(opt.groupKey) ?? false;
-    if (isEnabled && opt.replacementTargets.length > 0) {
-      targets.push(...opt.replacementTargets);
+  for (const dlc of dlcOptions) {
+    const isEnabled = localSelections.get(dlc.dlcKey) ?? false;
+    if (isEnabled && dlc.replacementTargets.length > 0) {
+      targets.push(...dlc.replacementTargets);
     }
   }
   return [...new Set(targets)];
 }
 
 /**
- * 收集所有从启用变为禁用的 DLC 的替换目标（需要恢复启用）
+ * 收集所有被禁用 DLC 的替换目标（需要恢复启用的条目）
  */
 function collectReplacementTargetsToEnable(
   dlcOptions: DLCOption[],
@@ -430,18 +403,29 @@ function collectReplacementTargetsToEnable(
   originalStates: Map<string, boolean>,
 ): string[] {
   const targets: string[] = [];
-  for (const opt of dlcOptions) {
-    const isEnabled = localSelections.get(opt.groupKey) ?? false;
-    const wasEnabled = originalStates.get(opt.groupKey) ?? false;
-    if (!isEnabled && wasEnabled && opt.replacementTargets.length > 0) {
-      targets.push(...opt.replacementTargets);
+  for (const dlc of dlcOptions) {
+    const isEnabled = localSelections.get(dlc.dlcKey) ?? false;
+    const wasEnabled = originalStates.get(dlc.dlcKey) ?? false;
+    // 只有从启用变为禁用时才恢复替换目标
+    if (!isEnabled && wasEnabled && dlc.replacementTargets.length > 0) {
+      targets.push(...dlc.replacementTargets);
     }
   }
   return [...new Set(targets)];
 }
 
 /**
- * 保存 DLC 选择到世界书（统一保存，一次 updateWorldBook 调用）
+ * 辅助函数：转义正则表达式特殊字符
+ */
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * 保存 DLC 选择到世界书
+ * @param dlcOptions DLC 选项列表
+ * @param localSelections 本地选择状态
+ * @param bookName 世界书名称
  * @returns 更新后的 DLC 选项列表
  */
 export async function saveDLCChanges(
@@ -454,14 +438,14 @@ export async function saveDLCChanges(
   }
 
   // 构建原始状态映射
-  const originalStates = new Map(dlcOptions.map(opt => [opt.groupKey, opt.enabled]));
+  const originalStates = new Map(dlcOptions.map(dlc => [dlc.dlcKey, dlc.enabled]));
 
   // 构建更新列表：将每个 DLC 的所有条目设置为相同的启用状态
   const updatedEntries: Array<{ name: string; enabled: boolean }> = [];
 
-  for (const opt of dlcOptions) {
-    const newEnabled = localSelections.get(opt.groupKey) ?? false;
-    for (const entry of opt.entries) {
+  for (const dlc of dlcOptions) {
+    const newEnabled = localSelections.get(dlc.dlcKey) ?? false;
+    for (const entry of dlc.entries) {
       updatedEntries.push({
         name: entry.name,
         enabled: newEnabled,
@@ -525,7 +509,7 @@ export async function saveDLCChanges(
     }
   }
 
-  // 处理替换逻辑（恢复启用）：启用包含 [替换目标] 的条目
+  // 处理替换逻辑（恢复启用）
   if (filteredReplacementTargetsToEnable.length > 0) {
     for (const target of filteredReplacementTargetsToEnable) {
       const pattern = new RegExp(`\\[${escapeRegExp(target)}\\]`);
@@ -536,7 +520,6 @@ export async function saveDLCChanges(
         if (existingIndex === -1) {
           updatedEntries.push({ name: entry.name, enabled: true });
         } else if (updatedEntries[existingIndex].enabled !== false) {
-          // 禁用优先级更高，不覆盖已禁用的条目
           updatedEntries[existingIndex].enabled = true;
         }
       }
@@ -546,12 +529,12 @@ export async function saveDLCChanges(
   await updateWorldBook(updatedEntries, bookName);
 
   // 返回更新后的 DLC 选项列表
-  return dlcOptions.map(opt => {
-    const newEnabled = localSelections.get(opt.groupKey) ?? false;
+  return dlcOptions.map(dlc => {
+    const newEnabled = localSelections.get(dlc.dlcKey) ?? false;
     return {
-      ...opt,
+      ...dlc,
       enabled: newEnabled,
-      entries: opt.entries.map(entry => ({
+      entries: dlc.entries.map(entry => ({
         ...entry,
         enabled: newEnabled,
       })),

@@ -6,13 +6,25 @@
       <!-- Tab 导航 -->
       <div class="tab-navigation">
         <button
-          v-for="tab in tabs"
-          :key="tab.key"
           class="tab-button"
-          :class="{ active: activeTab === tab.key }"
-          @click="switchTab(tab.key)"
+          :class="{ active: activeTab === '角色' }"
+          @click="switchTab('角色')"
         >
-          <span class="tab-label">{{ tab.label }}</span>
+          <span class="tab-label">角色</span>
+        </button>
+        <button
+          class="tab-button"
+          :class="{ active: activeTab === '事件' }"
+          @click="switchTab('事件')"
+        >
+          <span class="tab-label">事件</span>
+        </button>
+        <button
+          class="tab-button"
+          :class="{ active: activeTab === '扩展' }"
+          @click="switchTab('扩展')"
+        >
+          <span class="tab-label">扩展</span>
         </button>
         <button
           class="refresh-button"
@@ -31,75 +43,70 @@
 
       <!-- Tab 内容区域 -->
       <div class="tab-content">
-        <div
-          v-for="tab in tabs"
-          v-show="activeTab === tab.key"
-          :key="tab.key"
-          class="control-group"
-        >
-          <div v-if="isLoading" class="loading-text">正在加载{{ tab.label }}列表...</div>
-          <div v-else-if="filteredOptionsForTab(tab.key).length === 0" class="empty-text">
-            未找到可用的{{ tab.label }}
+        <div class="control-group">
+          <div v-if="isLoading" class="loading-text">正在加载{{ activeTab }}列表...</div>
+          <div v-else-if="currentTabOptions.length === 0" class="empty-text">
+            未找到可用的{{ activeTab }}
           </div>
           <div v-else class="list-detail-layout">
             <div class="item-list">
               <button
-                v-for="opt in filteredOptionsForTab(tab.key)"
-                :key="opt.groupKey"
+                v-for="dlc in filteredOptions"
+                :key="dlc.dlcKey"
                 class="list-item"
                 :class="{
-                  'toggled-on': localSelections.get(opt.groupKey),
-                  selected: selectedItem === opt.groupKey,
+                  'toggled-on': localSelections.get(dlc.dlcKey),
+                  selected: selectedDLC === dlc.dlcKey,
                 }"
-                @click="selectedItem = opt.groupKey"
+                @click="selectedDLC = dlc.dlcKey"
               >
-                {{ opt.label }}
+                {{ dlc.label }}
               </button>
             </div>
             <div class="item-detail">
-              <template v-if="selectedItem && selectedInfo">
-                <h3 class="detail-name">{{ selectedInfo.label }}</h3>
+              <template v-if="selectedDLC && selectedDLCInfo">
+                <h3 class="detail-name">{{ selectedDLCInfo.label }}</h3>
                 <div class="detail-row">
                   <span class="detail-label">作者:</span>
-                  <span class="detail-value">{{ selectedInfo.author || '未知' }}</span>
+                  <span class="detail-value">{{ selectedDLCInfo.author || '未知' }}</span>
                 </div>
-                <div class="detail-row">
+                <div v-if="selectedDLCInfo.entries.length > 1" class="detail-row">
                   <span class="detail-label">大小:</span>
-                  <span class="detail-value">{{ selectedInfo.entries.length }} 个条目</span>
+                  <span class="detail-value">{{ selectedDLCInfo.entries.length }} 个条目</span>
                 </div>
-                <div v-if="selectedInfo.exclusionTargets.length > 0" class="detail-row">
+                <div v-if="selectedDLCInfo.exclusionTargets.length > 0" class="detail-row">
                   <span class="detail-label">互斥:</span>
                   <span class="detail-value exclusion-hint">{{
-                    selectedInfo.exclusionTargets.join(', ')
+                    selectedDLCInfo.exclusionTargets.join(', ')
                   }}</span>
                 </div>
-                <div v-if="selectedInfo.replacementTargets.length > 0" class="detail-row">
+                <div v-if="selectedDLCInfo.replacementTargets.length > 0" class="detail-row">
                   <span class="detail-label">替换:</span>
                   <span class="detail-value replacement-hint">{{
-                    selectedInfo.replacementTargets.join(', ')
+                    selectedDLCInfo.replacementTargets.join(', ')
                   }}</span>
                 </div>
-                <div v-if="selectedInfo.prerequisiteTargets.length > 0" class="detail-row">
+                <div v-if="selectedDLCInfo.prerequisiteTargets.length > 0" class="detail-row">
                   <span class="detail-label">前置:</span>
                   <span class="detail-value prerequisite-hint">{{
-                    selectedInfo.prerequisiteTargets.join(', ')
+                    selectedDLCInfo.prerequisiteTargets.join(', ')
                   }}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">信息:</span>
-                  <span class="detail-value">{{ selectedInfo.info || '无' }}</span>
+                  <span class="detail-value">{{ selectedDLCInfo.info || '无' }}</span>
                 </div>
                 <div class="detail-actions">
                   <button
                     class="toggle-btn"
-                    :class="{ 'toggled-on': localSelections.get(selectedItem) }"
-                    @click="handleToggle(selectedItem)"
+                    :class="{ 'toggled-on': localSelections.get(selectedDLC) }"
+                    @click="handleToggle(selectedDLC)"
                   >
-                    {{ localSelections.get(selectedItem) ? '已启用' : '已禁用' }}
+                    {{ localSelections.get(selectedDLC) ? '已启用' : '已禁用' }}
                   </button>
                 </div>
               </template>
-              <div v-else class="detail-placeholder">请选择一个{{ tab.label }}查看详情</div>
+              <div v-else class="detail-placeholder">请选择一个{{ activeTab }}查看详情</div>
             </div>
           </div>
         </div>
@@ -130,13 +137,6 @@ const emit = defineEmits<{
   next: [];
 }>();
 
-// Tab 配置
-const tabs: { key: DLCCategory; label: string }[] = [
-  { key: '角色', label: '角色' },
-  { key: '事件', label: '事件' },
-  { key: '扩展', label: '扩展' },
-];
-
 const isLoading = ref(false);
 const isSaving = ref(false);
 
@@ -146,42 +146,37 @@ const activeTab = ref<DLCCategory>('角色');
 // 搜索状态
 const searchTerm = ref('');
 
-// 选中项状态（统一）
-const selectedItem = ref<string | null>(null);
+// 选中项状态
+const selectedDLC = ref<string | null>(null);
 
-// DLC 统一状态
+// 统一 DLC 状态
 const dlcOptions = ref<DLCOption[]>([...initialDLCState.dlcOptions]);
 const localSelections = ref(new Map(initialDLCState.localSelections));
 
 const bookName = ref<string | null>(null);
 
-// 计算属性：按类别过滤的选项
-function optionsForTab(category: DLCCategory): DLCOption[] {
-  return dlcOptions.value.filter(opt => opt.category === category);
-}
-
-// 计算属性：按类别过滤 + 搜索过滤
-function filteredOptionsForTab(category: DLCCategory): DLCOption[] {
-  const term = searchTerm.value.toLowerCase();
-  const categoryOptions = optionsForTab(category);
-  if (!term) return categoryOptions;
-
-  return categoryOptions.filter(opt => {
-    const searchStr = `${opt.label} ${opt.author || ''} ${opt.info || ''}`.toLowerCase();
-    return searchStr.includes(term);
-  });
-}
-
-// 计算属性：获取选中项的详细信息
-const selectedInfo = computed(() => {
-  if (!selectedItem.value) return null;
-  return dlcOptions.value.find(opt => opt.groupKey === selectedItem.value) || null;
+// 计算属性：当前 Tab 的选项列表
+const currentTabOptions = computed(() => {
+  return dlcOptions.value.filter(dlc => dlc.category === activeTab.value);
 });
 
-function switchTab(category: DLCCategory) {
-  activeTab.value = category;
-  selectedItem.value = null;
-}
+// 计算属性：过滤后的列表
+const filteredOptions = computed(() => {
+  const term = searchTerm.value.toLowerCase();
+  const tabOptions = currentTabOptions.value;
+  if (!term) return tabOptions;
+
+  return tabOptions.filter(dlc => {
+    const searchStr = `${dlc.label} ${dlc.author || ''} ${dlc.info || ''}`.toLowerCase();
+    return searchStr.includes(term);
+  });
+});
+
+// 计算属性：获取选中项的详细信息
+const selectedDLCInfo = computed(() => {
+  if (!selectedDLC.value) return null;
+  return dlcOptions.value.find(dlc => dlc.dlcKey === selectedDLC.value) || null;
+});
 
 async function loadAllOptions() {
   isLoading.value = true;
@@ -204,8 +199,13 @@ async function handleRefresh() {
   await loadAllOptions();
 }
 
-function handleToggle(groupKey: string) {
-  const result = toggleDLC(localSelections.value, dlcOptions.value, groupKey);
+function switchTab(tab: DLCCategory) {
+  activeTab.value = tab;
+  selectedDLC.value = null;
+}
+
+function handleToggle(dlcKey: string) {
+  const result = toggleDLC(localSelections.value, dlcOptions.value, dlcKey);
 
   if (result.success) {
     localSelections.value = result.selections;
@@ -215,18 +215,18 @@ function handleToggle(groupKey: string) {
 }
 
 /**
- * 点击下一步：保存所有 DLC 变更到世界书后跳转
+ * 点击下一步：保存所有 DLC 变更后跳转
  */
 async function handleNext() {
   isSaving.value = true;
   try {
     if (bookName.value) {
-      const updated = await saveDLCChangesService(
+      const updatedOptions = await saveDLCChangesService(
         dlcOptions.value,
         localSelections.value,
         bookName.value,
       );
-      dlcOptions.value = updated;
+      dlcOptions.value = updatedOptions;
     }
   } catch (error) {
     console.error('保存DLC选择失败:', error);
@@ -239,7 +239,7 @@ async function handleNext() {
 // 监听 Tab 切换，清空搜索词和选中状态
 watch(activeTab, () => {
   searchTerm.value = '';
-  selectedItem.value = null;
+  selectedDLC.value = null;
 });
 
 // 组件挂载时加载所有选项
@@ -600,6 +600,10 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
+.nav-icon {
+  font-size: 1.1em;
+}
+
 @media screen and (max-width: 600px) {
   .main-title {
     font-size: 1.8em;
@@ -612,6 +616,9 @@ onMounted(() => {
 
   .list-detail-layout {
     flex-direction: column;
+  }
+
+  .list-detail-layout {
     height: auto;
   }
 
@@ -628,6 +635,9 @@ onMounted(() => {
   .item-detail {
     height: auto;
     max-height: none;
+  }
+
+  .item-detail {
     padding: 10px 0;
   }
 }
