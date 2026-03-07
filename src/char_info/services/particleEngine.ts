@@ -37,7 +37,8 @@ export function createParticleEngine(options: CreateParticleEngineOptions): Part
   if (mode === 0) mode = 1;
 
   const baseParticleCount = window.innerWidth < 600 ? 15 : 30;
-  const PARTICLE_COUNT = t <= 2 ? Math.max(8, Math.floor(baseParticleCount * 0.55)) : baseParticleCount;
+  const PARTICLE_COUNT =
+    t <= 2 ? Math.max(8, Math.floor(baseParticleCount * 0.55)) : baseParticleCount;
 
   let r = 255;
   let g = 255;

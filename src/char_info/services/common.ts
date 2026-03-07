@@ -32,7 +32,9 @@ export function getSmartArray(input: unknown): string[] {
   processed = processed.replace(/^[\s\["']+|[\s\]"']+$/g, '');
   const items = processed.split(/[,;|，；、]/);
 
-  return items.map(s => s.trim().replace(/^["'\[\(]+|["'\]\)]+$/g, '')).filter(s => s && s !== 'null');
+  return items
+    .map(s => s.trim().replace(/^["'\[\(]+|["'\]\)]+$/g, ''))
+    .filter(s => s && s !== 'null');
 }
 
 export function escapeHtml(str: unknown): string {

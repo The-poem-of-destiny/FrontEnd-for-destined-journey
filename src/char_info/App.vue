@@ -5,7 +5,8 @@
       <div class="error-body">
         <div class="yaml-error-row yaml-error-sub"><b>技术信息：</b>{{ parseError.message }}</div>
         <div v-if="parseError.line !== undefined" class="yaml-error-row">
-          <b>定位：</b>第 {{ (parseError.line ?? 0) + 1 }} 行，第 {{ (parseError.column ?? 0) + 1 }} 列
+          <b>定位：</b>第 {{ (parseError.line ?? 0) + 1 }} 行，第
+          {{ (parseError.column ?? 0) + 1 }} 列
         </div>
 
         <div v-if="parseErrorTips.length > 0" class="yaml-fix-box">
@@ -138,21 +139,36 @@
             </template>
 
             <template v-else-if="activeTab === 'skills'">
-              <article v-for="(item, index) in skills" :key="`skill-${index}-${itemName(item)}`" class="card">
+              <article
+                v-for="(item, index) in skills"
+                :key="`skill-${index}-${itemName(item)}`"
+                class="card"
+              >
                 <div class="card-header">
                   <h3 class="card-title" :class="qualityClass(item)">{{ itemName(item) }}</h3>
-                  <span v-if="itemQuality(item)" class="card-subtitle" :class="qualityClass(item)">{{
-                    itemQuality(item)
-                  }}</span>
+                  <span
+                    v-if="itemQuality(item)"
+                    class="card-subtitle"
+                    :class="qualityClass(item)"
+                    >{{ itemQuality(item) }}</span
+                  >
                 </div>
                 <div class="card-body">
                   <div v-if="itemTags(item).length > 0" class="card-tags">
-                    <span v-for="tag in itemTags(item)" :key="`skill-tag-${index}-${tag}`" class="card-tag">
+                    <span
+                      v-for="tag in itemTags(item)"
+                      :key="`skill-tag-${index}-${tag}`"
+                      class="card-tag"
+                    >
                       {{ tag }}
                     </span>
                   </div>
-                  <p v-if="itemType(item)"><span class="card-label">类型:</span>{{ itemType(item) }}</p>
-                  <p v-if="itemCost(item)"><span class="card-label">消耗:</span>{{ itemCost(item) }}</p>
+                  <p v-if="itemType(item)">
+                    <span class="card-label">类型:</span>{{ itemType(item) }}
+                  </p>
+                  <p v-if="itemCost(item)">
+                    <span class="card-label">消耗:</span>{{ itemCost(item) }}
+                  </p>
                   <template v-if="itemEffectEntries(item).length > 0">
                     <p><span class="card-label">效果:</span></p>
                     <ul class="effect-list">
@@ -167,26 +183,41 @@
                     </ul>
                   </template>
                   <p v-else><span class="card-label">效果:</span>无</p>
-                  <p v-if="itemDescription(item)" class="card-description">{{ itemDescription(item) }}</p>
+                  <p v-if="itemDescription(item)" class="card-description">
+                    {{ itemDescription(item) }}
+                  </p>
                 </div>
               </article>
             </template>
 
             <template v-else-if="activeTab === 'equipment'">
-              <article v-for="(item, index) in equipments" :key="`equip-${index}-${itemName(item)}`" class="card">
+              <article
+                v-for="(item, index) in equipments"
+                :key="`equip-${index}-${itemName(item)}`"
+                class="card"
+              >
                 <div class="card-header">
                   <h3 class="card-title" :class="qualityClass(item)">{{ itemName(item) }}</h3>
-                  <span v-if="itemQuality(item)" class="card-subtitle" :class="qualityClass(item)">{{
-                    itemQuality(item)
-                  }}</span>
+                  <span
+                    v-if="itemQuality(item)"
+                    class="card-subtitle"
+                    :class="qualityClass(item)"
+                    >{{ itemQuality(item) }}</span
+                  >
                 </div>
                 <div class="card-body">
                   <div v-if="itemTags(item).length > 0" class="card-tags">
-                    <span v-for="tag in itemTags(item)" :key="`equip-tag-${index}-${tag}`" class="card-tag">
+                    <span
+                      v-for="tag in itemTags(item)"
+                      :key="`equip-tag-${index}-${tag}`"
+                      class="card-tag"
+                    >
                       {{ tag }}
                     </span>
                   </div>
-                  <p v-if="itemType(item)"><span class="card-label">类型:</span>{{ itemType(item) }}</p>
+                  <p v-if="itemType(item)">
+                    <span class="card-label">类型:</span>{{ itemType(item) }}
+                  </p>
                   <template v-if="itemEffectEntries(item).length > 0">
                     <p><span class="card-label">效果:</span></p>
                     <ul class="effect-list">
@@ -201,7 +232,9 @@
                     </ul>
                   </template>
                   <p v-else><span class="card-label">效果:</span>无</p>
-                  <p v-if="itemDescription(item)" class="card-description">{{ itemDescription(item) }}</p>
+                  <p v-if="itemDescription(item)" class="card-description">
+                    {{ itemDescription(item) }}
+                  </p>
                 </div>
               </article>
             </template>
@@ -216,17 +249,26 @@
                 >
                   <div class="card-header">
                     <h3 class="card-title" :class="qualityClass(item)">{{ itemName(item) }}</h3>
-                    <span v-if="itemQuality(item)" class="card-subtitle" :class="qualityClass(item)">{{
-                      itemQuality(item)
-                    }}</span>
+                    <span
+                      v-if="itemQuality(item)"
+                      class="card-subtitle"
+                      :class="qualityClass(item)"
+                      >{{ itemQuality(item) }}</span
+                    >
                   </div>
                   <div class="card-body">
                     <div v-if="itemTags(item).length > 0" class="card-tags">
-                      <span v-for="tag in itemTags(item)" :key="`${section.key}-${index}-${tag}`" class="card-tag">
+                      <span
+                        v-for="tag in itemTags(item)"
+                        :key="`${section.key}-${index}-${tag}`"
+                        class="card-tag"
+                      >
                         {{ tag }}
                       </span>
                     </div>
-                    <p v-if="itemType(item)"><span class="card-label">类型:</span>{{ itemType(item) }}</p>
+                    <p v-if="itemType(item)">
+                      <span class="card-label">类型:</span>{{ itemType(item) }}
+                    </p>
                     <template v-if="itemEffectEntriesOrDescription(item).length > 0">
                       <p><span class="card-label">效果:</span></p>
                       <ul class="effect-list">
@@ -241,7 +283,10 @@
                       </ul>
                     </template>
                     <p v-else><span class="card-label">效果:</span>无</p>
-                    <p v-if="itemDescription(item) && itemEffectEntries(item).length > 0" class="card-description">
+                    <p
+                      v-if="itemDescription(item) && itemEffectEntries(item).length > 0"
+                      class="card-description"
+                    >
                       {{ itemDescription(item) }}
                     </p>
                   </div>
@@ -250,7 +295,9 @@
             </template>
 
             <template v-else-if="activeTab === 'divinity'">
-              <h3 v-if="divinityGodTitle" class="subsection-title divinity-main-title">{{ divinityGodTitle }}</h3>
+              <h3 v-if="divinityGodTitle" class="subsection-title divinity-main-title">
+                {{ divinityGodTitle }}
+              </h3>
 
               <article v-if="divinityKingdom" class="card divinity-card">
                 <div class="card-header">
@@ -305,8 +352,12 @@
                   </div>
                   <div class="card-body">
                     <p v-if="itemDescription(item)">{{ itemDescription(item) }}</p>
-                    <p v-if="lawPassive(item)"><span class="card-label">被动:</span>{{ lawPassive(item) }}</p>
-                    <p v-if="lawActive(item)"><span class="card-label">主动:</span>{{ lawActive(item) }}</p>
+                    <p v-if="lawPassive(item)">
+                      <span class="card-label">被动:</span>{{ lawPassive(item) }}
+                    </p>
+                    <p v-if="lawActive(item)">
+                      <span class="card-label">主动:</span>{{ lawActive(item) }}
+                    </p>
                   </div>
                 </article>
               </template>
@@ -323,7 +374,9 @@
         </button>
         <div id="import-action-menu" :class="{ show: showImportMenu }">
           <button type="button" :disabled="importing" @click="onImportMvu">导入到 MVU 变量</button>
-          <button type="button" :disabled="importing" @click="onImportWorldbook">导入到 聊天世界书</button>
+          <button type="button" :disabled="importing" @click="onImportWorldbook">
+            导入到 聊天世界书
+          </button>
         </div>
       </div>
     </div>
@@ -425,10 +478,16 @@ function pickField(source: unknown, ...keys: string[]): unknown {
 const nameText = computed(() => String(pickField(sheetData.value, '姓名') || 'Unknown'));
 const levelText = computed(() => String(pickField(sheetData.value, '等级', '等级') ?? '?'));
 const raceText = computed(() => String(pickField(sheetData.value, '种族', '种族') || '其他'));
-const tierText = computed(() => String(pickField(sheetData.value, '生命层级', '生命层级') || 'Unknown'));
+const tierText = computed(() =>
+  String(pickField(sheetData.value, '生命层级', '生命层级') || 'Unknown'),
+);
 
-const identityText = computed(() => getSmartArray(pickField(sheetData.value, '身份')).join(' / ') || '-');
-const classText = computed(() => getSmartArray(pickField(sheetData.value, '职业', '职业')).join(' / ') || '-');
+const identityText = computed(
+  () => getSmartArray(pickField(sheetData.value, '身份')).join(' / ') || '-',
+);
+const classText = computed(
+  () => getSmartArray(pickField(sheetData.value, '职业', '职业')).join(' / ') || '-',
+);
 
 const personalityText = computed(() => {
   const val = pickField(sheetData.value, '性格');
@@ -443,8 +502,12 @@ const likesText = computed(() => {
   return tags.join('，');
 });
 
-const appearanceText = computed(() => String(pickField(sheetData.value, '外貌特质', '外貌特质') || '').trim());
-const attireText = computed(() => String(pickField(sheetData.value, '衣物装饰', '衣物装饰') || '').trim());
+const appearanceText = computed(() =>
+  String(pickField(sheetData.value, '外貌特质', '外貌特质') || '').trim(),
+);
+const attireText = computed(() =>
+  String(pickField(sheetData.value, '衣物装饰', '衣物装饰') || '').trim(),
+);
 const backstoryText = computed(() => String(pickField(sheetData.value, '背景故事') || '').trim());
 
 const attributeFormulaState = ref<Record<string, boolean>>({});
@@ -625,7 +688,9 @@ function formatEffectEntries(entries: EffectEntry[]): string {
     return entry.fallback ? entry.content : `${entry.name}: ${entry.content}`;
   }
 
-  return entries.map(entry => (entry.fallback ? entry.content : `${entry.name}: ${entry.content}`)).join('\n');
+  return entries
+    .map(entry => (entry.fallback ? entry.content : `${entry.name}: ${entry.content}`))
+    .join('\n');
 }
 
 function itemEffectEntries(item: ItemObject): EffectEntry[] {
@@ -653,9 +718,12 @@ function qualityClass(item: ItemObject): string {
   const quality = itemQuality(item).toLowerCase();
   if (!quality) return '';
 
-  if (quality.includes('神话') || quality.includes('神話') || quality.includes('myth')) return 'quality-mythic';
-  if (quality.includes('传说') || quality.includes('傳說') || quality.includes('legend')) return 'quality-legendary';
-  if (quality.includes('史诗') || quality.includes('史詩') || quality.includes('epic')) return 'quality-epic';
+  if (quality.includes('神话') || quality.includes('神話') || quality.includes('myth'))
+    return 'quality-mythic';
+  if (quality.includes('传说') || quality.includes('傳說') || quality.includes('legend'))
+    return 'quality-legendary';
+  if (quality.includes('史诗') || quality.includes('史詩') || quality.includes('epic'))
+    return 'quality-epic';
   if (quality.includes('稀有') || quality.includes('rare')) return 'quality-rare';
   if (
     quality.includes('优良') ||
@@ -744,9 +812,15 @@ const divinityKingdom = computed(() => {
   };
 });
 
-const divinityElements = computed(() => asObjectArray(divinityRoot.value?.要素 || sheetData.value?.要素));
-const divinityPowers = computed(() => asObjectArray(divinityRoot.value?.权能 || sheetData.value?.权能));
-const divinityLaws = computed(() => asObjectArray(divinityRoot.value?.法则 || sheetData.value?.法则));
+const divinityElements = computed(() =>
+  asObjectArray(divinityRoot.value?.要素 || sheetData.value?.要素),
+);
+const divinityPowers = computed(() =>
+  asObjectArray(divinityRoot.value?.权能 || sheetData.value?.权能),
+);
+const divinityLaws = computed(() =>
+  asObjectArray(divinityRoot.value?.法则 || sheetData.value?.法则),
+);
 
 const hasInventory = computed(() => inventorySections.value.length > 0);
 const hasDivinity = computed(() => {
@@ -779,7 +853,9 @@ watchEffect(() => {
 
 function detectIOSSafari(): boolean {
   const ua = navigator.userAgent || '';
-  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isIOS =
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const isSafari = /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
   return isIOS && isSafari;
 }
@@ -907,7 +983,8 @@ onBeforeUnmount(() => {
   --tier-color: #808080;
   --tier-color-rgb: 128, 128, 128;
   --name-font-stack:
-    'Noto Serif SC', 'Source Han Serif SC', 'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    'Noto Serif SC', 'Source Han Serif SC', 'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC',
+    sans-serif;
   --name-shadow: rgba(0, 0, 0, 0.58);
   --name-glow: rgba(var(--tier-color-rgb), 0.12);
   --tier-label-fg: #f3f6ff;
@@ -1027,7 +1104,8 @@ onBeforeUnmount(() => {
   stroke: var(--tier-color);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 5px rgba(var(--tier-color-rgb), 0.8));
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8))
+    drop-shadow(0 0 5px rgba(var(--tier-color-rgb), 0.8));
 }
 
 .frame-top {
@@ -1127,7 +1205,11 @@ onBeforeUnmount(() => {
   position: relative;
   margin-bottom: 10px;
   border-bottom: 1px solid rgba(var(--tier-color-rgb), 0.2);
-  background: radial-gradient(ellipse at 50% 0%, rgba(var(--tier-color-rgb), 0.15) 0%, transparent 80%);
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(var(--tier-color-rgb), 0.15) 0%,
+    transparent 80%
+  );
 }
 
 .sheet-header::after {

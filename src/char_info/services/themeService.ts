@@ -199,7 +199,9 @@ function resolveTier(raw: unknown): number {
 function normalizeRaceTextForLookup(race: string): string {
   let normalized = race;
 
-  const aliasEntries = Object.entries(RACE_ALIAS_TO_SIMPLIFIED).sort((a, b) => b[0].length - a[0].length);
+  const aliasEntries = Object.entries(RACE_ALIAS_TO_SIMPLIFIED).sort(
+    (a, b) => b[0].length - a[0].length,
+  );
   aliasEntries.forEach(([from, to]) => {
     if (normalized.includes(from)) {
       normalized = normalized.split(from).join(to);
@@ -243,7 +245,10 @@ export function resolveTheme(data: CharacterData): ThemeResolved {
   };
 }
 
-export function applyTheme(theme: ThemeResolved, root: HTMLElement = document.documentElement): void {
+export function applyTheme(
+  theme: ThemeResolved,
+  root: HTMLElement = document.documentElement,
+): void {
   root.style.setProperty('--race-color', theme.raceHex);
   root.style.setProperty('--race-color-rgb', theme.raceRgb);
   root.style.setProperty('--tier-color', theme.tierHex);

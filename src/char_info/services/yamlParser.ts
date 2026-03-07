@@ -155,7 +155,11 @@ export function cleanYaml(yamlStr: string): string {
   return cleanedLines.join('\n');
 }
 
-function buildFriendlyYamlError(err: unknown, originalYaml: string, cleanedYaml: string): FriendlyYamlError {
+function buildFriendlyYamlError(
+  err: unknown,
+  originalYaml: string,
+  cleanedYaml: string,
+): FriendlyYamlError {
   const e = err as { reason?: string; message?: string; mark?: { line?: number; column?: number } };
   const mark = e?.mark;
   const message = String(e?.reason || e?.message || String(err));

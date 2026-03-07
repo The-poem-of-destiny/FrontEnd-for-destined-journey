@@ -13,7 +13,9 @@ type TavernApiLike = {
 };
 
 function getApi(): TavernApiLike {
-  return ((window as any).TavernHelper || (window.parent as any)?.TavernHelper || window) as TavernApiLike;
+  return ((window as any).TavernHelper ||
+    (window.parent as any)?.TavernHelper ||
+    window) as TavernApiLike;
 }
 
 function ensureString(val: unknown): string {
@@ -76,7 +78,10 @@ function parseEffectMap(effectVal: unknown): Record<string, string> {
   return { 描述: text };
 }
 
-function arrayToMap(arr: unknown, type: 'skill' | 'equip' | 'divinity'): Record<string, Record<string, any>> {
+function arrayToMap(
+  arr: unknown,
+  type: 'skill' | 'equip' | 'divinity',
+): Record<string, Record<string, any>> {
   const map: Record<string, Record<string, any>> = {};
   if (!Array.isArray(arr)) return map;
 
@@ -101,7 +106,8 @@ function arrayToMap(arr: unknown, type: 'skill' | 'equip' | 'divinity'): Record<
 
     if (type === 'equip') {
       processed.品质 = processed.品质 || processed.品質 || '未知';
-      processed.类型 = processed.分类 || processed.分類 || processed.类型 || processed.類型 || '未知';
+      processed.类型 =
+        processed.分类 || processed.分類 || processed.类型 || processed.類型 || '未知';
       processed.描述 = processed.描述 || '';
       processed.位置 = processed.位置 || '';
     } else if (type === 'skill') {
@@ -210,9 +216,15 @@ export async function importToMvuVariables(data: CharacterData): Promise<void> {
   await api.insertOrAssignVariables(updatePayload, targetScope);
 }
 
-export async function saveToChatWorldbook(data: CharacterData, originalYaml: string): Promise<void> {
+export async function saveToChatWorldbook(
+  data: CharacterData,
+  originalYaml: string,
+): Promise<void> {
   const api = getApi();
-  if (typeof api.getOrCreateChatWorldbook !== 'function' || typeof api.createWorldbookEntries !== 'function') {
+  if (
+    typeof api.getOrCreateChatWorldbook !== 'function' ||
+    typeof api.createWorldbookEntries !== 'function'
+  ) {
     throw new Error('未检测到 Worldbook API。');
   }
 
