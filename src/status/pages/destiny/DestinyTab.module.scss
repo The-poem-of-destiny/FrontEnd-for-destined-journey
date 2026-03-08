@@ -472,8 +472,7 @@
 }
 
 @media (max-width: 900px) {
-  .partnerCategoryBar,
-  .partnerAssetFilterBar {
+  .partnerCategoryBar {
     flex-wrap: nowrap;
     gap: 8px;
     overflow-x: auto;
@@ -487,8 +486,7 @@
     }
   }
 
-  .partnerCategoryBtn,
-  .partnerAssetFilterBtn {
+  .partnerCategoryBtn {
     flex: 0 0 auto;
   }
 
@@ -823,15 +821,25 @@
 
 .partnerAssetFilterBar {
   display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-xs;
+  flex-wrap: nowrap;
+  gap: 8px;
   margin-bottom: $spacing-sm;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .partnerAssetFilterBtn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  flex: 0 0 auto;
   padding: 6px 10px;
   border: 1px solid color-mix(in srgb, var(--theme-card-border) 68%, transparent);
   border-radius: 999px;
@@ -839,6 +847,7 @@
   color: var(--theme-text-secondary);
   font-size: 11px;
   line-height: 1.2;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     background $transition-fast,
