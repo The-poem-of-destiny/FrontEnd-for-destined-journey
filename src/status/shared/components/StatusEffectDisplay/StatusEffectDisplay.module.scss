@@ -21,24 +21,24 @@
   min-width: 0;
   padding: 5px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  background: color-mix(in srgb, var(--theme-card-bg) 78%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 4%, transparent);
 }
 
 .buffChipBuff {
-  border-color: color-mix(in srgb, var(--theme-success) 42%, rgba(255, 255, 255, 0.08));
-  background: color-mix(in srgb, var(--theme-success) 12%, rgba(255, 255, 255, 0.03));
+  border-color: color-mix(in srgb, var(--theme-success) 42%, var(--theme-card-border) 58%);
+  background: color-mix(in srgb, var(--theme-success) 12%, var(--theme-card-bg) 88%);
 }
 
 .buffChipDebuff {
-  border-color: color-mix(in srgb, var(--theme-error) 42%, rgba(255, 255, 255, 0.08));
-  background: color-mix(in srgb, var(--theme-error) 12%, rgba(255, 255, 255, 0.03));
+  border-color: color-mix(in srgb, var(--theme-error) 42%, var(--theme-card-border) 58%);
+  background: color-mix(in srgb, var(--theme-error) 12%, var(--theme-card-bg) 88%);
 }
 
 .buffChipSpecial {
-  border-color: color-mix(in srgb, var(--theme-warning) 42%, rgba(255, 255, 255, 0.08));
-  background: color-mix(in srgb, var(--theme-warning) 12%, rgba(255, 255, 255, 0.03));
+  border-color: color-mix(in srgb, var(--theme-warning) 42%, var(--theme-card-border) 58%);
+  background: color-mix(in srgb, var(--theme-warning) 12%, var(--theme-card-bg) 88%);
 }
 
 .buffChipName {
@@ -53,7 +53,7 @@
   flex-shrink: 0;
   padding: 1px 6px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.18);
+  background: color-mix(in srgb, var(--theme-window-bg) 20%, transparent);
   font-size: 10px;
   font-weight: 700;
   color: var(--theme-text-secondary);
@@ -78,17 +78,15 @@
   gap: 10px;
   padding: 14px;
   border-radius: $border-radius-sm;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.025)),
-    rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: color-mix(in srgb, var(--theme-card-bg) 84%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
   border-left: 3px solid var(--theme-success);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 4%, transparent);
 }
 
 .effectItemEdit {
   gap: 10px;
-  background: rgba(255, 255, 255, 0.025);
+  background: color-mix(in srgb, var(--theme-card-bg) 80%, transparent);
 }
 
 .effectBuff {
@@ -147,7 +145,7 @@
   font-size: 11px;
   font-weight: 700;
   color: var(--theme-text-primary);
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, var(--theme-card-bg) 76%, transparent);
 }
 
 .effectTime {
@@ -158,7 +156,7 @@
 .effectDesc {
   padding: 8px 10px;
   border-radius: calc($border-radius-sm - 2px);
-  background: rgba(255, 255, 255, 0.025);
+  background: color-mix(in srgb, var(--theme-card-bg) 74%, transparent);
   font-size: 12px;
   color: var(--theme-text-secondary);
   line-height: 1.65;
@@ -195,7 +193,7 @@
   gap: 10px;
   padding: 10px;
   border-radius: calc($border-radius-sm - 2px);
-  background: rgba(255, 255, 255, 0.025);
+  background: color-mix(in srgb, var(--theme-card-bg) 74%, transparent);
 }
 
 .effectMetaItem {
@@ -218,7 +216,7 @@
   gap: 6px;
   padding: 10px;
   border-radius: calc($border-radius-sm - 2px);
-  background: rgba(255, 255, 255, 0.02);
+  background: color-mix(in srgb, var(--theme-card-bg) 72%, transparent);
 }
 
 .effectEditLabel {
@@ -235,11 +233,11 @@
   align-items: center;
   justify-content: center;
   margin-top: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.14);
+  background: color-mix(in srgb, var(--theme-window-bg) 14%, transparent);
   color: var(--theme-text-muted);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 4%, transparent);
   cursor: pointer;
   transition:
     background $transition-fast,
@@ -248,8 +246,8 @@
     transform $transition-fast;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: color-mix(in srgb, var(--theme-card-bg) 72%, transparent);
+    border-color: color-mix(in srgb, var(--theme-card-border) 88%, transparent);
     color: var(--theme-error);
     transform: translateY(-1px);
   }

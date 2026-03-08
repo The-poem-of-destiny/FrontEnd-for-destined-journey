@@ -39,7 +39,7 @@
   padding: 2px 4px;
   border-radius: $border-radius-sm;
   border: 1px dashed var(--theme-card-border);
-  background: var(--theme-window-bg-secondary, rgba(0, 0, 0, 0.08));
+  background: var(--theme-surface-muted);
 }
 
 .drawColorLabel {
@@ -130,7 +130,7 @@
   padding: $spacing-sm;
   border-radius: $border-radius-sm;
   border: 1px solid var(--theme-card-border);
-  background: var(--theme-window-bg-secondary, rgba(0, 0, 0, 0.04));
+  background: var(--theme-surface-muted);
 }
 
 .markerPanelHeader {
@@ -188,7 +188,7 @@
   border-radius: $border-radius-sm;
   border: 1px solid var(--theme-card-border);
   padding: 0 $spacing-sm;
-  background: var(--theme-window-bg-secondary, rgba(0, 0, 0, 0.08));
+  background: var(--theme-surface-muted);
   color: var(--theme-text-primary);
   font-size: 12px;
   max-width: 100%;
@@ -219,7 +219,7 @@
 .markerItem {
   border: 1px solid var(--theme-card-border);
   border-radius: $border-radius-sm;
-  background: var(--theme-window-bg-secondary, rgba(0, 0, 0, 0.08));
+  background: var(--theme-surface-muted);
   padding: $spacing-xs $spacing-sm;
   display: flex;
   align-items: center;
@@ -276,7 +276,7 @@
   padding: $spacing-sm;
   min-height: 160px;
   max-height: 360px;
-  background: var(--theme-window-bg-secondary, rgba(0, 0, 0, 0.04));
+  background: var(--theme-surface-muted);
   min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;

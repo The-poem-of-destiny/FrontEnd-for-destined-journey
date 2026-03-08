@@ -1,22 +1,29 @@
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useMemo, useState } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
 import { useEditorSettingStore } from '../../core/stores';
 import { sortEntriesByQuality } from '../../core/utils';
 import {
   Ascension,
   Card,
-  Collapse,
   DeleteConfirmModal,
   EditableField,
   EmptyHint,
   IconTitle,
   ItemDetail,
+  StatusEffectDisplay,
 } from '../../shared/components';
 import { withMvuData, WithMvuDataProps } from '../../shared/hoc';
 import styles from './DestinyTab.module.scss';
 
 /** 字段类型 */
 type FieldType = 'text' | 'number' | 'textarea' | 'tags' | 'toggle' | 'keyvalue';
+type PartnerDetailSection =
+  | 'overview'
+  | 'status'
+  | 'equipment'
+  | 'skills'
+  | 'inventory'
+  | 'background';
 
 /**
  * 命定页内容组件
@@ -27,6 +34,16 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     useDeleteConfirm();
   const destinyPoints = data.命运点数;
   const partners = data.关系列表;
+  const partnerEntries = useMemo(() => Object.entries(partners ?? {}), [partners]);
+  const [selectedPartnerName, setSelectedPartnerName] = useState<string | null>(null);
+  const [isPartnerDetailOpen, setIsPartnerDetailOpen] = useState(false);
+  const [activePartnerDetailSection, setActivePartnerDetailSection] =
+    useState<PartnerDetailSection>('overview');
+  const activePartnerName =
+    selectedPartnerName && partners?.[selectedPartnerName]
+      ? selectedPartnerName
+      : (partnerEntries[0]?.[0] ?? null);
+  const activePartner = activePartnerName ? partners?.[activePartnerName] : null;
 
   /**
    * 处理 FP 商店按钮点击
@@ -179,6 +196,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 })
               }
               itemCategory={itemCategory}
+              compact
             />
           ))}
         </div>
@@ -195,61 +213,406 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     return (
       <div className={styles.partnerSkills}>
         <div className={styles.sectionLabel}>状态效果</div>
-        {editEnabled ? (
-          <EditableField
-            path={`关系列表.${partnerName}.状态效果`}
-            value={effects ?? {}}
-            type="keyvalue"
-          />
-        ) : _.isEmpty(effects) ? (
-          <span className={styles.traitValue}>无</span>
-        ) : (
-          <div className={styles.skillList}>
-            {_.map(effects, (effect, effectName) => (
-              <Collapse
-                key={effectName}
-                title={
-                  <div className={styles.partnerTitle}>
-                    <IconTitle text={effectName} className={styles.partnerName} />
-                    <div className={styles.partnerTags}>
-                      <span className={styles.tag}>{effect?.类型 ?? '增益'}</span>
-                      {(effect?.层数 ?? 0) > 0 && (
-                        <span className={styles.tag}>层数 {effect?.层数 ?? 1}</span>
-                      )}
-                    </div>
-                  </div>
-                }
-              >
-                <div className={styles.partnerTraits}>
-                  {renderReadonlyRow(
-                    '效果',
-                    effect?.效果,
-                    styles.traitRow,
-                    styles.traitLabel,
-                    styles.traitValue,
-                  )}
-                  {renderReadonlyRow(
-                    '剩余时间',
-                    effect?.剩余时间,
-                    styles.traitRow,
-                    styles.traitLabel,
-                    styles.traitValue,
-                  )}
-                  {renderReadonlyRow(
-                    '来源',
-                    effect?.来源,
-                    styles.traitRow,
-                    styles.traitLabel,
-                    styles.traitValue,
+        <StatusEffectDisplay
+          effects={effects ?? {}}
+          editEnabled={editEnabled}
+          pathPrefix={`关系列表.${partnerName}.状态效果`}
+          emptyText="无"
+          onDelete={(effectName: string) =>
+            setDeleteTarget({
+              type: '状态效果',
+              path: `关系列表.${partnerName}.状态效果.${effectName}`,
+              name: effectName,
+            })
+          }
+        />
+      </div>
+    );
+  };
+
+  const renderPartnerSummary = (partnerName: string, partner: Record<string, any>) => (
+    <div className={styles.partnerTitle}>
+      <IconTitle text={partnerName} className={styles.partnerName} />
+      <div className={styles.partnerMeta}>
+        <span className={styles.affectionBadge}>好感度 {partner.好感度 ?? 0}</span>
+        <div className={styles.partnerTags}>
+          {partner.在场 && <span className={`${styles.tag} ${styles.tagPresent}`}>在场</span>}
+          {partner.命定契约 && (
+            <span className={`${styles.tag} ${styles.tagContract}`}>命定契约</span>
+          )}
+        </div>
+      </div>
+      {editEnabled && (
+        <button
+          className={styles.deletePartnerBtn}
+          onClick={e => {
+            e.stopPropagation();
+            setDeleteTarget({
+              type: '伙伴',
+              path: `关系列表.${partnerName}`,
+              name: partnerName,
+            });
+          }}
+          title="删除关系"
+        >
+          <i className="fa-solid fa-trash" />
+        </button>
+      )}
+    </div>
+  );
+
+  const getPartnerRoleText = (partner: Record<string, any>) => {
+    const roleParts = [
+      partner.种族,
+      Array.isArray(partner.职业) ? partner.职业.join(' / ') : partner.职业,
+      partner.等级 ? `Lv.${partner.等级}` : '',
+      partner.生命层级,
+    ];
+
+    return _.compact(roleParts).join(' · ') || '暂无定位';
+  };
+
+  const getPartnerStatusSummary = (partner: Record<string, any>) => {
+    const effectEntries = Object.entries(partner.状态效果 ?? {});
+    const visibleEffects = effectEntries
+      .slice(0, 3)
+      .reduce<
+        Record<string, Parameters<typeof StatusEffectDisplay>[0]['effects'][string]>
+      >((acc, [name, effect]) => {
+        acc[name] = effect as Parameters<typeof StatusEffectDisplay>[0]['effects'][string];
+        return acc;
+      }, {});
+    const hiddenCount = effectEntries.length - Object.keys(visibleEffects).length;
+
+    return (
+      <div className={styles.partnerSummaryStatusRow}>
+        <StatusEffectDisplay effects={visibleEffects} mode="chips" compact emptyText="状态稳定" />
+        {hiddenCount > 0 ? (
+          <span className={styles.partnerSummaryStatusMore}>+{hiddenCount}</span>
+        ) : null}
+      </div>
+    );
+  };
+
+  const getPartnerSummaryText = (partner: Record<string, any>) => getPartnerRoleText(partner);
+
+  const handlePartnerSelect = (partnerName: string) => {
+    setSelectedPartnerName(partnerName);
+    setActivePartnerDetailSection('overview');
+    setIsPartnerDetailOpen(true);
+  };
+
+  const handlePartnerDetailBack = () => {
+    setIsPartnerDetailOpen(false);
+    setActivePartnerDetailSection('overview');
+  };
+
+  const renderPartnerListItem = (partnerName: string, partner: Record<string, any>) => (
+    <div
+      className={`${styles.partnerSummaryCard} ${activePartnerName === partnerName ? styles.partnerSummaryCardActive : ''}`}
+      onClick={() => handlePartnerSelect(partnerName)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handlePartnerSelect(partnerName);
+        }
+      }}
+    >
+      <div className={styles.partnerSummaryMain}>
+        {renderPartnerSummary(partnerName, partner)}
+        <div className={styles.partnerSummaryText}>{getPartnerSummaryText(partner)}</div>
+        <div className={styles.partnerSummaryStatus}>{getPartnerStatusSummary(partner)}</div>
+      </div>
+    </div>
+  );
+
+  const renderPartnerDetails = (partnerName: string, partner: Record<string, any>) => {
+    const detailSections: Array<{ key: PartnerDetailSection; label: string }> = [
+      { key: 'overview', label: '概览' },
+      { key: 'status', label: '状态' },
+      { key: 'equipment', label: '装备' },
+      { key: 'skills', label: '技能' },
+      { key: 'inventory', label: '背包' },
+      { key: 'background', label: '背景' },
+    ];
+
+    return (
+      <div className={styles.partnerDetails}>
+        <div className={styles.partnerDetailNav}>
+          {detailSections.map(section => (
+            <button
+              key={section.key}
+              type="button"
+              className={`${styles.partnerDetailTab} ${activePartnerDetailSection === section.key ? styles.partnerDetailTabActive : ''}`}
+              onClick={() => setActivePartnerDetailSection(section.key)}
+            >
+              {section.label}
+            </button>
+          ))}
+        </div>
+
+        {activePartnerDetailSection === 'overview' && (
+          <>
+            <div className={styles.partnerOverviewHero}>
+              <div className={styles.partnerOverviewPrimary}>
+                <div className={styles.partnerAffection}>
+                  <span className={styles.label}>好感度</span>
+                  {editEnabled ? (
+                    <EditableField
+                      path={`关系列表.${partnerName}.好感度`}
+                      value={partner.好感度 ?? 0}
+                      type="number"
+                      numberConfig={{ min: -100, max: 100, step: 1 }}
+                    />
+                  ) : (
+                    renderAffectionBar(partner.好感度 ?? 0)
                   )}
                 </div>
-              </Collapse>
-            ))}
-          </div>
+
+                {editEnabled && (
+                  <div className={styles.partnerStatusToggles}>
+                    <div className={styles.toggleRow}>
+                      <span className={styles.toggleLabel}>在场状态</span>
+                      <EditableField
+                        path={`关系列表.${partnerName}.在场`}
+                        value={partner.在场 ?? false}
+                        type="toggle"
+                        toggleConfig={{ labelOff: '离场', labelOn: '在场', size: 'sm' }}
+                      />
+                    </div>
+                    <div className={styles.toggleRow}>
+                      <span className={styles.toggleLabel}>命定契约</span>
+                      <EditableField
+                        path={`关系列表.${partnerName}.命定契约`}
+                        value={partner.命定契约 ?? false}
+                        type="toggle"
+                        toggleConfig={{ labelOff: '未缔结', labelOn: '已缔结', size: 'sm' }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.partnerOverviewStats}>
+                <div className={styles.partnerInfoPanel}>
+                  <div className={styles.sectionLabel}>基础信息</div>
+                  <div className={styles.partnerInfo}>
+                    {renderEditableRow(
+                      '种族',
+                      `关系列表.${partnerName}.种族`,
+                      partner.种族,
+                      'text',
+                      styles.infoRow,
+                      styles.infoLabel,
+                      styles.infoValue,
+                    )}
+                    {renderEditableRow(
+                      '身份',
+                      `关系列表.${partnerName}.身份`,
+                      partner.身份,
+                      'tags',
+                      styles.infoRow,
+                      styles.infoLabel,
+                      styles.infoValue,
+                    )}
+                    {renderEditableRow(
+                      '职业',
+                      `关系列表.${partnerName}.职业`,
+                      partner.职业,
+                      'tags',
+                      styles.infoRow,
+                      styles.infoLabel,
+                      styles.infoValue,
+                    )}
+                    {renderReadonlyRow(
+                      '生命层级',
+                      partner.生命层级,
+                      styles.infoRow,
+                      styles.infoLabel,
+                      styles.infoValue,
+                    )}
+                    {renderReadonlyRow(
+                      '等级',
+                      partner.等级 ? `Lv.${partner.等级}` : '',
+                      styles.infoRow,
+                      styles.infoLabel,
+                      styles.infoValue,
+                    )}
+                  </div>
+                </div>
+
+                {!_.isEmpty(partner.属性) && (
+                  <div className={styles.partnerInfoPanel}>
+                    <div className={styles.sectionLabel}>属性</div>
+                    <div
+                      className={`${styles.attributeGrid} ${editEnabled ? styles.attributeGridEdit : ''}`}
+                    >
+                      {_.map(partner.属性, (value, key) => (
+                        <div
+                          key={key}
+                          className={`${styles.attributeItem} ${editEnabled ? styles.attributeItemEdit : ''}`}
+                        >
+                          <span className={styles.attributeKey}>{key}</span>
+                          {editEnabled ? (
+                            <EditableField
+                              path={`关系列表.${partnerName}.属性.${key}`}
+                              value={value ?? 0}
+                              type="number"
+                              numberConfig={{ min: 0, max: 20, step: 1 }}
+                            />
+                          ) : (
+                            <span className={styles.attributeValue}>{value}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {(partner.外貌 || partner.着装 || editEnabled) && (
+              <div className={styles.partnerAppearance}>
+                {renderEditableRow(
+                  '外貌',
+                  `关系列表.${partnerName}.外貌`,
+                  partner.外貌,
+                  'textarea',
+                  styles.appearanceRow,
+                  styles.appearanceLabel,
+                  styles.appearanceValue,
+                )}
+                {renderEditableRow(
+                  '着装',
+                  `关系列表.${partnerName}.着装`,
+                  partner.着装,
+                  'textarea',
+                  styles.appearanceRow,
+                  styles.appearanceLabel,
+                  styles.appearanceValue,
+                )}
+              </div>
+            )}
+
+            {(partner.性格 || partner.喜爱 || editEnabled) && (
+              <div className={styles.partnerTraits}>
+                {renderEditableRow(
+                  '性格',
+                  `关系列表.${partnerName}.性格`,
+                  partner.性格,
+                  'textarea',
+                  styles.traitRow,
+                  styles.traitLabel,
+                  styles.traitValue,
+                )}
+                {renderEditableRow(
+                  '喜爱',
+                  `关系列表.${partnerName}.喜爱`,
+                  partner.喜爱,
+                  'textarea',
+                  styles.traitRow,
+                  styles.traitLabel,
+                  styles.traitValue,
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {activePartnerDetailSection === 'status' && (
+          <>
+            {renderStatusEffectsSection(partner.状态效果, partnerName)}
+            {partner.登神长阶?.是否开启 && (
+              <div className={styles.partnerAscension}>
+                <div className={styles.ascensionLabel}>登神长阶</div>
+                <Ascension
+                  data={partner.登神长阶}
+                  compact
+                  editEnabled={editEnabled}
+                  pathPrefix={`关系列表.${partnerName}.登神长阶`}
+                />
+              </div>
+            )}
+          </>
+        )}
+
+        {activePartnerDetailSection === 'equipment' &&
+          renderItemSection(
+            '装备',
+            partner.装备,
+            styles.equipmentList,
+            item =>
+              item.位置 ? <span className={styles.equipmentSlot}>[{item.位置}]</span> : null,
+            partnerName,
+          )}
+
+        {activePartnerDetailSection === 'skills' &&
+          renderItemSection(
+            '技能',
+            partner.技能,
+            styles.skillList,
+            item => (item.消耗 ? <span className={styles.skillCost}>{item.消耗}</span> : null),
+            partnerName,
+          )}
+
+        {activePartnerDetailSection === 'inventory' &&
+          renderItemSection(
+            '背包',
+            partner.背包,
+            styles.skillList,
+            item => (item.数量 ? <span className={styles.skillCost}>x{item.数量}</span> : null),
+            partnerName,
+          )}
+
+        {activePartnerDetailSection === 'background' && (
+          <>
+            {(partner.心里话 || editEnabled) && (
+              <div className={styles.partnerThoughts}>
+                {renderEditableRow(
+                  '心里话',
+                  `关系列表.${partnerName}.心里话`,
+                  partner.心里话,
+                  'textarea',
+                  styles.thoughtsRow,
+                  styles.thoughtsLabel,
+                  styles.thoughtsContent,
+                )}
+              </div>
+            )}
+
+            {(partner.背景故事 || editEnabled) && (
+              <div className={styles.partnerBackground}>
+                {renderEditableRow(
+                  '背景故事',
+                  `关系列表.${partnerName}.背景故事`,
+                  partner.背景故事,
+                  'textarea',
+                  styles.backgroundRow,
+                  styles.backgroundLabel,
+                  styles.backgroundContent,
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     );
   };
+
+  const renderActivePartnerDetailContent = () =>
+    activePartnerName && activePartner ? (
+      <>
+        <div className={styles.partnerDetailHeader}>
+          {renderPartnerSummary(activePartnerName, activePartner)}
+          <div className={styles.partnerSummaryText}>{getPartnerSummaryText(activePartner)}</div>
+        </div>
+        {renderPartnerDetails(activePartnerName, activePartner)}
+      </>
+    ) : (
+      <EmptyHint className={styles.emptyHint} text="暂无可查看伙伴" />
+    );
 
   /** 渲染关系列表 */
   const renderPartners = () => {
@@ -257,288 +620,27 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       return <EmptyHint className={styles.emptyHint} text="暂无伙伴" />;
     }
 
+    const detailContent = renderActivePartnerDetailContent();
+
     return (
-      <div className={styles.partnerList}>
-        {_.map(partners, (partner, name) => (
-          <Collapse
-            key={name}
-            title={
-              <div className={styles.partnerTitle}>
-                <IconTitle text={name} className={styles.partnerName} />
-                <div className={styles.partnerMeta}>
-                  <span className={styles.affectionBadge}>好感度 {partner.好感度 ?? 0}</span>
-                  <div className={styles.partnerTags}>
-                    {partner.在场 && (
-                      <span className={`${styles.tag} ${styles.tagPresent}`}>在场</span>
-                    )}
-                    {partner.命定契约 && (
-                      <span className={`${styles.tag} ${styles.tagContract}`}>命定契约</span>
-                    )}
-                  </div>
-                </div>
-                {editEnabled && (
-                  <button
-                    className={styles.deletePartnerBtn}
-                    onClick={e => {
-                      e.stopPropagation();
-                      setDeleteTarget({
-                        type: '伙伴',
-                        path: `关系列表.${name}`,
-                        name,
-                      });
-                    }}
-                    title="删除关系"
-                  >
-                    <i className="fa-solid fa-trash" />
-                  </button>
-                )}
-              </div>
-            }
-          >
-            <div className={styles.partnerDetails}>
-              {/* 好感度 - 可编辑 */}
-              <div className={styles.partnerAffection}>
-                <span className={styles.label}>好感度</span>
-                {editEnabled ? (
-                  <EditableField
-                    path={`关系列表.${name}.好感度`}
-                    value={partner.好感度 ?? 0}
-                    type="number"
-                    numberConfig={{ min: -100, max: 100, step: 1 }}
-                  />
-                ) : (
-                  renderAffectionBar(partner.好感度 ?? 0)
-                )}
-              </div>
+      <div className={styles.partnerMasterDetail}>
+        <div
+          className={`${styles.partnerSummaryList} ${isPartnerDetailOpen ? styles.partnerSummaryListHiddenMobile : ''}`}
+        >
+          {partnerEntries.map(([name, partner]) => (
+            <div key={name}>{renderPartnerListItem(name, partner)}</div>
+          ))}
+        </div>
 
-              {/* 状态标签（在场、命定契约）- 编辑模式显示开关 */}
-              {editEnabled && (
-                <div className={styles.partnerStatusToggles}>
-                  <div className={styles.toggleRow}>
-                    <span className={styles.toggleLabel}>在场状态</span>
-                    <EditableField
-                      path={`关系列表.${name}.在场`}
-                      value={partner.在场 ?? false}
-                      type="toggle"
-                      toggleConfig={{ labelOff: '离场', labelOn: '在场', size: 'sm' }}
-                    />
-                  </div>
-                  <div className={styles.toggleRow}>
-                    <span className={styles.toggleLabel}>命定契约</span>
-                    <EditableField
-                      path={`关系列表.${name}.命定契约`}
-                      value={partner.命定契约 ?? false}
-                      type="toggle"
-                      toggleConfig={{ labelOff: '未缔结', labelOn: '已缔结', size: 'sm' }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* 基础信息 */}
-              <div className={styles.partnerInfo}>
-                {renderEditableRow(
-                  '种族',
-                  `关系列表.${name}.种族`,
-                  partner.种族,
-                  'text',
-                  styles.infoRow,
-                  styles.infoLabel,
-                  styles.infoValue,
-                )}
-                {renderEditableRow(
-                  '身份',
-                  `关系列表.${name}.身份`,
-                  partner.身份,
-                  'tags',
-                  styles.infoRow,
-                  styles.infoLabel,
-                  styles.infoValue,
-                )}
-                {renderEditableRow(
-                  '职业',
-                  `关系列表.${name}.职业`,
-                  partner.职业,
-                  'tags',
-                  styles.infoRow,
-                  styles.infoLabel,
-                  styles.infoValue,
-                )}
-                {renderReadonlyRow(
-                  '生命层级',
-                  partner.生命层级,
-                  styles.infoRow,
-                  styles.infoLabel,
-                  styles.infoValue,
-                )}
-                {renderReadonlyRow(
-                  '等级',
-                  partner.等级 ? `Lv.${partner.等级}` : '',
-                  styles.infoRow,
-                  styles.infoLabel,
-                  styles.infoValue,
-                )}
-              </div>
-
-              {/* 外貌与着装 */}
-              {(partner.外貌 || partner.着装 || editEnabled) && (
-                <div className={styles.partnerAppearance}>
-                  {renderEditableRow(
-                    '外貌',
-                    `关系列表.${name}.外貌`,
-                    partner.外貌,
-                    'textarea',
-                    styles.appearanceRow,
-                    styles.appearanceLabel,
-                    styles.appearanceValue,
-                  )}
-                  {renderEditableRow(
-                    '着装',
-                    `关系列表.${name}.着装`,
-                    partner.着装,
-                    'textarea',
-                    styles.appearanceRow,
-                    styles.appearanceLabel,
-                    styles.appearanceValue,
-                  )}
-                </div>
-              )}
-
-              {/* 性格特征 */}
-              {(partner.性格 || partner.喜爱 || editEnabled) && (
-                <div className={styles.partnerTraits}>
-                  {renderEditableRow(
-                    '性格',
-                    `关系列表.${name}.性格`,
-                    partner.性格,
-                    'textarea',
-                    styles.traitRow,
-                    styles.traitLabel,
-                    styles.traitValue,
-                  )}
-                  {renderEditableRow(
-                    '喜爱',
-                    `关系列表.${name}.喜爱`,
-                    partner.喜爱,
-                    'textarea',
-                    styles.traitRow,
-                    styles.traitLabel,
-                    styles.traitValue,
-                  )}
-                </div>
-              )}
-
-              {/* 属性 */}
-              {!_.isEmpty(partner.属性) && (
-                <div className={styles.partnerAttributes}>
-                  <div className={styles.sectionLabel}>属性</div>
-                  <div
-                    className={`${styles.attributeGrid} ${editEnabled ? styles.attributeGridEdit : ''}`}
-                  >
-                    {_.map(partner.属性, (value, key) => (
-                      <div
-                        key={key}
-                        className={`${styles.attributeItem} ${editEnabled ? styles.attributeItemEdit : ''}`}
-                      >
-                        <span className={styles.attributeKey}>{key}</span>
-                        {editEnabled ? (
-                          <EditableField
-                            path={`关系列表.${name}.属性.${key}`}
-                            value={value ?? 0}
-                            type="number"
-                            numberConfig={{ min: 0, max: 20, step: 1 }}
-                          />
-                        ) : (
-                          <span className={styles.attributeValue}>{value}</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 状态效果 */}
-              {renderStatusEffectsSection(partner.状态效果, name)}
-
-              {/* 装备 */}
-              {renderItemSection(
-                '装备',
-                partner.装备,
-                styles.equipmentList,
-                item =>
-                  item.位置 ? <span className={styles.equipmentSlot}>[{item.位置}]</span> : null,
-                name,
-              )}
-
-              {/* 技能 */}
-              {renderItemSection(
-                '技能',
-                partner.技能,
-                styles.skillList,
-                item => (item.消耗 ? <span className={styles.skillCost}>{item.消耗}</span> : null),
-                name,
-              )}
-
-              {/* 背包 */}
-              {renderItemSection(
-                '背包',
-                partner.背包,
-                styles.skillList,
-                item => (item.数量 ? <span className={styles.skillCost}>x{item.数量}</span> : null),
-                name,
-              )}
-
-              {/* 心里话 */}
-              {(partner.心里话 || editEnabled) && (
-                <div className={styles.partnerThoughts}>
-                  {renderEditableRow(
-                    '心里话',
-                    `关系列表.${name}.心里话`,
-                    partner.心里话,
-                    'textarea',
-                    styles.thoughtsRow,
-                    styles.thoughtsLabel,
-                    styles.thoughtsContent,
-                  )}
-                </div>
-              )}
-
-              {/* 背景故事 */}
-              {(partner.背景故事 || editEnabled) && (
-                <div className={styles.partnerBackground}>
-                  {renderEditableRow(
-                    '背景故事',
-                    `关系列表.${name}.背景故事`,
-                    partner.背景故事,
-                    'textarea',
-                    styles.backgroundRow,
-                    styles.backgroundLabel,
-                    styles.backgroundContent,
-                  )}
-                </div>
-              )}
-
-              {/* 登神长阶 */}
-              {partner.登神长阶?.是否开启 && (
-                <div className={styles.partnerAscension}>
-                  <div className={styles.ascensionLabel}>登神长阶</div>
-                  <Ascension
-                    data={partner.登神长阶}
-                    compact
-                    editEnabled={editEnabled}
-                    pathPrefix={`关系列表.${name}.登神长阶`}
-                  />
-                </div>
-              )}
-            </div>
-          </Collapse>
-        ))}
+        <div className={styles.partnerDetailPanel}>{detailContent}</div>
       </div>
     );
   };
 
   return (
-    <div className={styles.destinyTab}>
+    <div
+      className={`${styles.destinyTab} ${isPartnerDetailOpen ? styles.destinyTabDetailModeMobile : ''}`}
+    >
       {/* FP商店按钮（暂时禁用，待正式上线） */}
       <button className={styles.fpShopBtn} onClick={handleOpenFpShop} disabled title="待上线">
         <i className="fa-solid fa-store" />
@@ -565,9 +667,22 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       </Card>
 
       {/* 关系列表 */}
-      <Card title="伙伴" className={styles.destinyTabPartners}>
+      <section className={styles.destinyTabPartners}>
+        <div className={styles.partnerSectionTitle}>伙伴</div>
         {renderPartners()}
-      </Card>
+      </section>
+
+      {isPartnerDetailOpen && activePartnerName && activePartner && (
+        <div className={styles.partnerDetailPageMobile}>
+          <div className={styles.partnerDetailPageTopbar}>
+            <button className={styles.partnerBackBtn} onClick={handlePartnerDetailBack}>
+              <i className="fa-solid fa-chevron-left" />
+              <span>返回伙伴列表</span>
+            </button>
+          </div>
+          <div className={styles.partnerDetailPageBody}>{renderActivePartnerDetailContent()}</div>
+        </div>
+      )}
 
       {/* 删除确认弹窗 */}
       <DeleteConfirmModal

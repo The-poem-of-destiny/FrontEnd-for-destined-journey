@@ -199,7 +199,7 @@
   &:focus {
     outline: none;
     border-color: var(--theme-primary-bg);
-    box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb, 59, 130, 246), 0.2);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-primary-bg) 24%, transparent);
   }
 
   &::placeholder {

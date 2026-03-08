@@ -3,6 +3,23 @@
 
 .destinyTab {
   @include page-container;
+  position: relative;
+  flex: 1;
+  min-height: 100%;
+}
+
+.destinyTabDetailModeMobile {
+  @media (max-width: 900px) {
+    flex: 1;
+    min-height: 100%;
+    height: 100%;
+
+    > .fpShopBtn,
+    > .destinyTabPoints,
+    > .destinyTabPartners {
+      display: none;
+    }
+  }
 }
 
 // FP商店按钮
@@ -39,9 +56,9 @@
   padding: 2px 6px;
   font-size: 10px;
   font-weight: 500;
-  background: rgba(var(--theme-warning-rgb, 255, 152, 0), 0.15);
-  color: var(--theme-warning, #ff9800);
-  border: 1px solid rgba(var(--theme-warning-rgb, 255, 152, 0), 0.3);
+  background: color-mix(in srgb, var(--theme-warning) 18%, transparent);
+  color: var(--theme-warning);
+  border: 1px solid color-mix(in srgb, var(--theme-warning) 36%, transparent);
   border-radius: 3px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -93,7 +110,17 @@
 }
 
 .destinyTabPartners {
-  // 关系列表卡片
+  @include list-container($spacing-md);
+  padding: $spacing-md;
+  border-radius: $border-radius-md;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  background: color-mix(in srgb, var(--theme-card-bg) 86%, transparent);
+}
+
+.partnerSectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text-primary);
 }
 
 .destinyTabAscension {
@@ -127,8 +154,142 @@
 }
 
 // 命定之人列表
+.partnerMasterDetail {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: $spacing-md;
+  align-items: start;
+}
+
 .partnerList {
   @include list-container;
+}
+
+.partnerSummaryList {
+  @include list-container($spacing-sm);
+  min-width: 0;
+}
+
+.partnerSummaryListHiddenMobile {
+  @media (max-width: 900px) {
+    display: none;
+  }
+}
+
+.partnerSummaryCard {
+  padding: $spacing-md;
+  border-radius: $border-radius-sm;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  background: color-mix(in srgb, var(--theme-card-bg) 86%, transparent);
+  cursor: pointer;
+  transition:
+    background $transition-fast,
+    border-color $transition-fast,
+    box-shadow $transition-fast,
+    transform $transition-fast;
+
+  &:hover {
+    background: color-mix(in srgb, var(--theme-card-bg) 82%, transparent);
+    border-color: color-mix(in srgb, var(--theme-card-border) 88%, transparent);
+    box-shadow: 0 12px 28px color-mix(in srgb, var(--theme-window-bg) 22%, transparent);
+    transform: translateY(-1px);
+  }
+}
+
+.partnerSummaryCardActive {
+  background: color-mix(in srgb, var(--theme-card-bg) 80%, transparent);
+  border-color: color-mix(in srgb, var(--theme-card-border) 92%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 8%, transparent),
+    0 10px 24px color-mix(in srgb, var(--theme-window-bg) 16%, transparent);
+}
+
+.partnerSummaryMain {
+  @include list-container(8px);
+  min-width: 0;
+}
+
+.partnerSummaryText {
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+  line-height: 1.6;
+  white-space: pre-line;
+  word-break: break-word;
+}
+
+.partnerSummaryStatus {
+  min-width: 0;
+}
+
+.partnerSummaryStatusRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.partnerSummaryStatusMore {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 70%, transparent);
+  background: color-mix(in srgb, var(--theme-card-bg) 78%, transparent);
+  color: var(--theme-text-muted);
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.partnerDetailPanel {
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.partnerDetailHeader {
+  @include list-container(8px);
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+}
+
+.partnerDetailPageMobile {
+  display: none;
+}
+
+.partnerDetailPageTopbar {
+  display: none;
+}
+
+.partnerDetailPageBody {
+  min-height: auto;
+  height: auto;
+  flex: 0 0 auto;
+  display: block;
+}
+
+.partnerBackBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 78%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-card-bg) 72%, transparent);
+  color: var(--theme-text-primary);
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background $transition-fast,
+    border-color $transition-fast,
+    transform $transition-fast;
+
+  &:hover {
+    background: color-mix(in srgb, var(--theme-card-bg) 86%, transparent);
+    border-color: color-mix(in srgb, var(--theme-card-border) 94%, transparent);
+    transform: translateY(-1px);
+  }
 }
 
 .partnerName {
@@ -162,14 +323,175 @@
 
 // 命定之人详情
 .partnerDetails {
+  @include list-container($spacing-md);
   font-size: 12px;
+}
+
+.partnerDetailNav {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  padding: 4px;
+  border-radius: $border-radius-md;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  background: color-mix(in srgb, var(--theme-card-bg) 58%, transparent);
+}
+
+.partnerDetailTab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: $border-radius-sm;
+  background: transparent;
+  color: var(--theme-text-muted);
+  font-size: 12px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background $transition-fast,
+    border-color $transition-fast,
+    color $transition-fast;
+
+  &:hover {
+    background: color-mix(in srgb, var(--theme-card-bg) 72%, transparent);
+    color: var(--theme-text-primary);
+  }
+}
+
+.partnerDetailTabActive {
+  border-color: color-mix(in srgb, var(--theme-card-border) 82%, transparent);
+  background: color-mix(in srgb, var(--theme-card-bg) 88%, var(--theme-text-primary) 4%);
+  color: var(--theme-text-primary);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 10%, transparent);
+}
+
+.partnerOverviewHero {
+  @include list-container($spacing-md);
+}
+
+.partnerOverviewPrimary {
+  @include list-container($spacing-sm);
+}
+
+.partnerOverviewStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: $spacing-sm;
+}
+
+@media (max-width: 760px) {
+  .partnerOverviewStats {
+    grid-template-columns: 1fr;
+  }
+}
+
+.partnerInfoPanel {
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius-sm;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  background: color-mix(in srgb, var(--theme-card-bg) 86%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 6%, transparent);
+}
+
+@media (max-width: 900px) {
+  .destinyTabPartners {
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .partnerSectionTitle {
+    display: none;
+  }
+
+  .partnerMasterDetail {
+    grid-template-columns: 1fr;
+  }
+
+  .partnerDetailPanel {
+    display: none;
+  }
+
+  .partnerDetailPageMobile {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+    width: 100%;
+    min-height: auto;
+    height: auto;
+    padding: $spacing-md 0 0;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    z-index: auto;
+    overflow: visible;
+    align-items: stretch;
+  }
+
+  .partnerDetailPageTopbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding-bottom: $spacing-xs;
+    background: color-mix(in srgb, var(--theme-content-bg) 72%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .partnerDetailNav {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .partnerDetailTab {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 72px;
+    padding-inline: 14px;
+    white-space: nowrap;
+  }
+
+  .partnerOverviewStats {
+    grid-template-columns: 1fr;
+  }
+
+  .partnerInfo {
+    grid-template-columns: 1fr;
+  }
+
+  .attributeGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .attributeGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .partnerAffection {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  margin-bottom: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius-sm;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  background: color-mix(in srgb, var(--theme-card-bg) 84%, transparent);
 }
 
 .label {
@@ -223,7 +545,6 @@
   display: flex;
   gap: $spacing-md;
   flex-wrap: wrap;
-  margin-bottom: $spacing-sm;
   @include item-bar;
   @include bg-overlay-medium-light;
 }
@@ -243,7 +564,12 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: $spacing-xs $spacing-md;
-  margin-bottom: $spacing-sm;
+}
+
+@media (max-width: 760px) {
+  .partnerInfo {
+    grid-template-columns: 1fr;
+  }
 }
 
 .infoRow {

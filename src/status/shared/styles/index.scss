@@ -25,6 +25,8 @@
   --theme-content-bg: #12151b;
   --theme-card-bg: #1b1f27;
   --theme-card-border: #2c3340;
+  --theme-surface-muted: color-mix(in srgb, var(--theme-window-bg) 72%, var(--theme-card-bg) 28%);
+  --theme-overlay-bg: color-mix(in srgb, var(--theme-window-bg) 58%, transparent);
 
   // 文本颜色
   --theme-text-primary: #f3f5f8;

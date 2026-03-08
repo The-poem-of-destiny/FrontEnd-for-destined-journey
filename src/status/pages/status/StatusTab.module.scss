@@ -196,7 +196,7 @@
   gap: $spacing-xs;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border) 68%, transparent);
 }
 
 .basicInfoLabel {
@@ -239,8 +239,8 @@
   flex-direction: column;
   gap: $spacing-xs;
   padding: $spacing-md;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: color-mix(in srgb, var(--theme-card-bg) 86%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
   border-radius: $border-radius-sm;
   text-align: left;
   cursor: pointer;
@@ -251,9 +251,9 @@
     box-shadow $transition-fast;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.035);
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+    background: color-mix(in srgb, var(--theme-card-bg) 82%, transparent);
+    border-color: color-mix(in srgb, var(--theme-card-border) 88%, transparent);
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--theme-window-bg) 18%, transparent);
     transform: translateY(-1px);
   }
 }
