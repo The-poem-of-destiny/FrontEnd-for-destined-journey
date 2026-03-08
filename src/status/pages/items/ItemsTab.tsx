@@ -1,7 +1,13 @@
+import _ from 'lodash';
 import { FC, ReactNode, useMemo, useState } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
 import { useEditorSettingStore } from '../../core/stores';
-import { formatMoney, sortEntriesByQuality } from '../../core/utils';
+import {
+  formatMoney,
+  getAssetCollectionSource,
+  getAssetFilterOptions,
+  getFilteredAssetEntries,
+} from '../../core/utils';
 import {
   Card,
   DeleteConfirmModal,
@@ -65,66 +71,35 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   /** 获取当前类别的数据源 */
   const getCategoryData = (category: CategoryId) => {
-    switch (category) {
-      case 'inventory':
-        return player.背包 ?? {};
-      case 'equipment':
-        return player.装备 ?? {};
-      case 'skills':
-        return player.技能 ?? {};
-      default:
-        return {};
-    }
+    const config = getCategoryConfig(category);
+    return getAssetCollectionSource(player, config.label);
   };
 
   /** 获取当前类别的筛选字段 */
-  const getFilterKey = (category: CategoryId): string => {
+  const getFilterKey = (category: CategoryId) => {
     const cat = ItemCategories.find(c => c.id === category);
     return cat?.filterKey ?? '类型';
   };
 
+  const activeCategoryConfig = getCategoryConfig(activeCategory);
+  const activeCategoryItems = useMemo(
+    () => getCategoryData(activeCategory),
+    [activeCategory, player.技能, player.装备, player.背包],
+  );
+
   /** 计算当前类别的所有筛选选项 */
   const filterOptions = useMemo(() => {
-    const items = getCategoryData(activeCategory);
-    const filterKey = getFilterKey(activeCategory);
-    const values = new Set<string>();
+    return getAssetFilterOptions(activeCategoryItems, getFilterKey(activeCategory), ALL_FILTER);
+  }, [activeCategory, activeCategoryItems]);
 
-    _.forEach(items, item => {
-      const value = _.get(item, filterKey);
-      if (value && typeof value === 'string') {
-        values.add(value);
-      }
-    });
-
-    return [ALL_FILTER, ...Array.from(values).sort()];
-  }, [activeCategory, data]);
-
-  /** 过滤背包物品 */
-  const filteredInventory = useMemo(() => {
-    const items = player.背包 ?? {};
-    if (activeFilter === ALL_FILTER || activeCategory !== 'inventory') {
-      return items;
-    }
-    return _.pickBy(items, item => item.类型 === activeFilter);
-  }, [activeCategory, activeFilter, player.背包]);
-
-  /** 过滤装备 */
-  const filteredEquipment = useMemo(() => {
-    const items = player.装备 ?? {};
-    if (activeFilter === ALL_FILTER || activeCategory !== 'equipment') {
-      return items;
-    }
-    return _.pickBy(items, item => item.位置 === activeFilter);
-  }, [activeCategory, activeFilter, player.装备]);
-
-  /** 过滤技能 */
-  const filteredSkills = useMemo(() => {
-    const items = player.技能 ?? {};
-    if (activeFilter === ALL_FILTER || activeCategory !== 'skills') {
-      return items;
-    }
-    return _.pickBy(items, item => item.类型 === activeFilter);
-  }, [activeCategory, activeFilter, player.技能]);
+  const filteredEntries = useMemo(() => {
+    return getFilteredAssetEntries(
+      activeCategoryItems,
+      getFilterKey(activeCategory),
+      activeFilter,
+      ALL_FILTER,
+    );
+  }, [activeCategory, activeCategoryItems, activeFilter]);
 
   /** 切换类别时重置筛选器 */
   const handleCategoryChange = (category: CategoryId) => {
@@ -157,37 +132,26 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     );
   };
 
-  const sortItemsByQuality = (items: Record<string, any>) => {
-    return sortEntriesByQuality(items);
-  };
-
-  const renderItemList = (
-    items: Record<string, any>,
-    emptyText: string,
-    getTitleSuffix: (item: any) => ReactNode,
-  ) => {
-    if (_.isEmpty(items)) {
+  const renderItemList = (emptyText: string, getTitleSuffix: (item: any) => ReactNode) => {
+    if (filteredEntries.length === 0) {
       return <EmptyHint className={styles.emptyHint} text={emptyText} />;
     }
 
-    const sortedItems = sortItemsByQuality(items);
-    const config = getCategoryConfig(activeCategory);
-
     return (
       <div className={styles.itemList}>
-        {sortedItems.map(([name, item]) => (
+        {filteredEntries.map(([name, item]) => (
           <ItemDetail
             key={name}
             name={name}
             data={item}
             titleSuffix={getTitleSuffix(item)}
             editEnabled={editEnabled}
-            pathPrefix={`${config.pathPrefix}.${name}`}
-            itemCategory={config.itemCategory}
+            pathPrefix={`${activeCategoryConfig.pathPrefix}.${name}`}
+            itemCategory={activeCategoryConfig.itemCategory}
             onDelete={() =>
               setDeleteTarget({
-                type: config.label,
-                path: `${config.pathPrefix}.${name}`,
+                type: activeCategoryConfig.label,
+                path: `${activeCategoryConfig.pathPrefix}.${name}`,
                 name,
               })
             }
@@ -200,7 +164,6 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   /** 渲染背包物品 */
   const renderInventory = () => {
     return renderItemList(
-      filteredInventory,
       activeFilter === ALL_FILTER ? '背包空空如也' : `没有${activeFilter}类型的物品`,
       item => <span className={styles.itemCount}>×{item.数量}</span>,
     );
@@ -209,7 +172,6 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   /** 渲染装备 */
   const renderEquipment = () => {
     return renderItemList(
-      filteredEquipment,
       activeFilter === ALL_FILTER ? '暂无装备' : `没有${activeFilter}位置的装备`,
       item => (item.位置 ? <span className={styles.itemSlot}>[{item.位置}]</span> : null),
     );
@@ -218,7 +180,6 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   /** 渲染技能 */
   const renderSkills = () => {
     return renderItemList(
-      filteredSkills,
       activeFilter === ALL_FILTER ? '暂无技能' : `没有${activeFilter}类型的技能`,
       item => (item.消耗 ? <span className={styles.itemCost}>{item.消耗}</span> : null),
     );
@@ -269,12 +230,14 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
               {option}
               {option !== ALL_FILTER && (
                 <span className={styles.filterCount}>
-                  {_.size(
-                    _.pickBy(
-                      getCategoryData(activeCategory),
-                      item => _.get(item, getFilterKey(activeCategory)) === option,
-                    ),
-                  )}
+                  {option === ALL_FILTER
+                    ? Object.keys(activeCategoryItems).length
+                    : _.size(
+                        _.pickBy(
+                          activeCategoryItems,
+                          item => _.get(item, getFilterKey(activeCategory)) === option,
+                        ),
+                      )}
                 </span>
               )}
             </button>

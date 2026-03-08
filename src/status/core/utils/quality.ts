@@ -5,6 +5,7 @@
 
 /** 品质到 CSS 类名的映射 */
 export const QualityClassMap: Record<string, string> = {
+  普通: 'common',
   唯一: 'unique',
   神话: 'mythic',
   传说: 'legendary',
@@ -46,6 +47,7 @@ export const getQualityRank = (quality?: string): number => {
 
 /** 品质样式映射 */
 export const QualityStyleMap: Record<string, string> = {
+  common: 'qualityCommon',
   unique: 'qualityUnique',
   mythic: 'qualityMythic',
   legendary: 'qualityLegendary',

@@ -337,6 +337,10 @@
 /// 生成品质颜色类
 /// 用于: Card, Collapse, ItemDetail, ItemsTab
 @mixin quality-colors($prefix: 'quality') {
+  .#{$prefix}Common {
+    color: var(--theme-quality-common);
+  }
+
   .#{$prefix}Unique {
     color: var(--theme-quality-unique);
   }

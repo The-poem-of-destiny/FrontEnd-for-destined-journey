@@ -1,7 +1,11 @@
 import { FC, ReactNode, useMemo, useState } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
 import { useEditorSettingStore } from '../../core/stores';
-import { sortEntriesByQuality } from '../../core/utils';
+import {
+  getAssetCollectionSource,
+  getAssetFilterOptions,
+  getFilteredAssetEntries,
+} from '../../core/utils';
 import {
   Ascension,
   Card,
@@ -17,6 +21,7 @@ import styles from './DestinyTab.module.scss';
 
 /** 字段类型 */
 type FieldType = 'text' | 'number' | 'textarea' | 'tags' | 'toggle' | 'keyvalue';
+type PartnerListCategory = 'all' | 'present' | 'away' | 'contracted';
 type PartnerDetailSection =
   | 'overview'
   | 'status'
@@ -24,6 +29,62 @@ type PartnerDetailSection =
   | 'skills'
   | 'inventory'
   | 'background';
+
+type PartnerAssetSectionConfig = {
+  key: Extract<PartnerDetailSection, 'equipment' | 'skills' | 'inventory'>;
+  label: string;
+  dataKey: '装备' | '技能' | '背包';
+  filterKey: '位置' | '类型';
+  itemCategory: 'equipment' | 'skill' | 'item';
+  emptyText: string;
+  getTitleSuffix: (item: any) => ReactNode;
+};
+
+const ALL_FILTER = '全部';
+
+const PartnerListCategories: Array<{
+  key: PartnerListCategory;
+  label: string;
+  matches: (partner: Record<string, any>) => boolean;
+}> = [
+  { key: 'all', label: '全部', matches: () => true },
+  { key: 'present', label: '在场', matches: partner => Boolean(partner.在场) },
+  { key: 'away', label: '不在场', matches: partner => !partner.在场 },
+  { key: 'contracted', label: '已缔约', matches: partner => Boolean(partner.命定契约) },
+];
+
+const PartnerAssetSections: PartnerAssetSectionConfig[] = [
+  {
+    key: 'equipment',
+    label: '装备',
+    dataKey: '装备',
+    filterKey: '位置',
+    itemCategory: 'equipment',
+    emptyText: '暂无装备',
+    getTitleSuffix: item =>
+      item.位置 ? <span className={styles.equipmentSlot}>[{item.位置}]</span> : null,
+  },
+  {
+    key: 'skills',
+    label: '技能',
+    dataKey: '技能',
+    filterKey: '类型',
+    itemCategory: 'skill',
+    emptyText: '暂无技能',
+    getTitleSuffix: item =>
+      item.消耗 ? <span className={styles.skillCost}>{item.消耗}</span> : null,
+  },
+  {
+    key: 'inventory',
+    label: '背包',
+    dataKey: '背包',
+    filterKey: '类型',
+    itemCategory: 'item',
+    emptyText: '背包空空如也',
+    getTitleSuffix: item =>
+      item.数量 ? <span className={styles.skillCost}>x{item.数量}</span> : null,
+  },
+];
 
 /**
  * 命定页内容组件
@@ -35,15 +96,62 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const destinyPoints = data.命运点数;
   const partners = data.关系列表;
   const partnerEntries = useMemo(() => Object.entries(partners ?? {}), [partners]);
+  const [activePartnerListCategory, setActivePartnerListCategory] =
+    useState<PartnerListCategory>('all');
   const [selectedPartnerName, setSelectedPartnerName] = useState<string | null>(null);
   const [isPartnerDetailOpen, setIsPartnerDetailOpen] = useState(false);
   const [activePartnerDetailSection, setActivePartnerDetailSection] =
     useState<PartnerDetailSection>('overview');
+  const [activePartnerAssetFilter, setActivePartnerAssetFilter] = useState<string>(ALL_FILTER);
+
+  const partnerCategoryEntries = useMemo(() => {
+    return PartnerListCategories.map(category => {
+      const entries = partnerEntries.filter(([, partner]) => category.matches(partner));
+      return {
+        ...category,
+        count: entries.length,
+        entries,
+      };
+    });
+  }, [partnerEntries]);
+
+  const activePartnerListCategoryConfig =
+    partnerCategoryEntries.find(category => category.key === activePartnerListCategory) ??
+    partnerCategoryEntries[0];
+  const visiblePartnerEntries = activePartnerListCategoryConfig?.entries ?? [];
   const activePartnerName =
-    selectedPartnerName && partners?.[selectedPartnerName]
+    selectedPartnerName && visiblePartnerEntries.some(([name]) => name === selectedPartnerName)
       ? selectedPartnerName
-      : (partnerEntries[0]?.[0] ?? null);
+      : (visiblePartnerEntries[0]?.[0] ?? null);
   const activePartner = activePartnerName ? partners?.[activePartnerName] : null;
+  const activePartnerAssetSection =
+    PartnerAssetSections.find(section => section.key === activePartnerDetailSection) ?? null;
+
+  const activePartnerAssetSource = useMemo(() => {
+    if (!activePartner || !activePartnerAssetSection) return {};
+    return getAssetCollectionSource(activePartner, activePartnerAssetSection.dataKey);
+  }, [activePartner, activePartnerAssetSection]);
+
+  const activePartnerAssetEntries = useMemo(() => {
+    if (!activePartnerAssetSection) return [];
+
+    return getFilteredAssetEntries(
+      activePartnerAssetSource,
+      activePartnerAssetSection.filterKey,
+      activePartnerAssetFilter,
+      ALL_FILTER,
+    );
+  }, [activePartnerAssetFilter, activePartnerAssetSection, activePartnerAssetSource]);
+
+  const activePartnerAssetFilterOptions = useMemo(() => {
+    if (!activePartnerAssetSection) return [ALL_FILTER];
+
+    return getAssetFilterOptions(
+      activePartnerAssetSource,
+      activePartnerAssetSection.filterKey,
+      ALL_FILTER,
+    );
+  }, [activePartnerAssetSection, activePartnerAssetSource]);
 
   /**
    * 处理 FP 商店按钮点击
@@ -164,42 +272,85 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     );
   };
 
-  const renderItemSection = (
-    title: string,
-    items: Record<string, any> | undefined,
-    listClassName: string,
-    getTitleSuffix: (item: any) => ReactNode,
+  const renderPartnerAssetSection = (
     partnerName: string,
+    sectionConfig: PartnerAssetSectionConfig,
   ) => {
-    if (_.isEmpty(items)) return null;
+    const source = activePartnerAssetSource;
+    const sectionClassName =
+      sectionConfig.key === 'equipment' ? styles.partnerEquipment : styles.partnerSkills;
+    const listClassName =
+      sectionConfig.key === 'equipment' ? styles.equipmentList : styles.skillList;
+    const totalCount = Object.keys(source).length;
 
-    const itemType = title === '装备' ? '装备' : title === '背包' ? '背包' : '技能';
-    const itemCategory = title === '装备' ? 'equipment' : title === '背包' ? 'item' : 'skill';
+    if (totalCount === 0 && !editEnabled) {
+      return <EmptyHint className={styles.emptyHint} text={sectionConfig.emptyText} />;
+    }
 
     return (
-      <div className={title === '装备' ? styles.partnerEquipment : styles.partnerSkills}>
-        <div className={styles.sectionLabel}>{title}</div>
-        <div className={listClassName}>
-          {sortEntriesByQuality(items).map(([name, item]) => (
-            <ItemDetail
-              key={name}
-              name={name}
-              data={item}
-              titleSuffix={getTitleSuffix(item)}
-              editEnabled={editEnabled}
-              pathPrefix={`关系列表.${partnerName}.${itemType}.${name}`}
-              onDelete={() =>
-                setDeleteTarget({
-                  type: itemType,
-                  path: `关系列表.${partnerName}.${itemType}.${name}`,
-                  name,
-                })
-              }
-              itemCategory={itemCategory}
-              compact
-            />
-          ))}
+      <div className={sectionClassName}>
+        <div className={styles.partnerAssetHeader}>
+          <div>
+            <div className={styles.sectionLabel}>{sectionConfig.label}</div>
+            <div className={styles.partnerAssetSummary}>
+              当前显示 {activePartnerAssetEntries.length} / {totalCount} 项
+            </div>
+          </div>
         </div>
+
+        {activePartnerAssetFilterOptions.length > 1 && (
+          <div className={styles.partnerAssetFilterBar}>
+            {activePartnerAssetFilterOptions.map(option => {
+              const optionCount =
+                option === ALL_FILTER
+                  ? totalCount
+                  : _.size(
+                      _.pickBy(source, item => _.get(item, sectionConfig.filterKey) === option),
+                    );
+
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  className={`${styles.partnerAssetFilterBtn} ${activePartnerAssetFilter === option ? styles.partnerAssetFilterBtnActive : ''}`}
+                  onClick={() => setActivePartnerAssetFilter(option)}
+                >
+                  <span>{option}</span>
+                  <span className={styles.partnerAssetFilterCount}>{optionCount}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {activePartnerAssetEntries.length > 0 ? (
+          <div className={listClassName}>
+            {activePartnerAssetEntries.map(([name, item]) => (
+              <ItemDetail
+                key={name}
+                name={name}
+                data={item}
+                titleSuffix={sectionConfig.getTitleSuffix(item)}
+                editEnabled={editEnabled}
+                pathPrefix={`关系列表.${partnerName}.${sectionConfig.dataKey}.${name}`}
+                onDelete={() =>
+                  setDeleteTarget({
+                    type: sectionConfig.label,
+                    path: `关系列表.${partnerName}.${sectionConfig.dataKey}.${name}`,
+                    name,
+                  })
+                }
+                itemCategory={sectionConfig.itemCategory}
+                compact
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyHint
+            className={styles.emptyHint}
+            text={`没有${activePartnerAssetFilter}分类的${sectionConfig.label}`}
+          />
+        )}
       </div>
     );
   };
@@ -232,14 +383,16 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   const renderPartnerSummary = (partnerName: string, partner: Record<string, any>) => (
     <div className={styles.partnerTitle}>
-      <IconTitle text={partnerName} className={styles.partnerName} />
-      <div className={styles.partnerMeta}>
-        <span className={styles.affectionBadge}>好感度 {partner.好感度 ?? 0}</span>
-        <div className={styles.partnerTags}>
-          {partner.在场 && <span className={`${styles.tag} ${styles.tagPresent}`}>在场</span>}
-          {partner.命定契约 && (
-            <span className={`${styles.tag} ${styles.tagContract}`}>命定契约</span>
-          )}
+      <div className={styles.partnerTitleMain}>
+        <IconTitle text={partnerName} className={styles.partnerName} />
+        <div className={styles.partnerMeta}>
+          <span className={styles.affectionBadge}>好感度 {partner.好感度 ?? 0}</span>
+          <div className={styles.partnerTags}>
+            {partner.在场 && <span className={`${styles.tag} ${styles.tagPresent}`}>在场</span>}
+            {partner.命定契约 && (
+              <span className={`${styles.tag} ${styles.tagContract}`}>命定契约</span>
+            )}
+          </div>
         </div>
       </div>
       {editEnabled && (
@@ -299,12 +452,27 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const handlePartnerSelect = (partnerName: string) => {
     setSelectedPartnerName(partnerName);
     setActivePartnerDetailSection('overview');
+    setActivePartnerAssetFilter(ALL_FILTER);
     setIsPartnerDetailOpen(true);
   };
 
   const handlePartnerDetailBack = () => {
     setIsPartnerDetailOpen(false);
     setActivePartnerDetailSection('overview');
+    setActivePartnerAssetFilter(ALL_FILTER);
+  };
+
+  const handlePartnerListCategoryChange = (category: PartnerListCategory) => {
+    setActivePartnerListCategory(category);
+    setSelectedPartnerName(null);
+    setActivePartnerDetailSection('overview');
+    setActivePartnerAssetFilter(ALL_FILTER);
+    setIsPartnerDetailOpen(false);
+  };
+
+  const handlePartnerDetailSectionChange = (section: PartnerDetailSection) => {
+    setActivePartnerDetailSection(section);
+    setActivePartnerAssetFilter(ALL_FILTER);
   };
 
   const renderPartnerListItem = (partnerName: string, partner: Record<string, any>) => (
@@ -346,7 +514,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
               key={section.key}
               type="button"
               className={`${styles.partnerDetailTab} ${activePartnerDetailSection === section.key ? styles.partnerDetailTabActive : ''}`}
-              onClick={() => setActivePartnerDetailSection(section.key)}
+              onClick={() => handlePartnerDetailSectionChange(section.key)}
             >
               {section.label}
             </button>
@@ -538,33 +706,8 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
           </>
         )}
 
-        {activePartnerDetailSection === 'equipment' &&
-          renderItemSection(
-            '装备',
-            partner.装备,
-            styles.equipmentList,
-            item =>
-              item.位置 ? <span className={styles.equipmentSlot}>[{item.位置}]</span> : null,
-            partnerName,
-          )}
-
-        {activePartnerDetailSection === 'skills' &&
-          renderItemSection(
-            '技能',
-            partner.技能,
-            styles.skillList,
-            item => (item.消耗 ? <span className={styles.skillCost}>{item.消耗}</span> : null),
-            partnerName,
-          )}
-
-        {activePartnerDetailSection === 'inventory' &&
-          renderItemSection(
-            '背包',
-            partner.背包,
-            styles.skillList,
-            item => (item.数量 ? <span className={styles.skillCost}>x{item.数量}</span> : null),
-            partnerName,
-          )}
+        {activePartnerAssetSection &&
+          renderPartnerAssetSection(partnerName, activePartnerAssetSection)}
 
         {activePartnerDetailSection === 'background' && (
           <>
@@ -623,16 +766,39 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     const detailContent = renderActivePartnerDetailContent();
 
     return (
-      <div className={styles.partnerMasterDetail}>
-        <div
-          className={`${styles.partnerSummaryList} ${isPartnerDetailOpen ? styles.partnerSummaryListHiddenMobile : ''}`}
-        >
-          {partnerEntries.map(([name, partner]) => (
-            <div key={name}>{renderPartnerListItem(name, partner)}</div>
+      <div className={styles.partnerSectionContent}>
+        <div className={styles.partnerCategoryBar}>
+          {partnerCategoryEntries.map(category => (
+            <button
+              key={category.key}
+              type="button"
+              className={`${styles.partnerCategoryBtn} ${activePartnerListCategory === category.key ? styles.partnerCategoryBtnActive : ''}`}
+              onClick={() => handlePartnerListCategoryChange(category.key)}
+            >
+              <span>{category.label}</span>
+              <span className={styles.partnerCategoryCount}>{category.count}</span>
+            </button>
           ))}
         </div>
 
-        <div className={styles.partnerDetailPanel}>{detailContent}</div>
+        <div className={styles.partnerMasterDetail}>
+          <div
+            className={`${styles.partnerSummaryList} ${isPartnerDetailOpen ? styles.partnerSummaryListHiddenMobile : ''}`}
+          >
+            {visiblePartnerEntries.length > 0 ? (
+              visiblePartnerEntries.map(([name, partner]) => (
+                <div key={name}>{renderPartnerListItem(name, partner)}</div>
+              ))
+            ) : (
+              <EmptyHint
+                className={styles.emptyHint}
+                text={`当前“${activePartnerListCategoryConfig?.label ?? '全部'}”分类下暂无伙伴`}
+              />
+            )}
+          </div>
+
+          <div className={styles.partnerDetailPanel}>{detailContent}</div>
+        </div>
       </div>
     );
   };
@@ -668,7 +834,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
       {/* 关系列表 */}
       <section className={styles.destinyTabPartners}>
-        <div className={styles.partnerSectionTitle}>伙伴</div>
+        <div className={styles.partnerSectionTitle}>伙伴列表</div>
         {renderPartners()}
       </section>
 
