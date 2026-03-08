@@ -9,6 +9,7 @@ export { EditableField } from './EditableField';
 export { EmptyHint } from './EmptyHint';
 export { IconTitle } from './IconTitle';
 export { ItemDetail } from './ItemDetail';
+export { ItemInspectModal } from './ItemInspectModal';
 export { ResourceBar } from './ResourceBar';
 export { StatusEffectDisplay } from './StatusEffectDisplay';
 
@@ -28,6 +29,7 @@ export type { EditableFieldProps } from './EditableField';
 export type { EmptyHintProps } from './EmptyHint/EmptyHint';
 export type { IconTitleProps } from './IconTitle/IconTitle';
 export type { ItemData } from './ItemDetail';
+export type { ItemInspectModalProps } from './ItemInspectModal';
 export type { ResourceBarProps } from './ResourceBar/ResourceBar';
 export type { StatusEffectDisplayProps, StatusEffectItem } from './StatusEffectDisplay';
 

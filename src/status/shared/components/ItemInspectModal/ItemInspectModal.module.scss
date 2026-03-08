@@ -1,0 +1,99 @@
+@use '../../styles/variables' as *;
+@use '../../styles/mixins' as *;
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-lg;
+  background: color-mix(in srgb, var(--theme-overlay-bg) 82%, transparent);
+  backdrop-filter: blur(8px) saturate(100%);
+  -webkit-backdrop-filter: blur(8px) saturate(100%);
+}
+.modal {
+  width: min(92vw, 720px);
+  max-height: min(82vh, 760px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  border-radius: $border-radius-md;
+  background: color-mix(in srgb, var(--theme-card-bg) 32%, transparent);
+  backdrop-filter: blur(12px) saturate(125%);
+  -webkit-backdrop-filter: blur(12px) saturate(125%);
+  box-shadow:
+    0 24px 60px color-mix(in srgb, var(--theme-window-bg) 52%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 8%, transparent);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-md $spacing-sm;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border) 60%, transparent);
+  background: color-mix(in srgb, var(--theme-surface-muted) 42%, transparent);
+}
+
+.headerText {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  color: var(--theme-text-primary);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.subtitle {
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.closeButton {
+  @include button-secondary;
+  flex: 0 0 auto;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: $spacing-md;
+}
+
+@media (max-width: 540px) {
+  .overlay {
+    padding: $spacing-sm;
+  }
+
+  .modal {
+    width: 100%;
+    max-height: min(86vh, 820px);
+    border-radius: $border-radius-sm;
+  }
+
+  .header {
+    padding: $spacing-sm $spacing-sm $spacing-xs;
+  }
+
+  .body {
+    padding: $spacing-sm;
+  }
+}

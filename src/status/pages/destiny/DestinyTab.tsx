@@ -341,7 +341,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                   })
                 }
                 itemCategory={sectionConfig.itemCategory}
-                compact
+                displayMode="compact"
               />
             ))}
           </div>

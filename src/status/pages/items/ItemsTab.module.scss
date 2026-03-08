@@ -12,79 +12,90 @@
 }
 
 .itemsTabCurrency {
-  // 货币卡片样式
+  border-color: color-mix(in srgb, var(--theme-card-border) 74%, transparent);
 }
 
 .itemsTabCategories {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: $spacing-xs;
+  padding: 4px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 76%, transparent);
+  border-radius: $border-radius-md;
+  background: color-mix(in srgb, var(--theme-surface-muted) 76%, transparent);
 }
 
 .itemsTabContent {
   flex: 1;
 }
 
-// 筛选器栏
 .filterBar {
   display: flex;
   flex-wrap: wrap;
   gap: $spacing-xs;
-  @include item-bar;
+  padding: 4px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  border-radius: $border-radius-md;
+  background: color-mix(in srgb, var(--theme-card-bg) 56%, transparent);
 }
 
 .filterBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px $spacing-sm;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   background: transparent;
-  border-radius: $border-radius-sm;
   color: var(--theme-text-secondary);
   font-size: 11px;
   cursor: pointer;
-  transition: all $transition-fast;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  transition:
+    background-color $transition-fast,
+    border-color $transition-fast,
+    color $transition-fast;
+  @include uppercase-text(0.4px);
 
   &:hover {
+    border-color: color-mix(in srgb, var(--theme-card-border) 80%, transparent);
     background: var(--theme-tab-hover-bg);
     color: var(--theme-text-primary);
-  }
-
-  &.isActive {
-    background: var(--theme-primary-bg);
-    color: var(--theme-primary-text);
   }
 }
 
 .filterCount {
-  padding: 1px 4px;
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  display: inline-flex;
+  min-width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-window-bg) 28%, transparent);
+  color: inherit;
   font-size: 10px;
-  min-width: 16px;
-  text-align: center;
-
-  .isActive & {
-    background: rgba(255, 255, 255, 0.2);
-  }
 }
 
-// 货币显示
 .currency {
   display: flex;
   justify-content: center;
+  align-items: center;
   letter-spacing: 0.3px;
 }
 
 .currencyEdit {
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   gap: $spacing-sm;
 }
 
 .currencyItem {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: $spacing-xs;
   font-size: 13px;
   font-weight: 500;
@@ -96,8 +107,8 @@
   }
 
   .currencyEdit & {
-    min-width: 80px;
-    flex: 1 1 auto;
+    min-width: 0;
+    flex: 0 1 auto;
   }
 }
 
@@ -112,49 +123,43 @@
   opacity: 0.8;
 }
 
-// 类别按钮
 .categoryBtn {
-  flex: 1;
-  @include flex-center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   gap: $spacing-xs;
-  @include item-bar;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: calc(#{$border-radius-md} - 4px);
+  background: transparent;
   color: var(--theme-text-secondary);
   font-size: 12px;
   cursor: pointer;
-  transition: all $transition-fast;
+  transition:
+    background-color $transition-fast,
+    border-color $transition-fast,
+    color $transition-fast,
+    box-shadow $transition-fast;
   @include uppercase-text(0.5px);
 
   &:hover {
     background: var(--theme-tab-hover-bg);
+    color: var(--theme-text-primary);
   }
 }
 
 .isActive {
-  background: var(--theme-primary-bg);
-  border-color: var(--theme-primary-bg);
-  color: var(--theme-primary-text);
+  background: color-mix(in srgb, var(--theme-primary-bg) 18%, var(--theme-card-bg) 82%);
+  border-color: color-mix(in srgb, var(--theme-primary-bg) 44%, var(--theme-card-border) 56%);
+  color: var(--theme-text-primary);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 6%, transparent);
 }
 
-// 物品列表
 .itemList {
-  @include list-container;
-}
-
-// 物品标题
-.itemTitle {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: $spacing-sm;
-  width: 100%;
-  min-width: 0;
-  flex-wrap: wrap;
-}
-
-.itemName {
-  flex: 1;
-  font-weight: 500;
-  min-width: 0;
-  word-break: break-word;
 }
 
 .itemCount,
@@ -165,60 +170,33 @@
   word-break: break-word;
 }
 
-// 物品详情
-.itemDetails {
-  font-size: 12px;
-}
-
-.itemType {
-  color: var(--theme-text-secondary);
-  margin-bottom: $spacing-xs;
-  word-break: break-word;
-}
-
-// 物品标签
-.itemTags {
-  display: flex;
+.inspectSubtitle {
+  display: inline-flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: $spacing-xs;
-}
-
-.tag {
-  @include badge-bordered;
-}
-
-.itemDesc {
-  color: var(--theme-text-primary);
-  line-height: 1.5;
-  margin-bottom: $spacing-sm;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-
-.itemEffects {
-  padding-top: $spacing-sm;
-  border-top: 1px dashed var(--theme-card-border);
-}
-
-.effectRow {
-  display: flex;
-  justify-content: space-between;
-  padding: 2px 0;
-}
-
-.effectKey {
+  gap: 6px;
   color: var(--theme-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
-.effectValue {
-  color: var(--theme-text-primary);
-}
-
-// 空提示
 .emptyHint {
   @include empty-hint($spacing-lg);
 }
 
-// 品质颜色
-@include quality-colors;
+@media (max-width: 540px) {
+  .filterBar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .filterBtn {
+    flex: 0 0 auto;
+  }
+}

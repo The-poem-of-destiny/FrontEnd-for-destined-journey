@@ -1,132 +1,251 @@
 @use '../../styles/variables' as *;
 @use '../../styles/mixins' as *;
 
-// 物品标题
 .itemTitle {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: $spacing-xs $spacing-sm;
   width: 100%;
-  flex-wrap: wrap;
-}
-
-.itemName {
-  flex: 1;
-  font-weight: 500;
   min-width: 0;
 }
 
-// 删除按钮
+.itemTitleMain {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: $spacing-sm;
+  row-gap: $spacing-xs;
+  min-width: 0;
+}
+
+.itemName {
+  min-width: 0;
+  font-weight: 600;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.itemTitleSuffix {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: max-content;
+  color: var(--theme-text-muted);
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.itemTitleActions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-xs;
+  flex: 0 0 auto;
+}
+
 .deleteButton {
   @include delete-button-danger;
-  margin-left: auto;
+  margin-left: 0;
 }
 
-// 字段标签
-.fieldLabel {
-  color: var(--theme-text-secondary);
-  margin-right: $spacing-xs;
+.itemMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
 }
 
-// 位置/消耗/数量
-.itemSlot,
-.itemCost,
-.itemQuantity {
-  color: var(--theme-text-secondary);
-  margin-bottom: $spacing-xs;
-}
-
-// 效果标题
-.effectsHeader {
-  font-size: 11px;
-  color: var(--theme-text-secondary);
-  margin-bottom: $spacing-xs;
-  font-weight: 500;
-}
-
-// 物品详情
-.itemCompactCard {
-  padding: $spacing-sm $spacing-md;
-  border-radius: $border-radius-sm;
+.itemMetaBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  padding: 3px 8px;
   border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
-  background: color-mix(in srgb, var(--theme-card-bg) 84%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 4%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-window-bg) 18%, transparent);
 }
 
-.itemDetails {
-  font-size: 12px;
+.itemMetaLabel {
+  color: var(--theme-text-muted);
+  font-size: 10px;
+  @include uppercase-text(0.5px);
 }
 
-.itemQuality {
+.itemMetaValue {
   color: var(--theme-text-secondary);
-  margin-bottom: $spacing-xs;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
 }
 
-.itemType {
-  color: var(--theme-text-secondary);
-  margin-bottom: $spacing-xs;
-}
-
-@media (max-width: 540px) {
-  .itemTitle {
-    align-items: flex-start;
-  }
-}
-
-// 物品标签
 .itemTags {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-bottom: $spacing-xs;
 }
 
 .tag {
-  @include badge-dark;
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 5px 10px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 82%, transparent);
+  border-radius: $border-radius-sm;
+  background: color-mix(in srgb, var(--theme-card-bg) 72%, var(--theme-surface-muted) 28%);
+  color: var(--theme-text-primary);
+  font-size: 11px;
+  line-height: 1.3;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 4%, transparent);
+}
+
+.itemPanelCard,
+.itemCompactCard,
+.itemModalDetail {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 80%, transparent);
+  border-radius: $border-radius-sm;
+  background: color-mix(in srgb, var(--theme-card-bg) 88%, transparent);
+}
+
+.itemPanelCard {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color $transition-fast,
+    background-color $transition-fast,
+    transform $transition-fast,
+    box-shadow $transition-fast;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--theme-primary-bg) 36%, var(--theme-card-border) 64%);
+    background: color-mix(in srgb, var(--theme-card-bg) 78%, var(--theme-surface-muted) 22%);
+    box-shadow: 0 12px 24px color-mix(in srgb, var(--theme-window-bg) 28%, transparent);
+    transform: translateY(-1px);
+  }
+}
+
+.itemPanelBody,
+.itemCompactBody {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.itemSummaryDesc {
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.itemSummaryEffects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.itemSummaryEffectChip,
+.effectChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 8px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 76%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-surface-muted) 68%, transparent);
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.itemCompactCard {
+  padding: $spacing-sm $spacing-md;
+}
+
+.itemCompactBody {
+  margin-top: $spacing-xs;
+}
+
+.itemModalDetail {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding: 0;
   border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--theme-text-primary);
+}
+
+.itemDetails {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  font-size: 12px;
+  color: var(--theme-text-primary);
+}
+
+.itemFieldRow {
+  @include label-value-grid(56px);
+  align-items: start;
+
+  > :last-child {
+    color: var(--theme-text-primary);
+    min-width: 0;
+    word-break: break-word;
+  }
+}
+
+.fieldLabel {
+  color: var(--theme-text-muted);
+  font-size: 11px;
+  @include uppercase-text(0.4px);
+}
+
+.itemBlock {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  padding-top: $spacing-sm;
+  border-top: 1px dashed color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  background: transparent;
+}
+
+.itemBlockTitle {
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  @include uppercase-text(0.4px);
 }
 
 .itemDesc {
   color: var(--theme-text-primary);
-  line-height: 1.5;
-  margin-bottom: $spacing-xs;
+  line-height: 1.65;
   white-space: pre-line;
-}
-
-.itemCompactCard {
-  .itemTitle {
-    align-items: flex-start;
-  }
-
-  .itemDetails {
-    @include list-container($spacing-xs);
-    margin-top: $spacing-xs;
-  }
-
-  .itemQuality,
-  .itemType,
-  .itemSlot,
-  .itemCost,
-  .itemQuantity,
-  .itemDesc,
-  .itemTags {
-    margin-bottom: 0;
-  }
-
-  .itemEffects {
-    padding-top: $spacing-xs;
-    margin-top: 2px;
-  }
+  word-break: break-word;
 }
 
 .itemEffects {
-  padding-top: $spacing-xs;
-  border-top: 1px dashed var(--theme-card-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .effectRow {
-  @include label-value-grid;
+  @include label-value-grid(96px);
+  width: 100%;
   padding: 2px 0;
 }
 
@@ -144,10 +263,47 @@
 }
 
 @media (max-width: 540px) {
+  .itemTitle {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: $spacing-sm;
+  }
+
+  .itemTitleMain {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 10px;
+    min-width: 0;
+  }
+
+  .itemName {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .itemTitleSuffix {
+    justify-content: flex-end;
+    text-align: right;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-right: 2px;
+  }
+
+  .itemTitleActions {
+    justify-content: flex-end;
+    align-self: center;
+    margin-left: 2px;
+  }
+
+  .itemFieldRow,
   .effectRow {
     grid-template-columns: 1fr;
   }
+
+  .itemPanelCard {
+    padding: $spacing-sm;
+  }
 }
 
-// 品质颜色
 @include quality-colors;

@@ -1,6 +1,6 @@
-import { getQualityClass, QualityClassMap } from '@/status/core/utils';
-import { FC } from 'react';
-import { Collapse } from '../Collapse';
+import { getQualityClass } from '@/status/core/utils';
+import _ from 'lodash';
+import { FC, ReactNode } from 'react';
 import { EditableField } from '../EditableField';
 import styles from './ItemDetail.module.scss';
 
@@ -23,13 +23,16 @@ export interface ItemData {
   标签?: string[];
   效果?: Record<string, string>;
   描述?: string;
-  位置?: string; // 装备专用
-  消耗?: string; // 技能专用
-  数量?: number; // 背包物品专用
+  位置?: string;
+  消耗?: string;
+  数量?: number;
 }
 
 /** 物品类别 */
 export type ItemCategory = 'equipment' | 'skill' | 'item';
+
+/** 物品展示模式 */
+export type ItemDetailDisplayMode = 'compact' | 'panel-card' | 'modal-detail';
 
 interface ItemDetailProps {
   /** 物品名称 */
@@ -37,9 +40,7 @@ interface ItemDetailProps {
   /** 物品数据 */
   data: ItemData;
   /** 额外的标题元素（如数量、位置等） */
-  titleSuffix?: React.ReactNode;
-  /** 是否默认展开 */
-  defaultOpen?: boolean;
+  titleSuffix?: ReactNode;
   /** 是否启用编辑模式 */
   editEnabled?: boolean;
   /** 数据路径前缀（用于编辑时构建完整路径） */
@@ -48,179 +49,259 @@ interface ItemDetailProps {
   onDelete?: () => void;
   /** 物品类别，用于区分显示不同的字段 */
   itemCategory?: ItemCategory;
-  /** 是否使用非折叠紧凑模式 */
-  compact?: boolean;
+  /** 展示模式 */
+  displayMode?: ItemDetailDisplayMode;
+  /** 点击查看详情 */
+  onInspect?: () => void;
 }
 
 /**
  * 物品详情组件
- * 用于渲染装备、技能、背包物品的完整信息
- * 复用于 ItemsTab 和 DestinyTab
- * 支持编辑模式下的字段编辑和删除功能
- * 注意：删除确认弹窗由父组件控制，本组件只触发 onDelete 回调
+ * 用于渲染装备、技能、背包物品的摘要与完整信息。
+ * 复用于 ItemsTab 和 DestinyTab。
  */
 export const ItemDetail: FC<ItemDetailProps> = ({
   name,
   data,
   titleSuffix,
-  defaultOpen = false,
   editEnabled = false,
   pathPrefix,
   onDelete,
   itemCategory = 'item',
-  compact = false,
+  displayMode = 'panel-card',
+  onInspect,
 }) => {
-  /** 处理删除按钮点击 */
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     onDelete?.();
   };
 
-  const itemTitle = (
-    <div className={styles.itemTitle}>
-      <span className={`${styles.itemName} ${getQualityClass(data.品质, styles)}`}>{name}</span>
-      {titleSuffix}
-      {editEnabled && onDelete && (
-        <button className={styles.deleteButton} onClick={handleDeleteClick} title="删除">
-          <i className="fa-solid fa-trash-can" />
-        </button>
-      )}
-    </div>
-  );
+  const qualityClass = getQualityClass(data.品质, styles);
+  const metaItems = [data.类型 ? { key: 'type', label: '类型', value: data.类型 } : null].filter(
+    Boolean,
+  ) as Array<{ key: string; label: string; value: string }>;
 
-  const itemContent = (
-    <div className={styles.itemDetails}>
-      {/* 品质 - 编辑模式下使用下拉选择 */}
-      {(data.品质 || editEnabled) && (
-        <div className={styles.itemQuality}>
-          <span className={styles.fieldLabel}>品质:</span>
-          {editEnabled && pathPrefix ? (
-            <EditableField
-              path={`${pathPrefix}.品质`}
-              value={data.品质 ?? ''}
-              type="select"
-              selectConfig={{ options: QUALITY_OPTIONS }}
-            />
-          ) : (
-            <span>{data.品质}</span>
-          )}
-        </div>
-      )}
+  const effectEntries = _.entries(data.效果 ?? {});
+  const effectNames = effectEntries.map(([key]) => key);
+  const summaryEffectNames = effectNames.slice(0, 4);
 
-      {/* 类型 - 编辑模式下可编辑 */}
-      {(data.类型 || editEnabled) && (
-        <div className={styles.itemType}>
-          <span className={styles.fieldLabel}>类型:</span>
-          {editEnabled && pathPrefix ? (
-            <EditableField path={`${pathPrefix}.类型`} value={data.类型 ?? ''} type="text" />
-          ) : (
-            <span>{data.类型}</span>
-          )}
-        </div>
-      )}
+  const renderDeleteButton = () => {
+    if (!editEnabled || !onDelete) return null;
 
-      {/* 位置（装备专用） - 编辑模式下可编辑 */}
-      {(itemCategory === 'equipment' || itemCategory === 'item') &&
-        (data.位置 || (editEnabled && itemCategory === 'equipment')) && (
-          <div className={styles.itemSlot}>
-            <span className={styles.fieldLabel}>位置:</span>
-            {editEnabled && pathPrefix ? (
-              <EditableField path={`${pathPrefix}.位置`} value={data.位置 ?? ''} type="text" />
-            ) : (
-              <span>{data.位置}</span>
-            )}
-          </div>
-        )}
-
-      {/* 消耗（技能专用） - 编辑模式下可编辑 */}
-      {(itemCategory === 'skill' || itemCategory === 'item') &&
-        (data.消耗 || (editEnabled && itemCategory === 'skill')) && (
-          <div className={styles.itemCost}>
-            <span className={styles.fieldLabel}>消耗:</span>
-            {editEnabled && pathPrefix ? (
-              <EditableField path={`${pathPrefix}.消耗`} value={data.消耗 ?? ''} type="text" />
-            ) : (
-              <span>{data.消耗}</span>
-            )}
-          </div>
-        )}
-
-      {/* 数量（背包物品专用） - 仅在编辑模式下显示（非编辑模式已在标题后缀显示）*/}
-      {itemCategory === 'item' && editEnabled && pathPrefix && (
-        <div className={styles.itemQuantity}>
-          <span className={styles.fieldLabel}>数量:</span>
-          <EditableField
-            path={`${pathPrefix}.数量`}
-            value={data.数量 ?? 1}
-            type="number"
-            numberConfig={{ min: 1, step: 1 }}
-          />
-        </div>
-      )}
-
-      {/* 标签 - 只有数据存在时才显示（不提供新增） */}
-      {!_.isEmpty(data.标签) && (
-        <div className={styles.itemTags}>
-          {editEnabled && pathPrefix ? (
-            <EditableField path={`${pathPrefix}.标签`} value={data.标签 ?? []} type="tags" />
-          ) : (
-            data.标签?.map((tag, idx) => (
-              <span key={idx} className={styles.tag}>
-                {tag}
-              </span>
-            ))
-          )}
-        </div>
-      )}
-
-      {/* 描述 - 编辑模式下可编辑 */}
-      {(data.描述 || editEnabled) && (
-        <div className={styles.itemDesc}>
-          {editEnabled && pathPrefix ? (
-            <EditableField path={`${pathPrefix}.描述`} value={data.描述 ?? ''} type="textarea" />
-          ) : (
-            data.描述
-          )}
-        </div>
-      )}
-
-      {/* 效果 - 编辑模式下可编辑 */}
-      {(!_.isEmpty(data.效果) || editEnabled) && (
-        <div className={styles.itemEffects}>
-          <div className={styles.effectsHeader}>效果</div>
-          {editEnabled && pathPrefix ? (
-            <EditableField path={`${pathPrefix}.效果`} value={data.效果 ?? {}} type="keyvalue" />
-          ) : (
-            _.map(data.效果, (value, key) => (
-              <div key={key} className={styles.effectRow}>
-                <span className={styles.effectKey}>{key}</span>
-                <span className={styles.effectValue}>{value}</span>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  );
-
-  if (compact) {
     return (
-      <div
-        className={`${styles.itemCompactCard} ${styles[getQualityClass(data.品质, styles)] ?? ''}`.trim()}
+      <button
+        type="button"
+        className={styles.deleteButton}
+        onClick={handleDeleteClick}
+        title="删除"
       >
-        {itemTitle}
-        {itemContent}
+        <i className="fa-solid fa-trash-can" />
+      </button>
+    );
+  };
+
+  const renderEditableOrText = (
+    fieldPath: string,
+    value: string | number,
+    type: 'text' | 'number' | 'select' | 'textarea',
+    selectOptions?: { value: string; label: string }[],
+  ) => {
+    if (!editEnabled || !pathPrefix) {
+      return <span>{value}</span>;
+    }
+
+    if (type === 'number') {
+      return (
+        <EditableField
+          path={`${pathPrefix}.${fieldPath}`}
+          value={value}
+          type="number"
+          numberConfig={{ min: 1, step: 1 }}
+        />
+      );
+    }
+
+    if (type === 'select') {
+      return (
+        <EditableField
+          path={`${pathPrefix}.${fieldPath}`}
+          value={value}
+          type="select"
+          selectConfig={{ options: selectOptions ?? [] }}
+        />
+      );
+    }
+
+    if (type === 'textarea') {
+      return <EditableField path={`${pathPrefix}.${fieldPath}`} value={value} type="textarea" />;
+    }
+
+    return <EditableField path={`${pathPrefix}.${fieldPath}`} value={value} type="text" />;
+  };
+
+  const renderTitle = () => (
+    <div className={styles.itemTitle}>
+      <div className={styles.itemTitleMain}>
+        <span className={`${styles.itemName} ${qualityClass}`.trim()}>{name}</span>
+        {titleSuffix ? <span className={styles.itemTitleSuffix}>{titleSuffix}</span> : null}
+      </div>
+      <div className={styles.itemTitleActions}>{renderDeleteButton()}</div>
+    </div>
+  );
+
+  const renderMeta = () => {
+    if (metaItems.length === 0) return null;
+
+    return (
+      <div className={styles.itemMeta}>
+        {metaItems.map(meta => (
+          <span key={meta.key} className={styles.itemMetaBadge}>
+            <span className={styles.itemMetaLabel}>{meta.label}</span>
+            <span className={styles.itemMetaValue}>{meta.value}</span>
+          </span>
+        ))}
+      </div>
+    );
+  };
+
+  const renderTags = (allowEdit = editEnabled && !!pathPrefix) => {
+    if (_.isEmpty(data.标签)) return null;
+
+    return (
+      <div className={styles.itemTags}>
+        {allowEdit ? (
+          <EditableField path={`${pathPrefix}.标签`} value={data.标签 ?? []} type="tags" />
+        ) : (
+          data.标签?.map((tag, idx) => (
+            <span key={idx} className={styles.tag}>
+              {tag}
+            </span>
+          ))
+        )}
+      </div>
+    );
+  };
+
+  const renderSummary = () => (
+    <>
+      {renderMeta()}
+      {renderTags(false)}
+      {data.描述 ? <div className={styles.itemSummaryDesc}>{data.描述}</div> : null}
+      {summaryEffectNames.length > 0 ? (
+        <div className={styles.itemSummaryEffects}>
+          {summaryEffectNames.map(effectName => (
+            <span key={effectName} className={styles.itemSummaryEffectChip}>
+              {effectName}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </>
+  );
+
+  const renderDetailContent = () => (
+    <div className={styles.itemDetails}>
+      {(data.品质 || editEnabled) && (
+        <div className={styles.itemFieldRow}>
+          <span className={styles.fieldLabel}>品质</span>
+          {renderEditableOrText('品质', data.品质 ?? '', 'select', QUALITY_OPTIONS)}
+        </div>
+      )}
+
+      {(data.类型 || editEnabled) && (
+        <div className={styles.itemFieldRow}>
+          <span className={styles.fieldLabel}>类型</span>
+          {renderEditableOrText('类型', data.类型 ?? '', 'text')}
+        </div>
+      )}
+
+      {(displayMode === 'modal-detail' || editEnabled) &&
+      (itemCategory === 'equipment' || itemCategory === 'item') &&
+      (data.位置 || itemCategory === 'equipment') ? (
+        <div className={styles.itemFieldRow}>
+          <span className={styles.fieldLabel}>位置</span>
+          {renderEditableOrText('位置', data.位置 ?? '', 'text')}
+        </div>
+      ) : null}
+
+      {(displayMode === 'modal-detail' || editEnabled) &&
+      (itemCategory === 'skill' || itemCategory === 'item') &&
+      (data.消耗 || itemCategory === 'skill') ? (
+        <div className={styles.itemFieldRow}>
+          <span className={styles.fieldLabel}>消耗</span>
+          {renderEditableOrText('消耗', data.消耗 ?? '', 'text')}
+        </div>
+      ) : null}
+
+      {itemCategory === 'item' && (displayMode === 'modal-detail' || editEnabled) ? (
+        <div className={styles.itemFieldRow}>
+          <span className={styles.fieldLabel}>数量</span>
+          {renderEditableOrText('数量', data.数量 ?? 1, 'number')}
+        </div>
+      ) : null}
+
+      {renderTags()}
+
+      {(data.描述 || editEnabled) && (
+        <div className={styles.itemBlock}>
+          <div className={styles.itemBlockTitle}>描述</div>
+          <div className={styles.itemDesc}>
+            {editEnabled && pathPrefix ? (
+              <EditableField path={`${pathPrefix}.描述`} value={data.描述 ?? ''} type="textarea" />
+            ) : (
+              data.描述
+            )}
+          </div>
+        </div>
+      )}
+
+      {(!_.isEmpty(data.效果) || editEnabled) && (
+        <div className={styles.itemBlock}>
+          <div className={styles.itemBlockTitle}>效果</div>
+          <div className={styles.itemEffects}>
+            {editEnabled && pathPrefix ? (
+              <EditableField path={`${pathPrefix}.效果`} value={data.效果 ?? {}} type="keyvalue" />
+            ) : displayMode === 'modal-detail' ? (
+              effectEntries.map(([key, value]) => (
+                <div key={key} className={styles.effectRow}>
+                  <span className={styles.effectKey}>{key}</span>
+                  <span className={styles.effectValue}>{value}</span>
+                </div>
+              ))
+            ) : (
+              effectNames.map(effectName => (
+                <span key={effectName} className={styles.effectChip}>
+                  {effectName}
+                </span>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  if (displayMode === 'compact') {
+    return (
+      <div className={`${styles.itemCompactCard} ${styles[qualityClass] ?? ''}`.trim()}>
+        {renderTitle()}
+        <div className={styles.itemCompactBody}>{renderDetailContent()}</div>
       </div>
     );
   }
 
+  if (displayMode === 'modal-detail') {
+    return <div className={styles.itemModalDetail}>{renderDetailContent()}</div>;
+  }
+
   return (
-    <Collapse
-      quality={QualityClassMap[data.品质 ?? '']}
-      defaultOpen={defaultOpen}
-      title={itemTitle}
+    <button
+      type="button"
+      className={`${styles.itemPanelCard} ${styles[qualityClass] ?? ''}`.trim()}
+      onClick={onInspect}
     >
-      {itemContent}
-    </Collapse>
+      {renderTitle()}
+      <div className={styles.itemPanelBody}>{renderSummary()}</div>
+    </button>
   );
 };
