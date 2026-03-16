@@ -4,7 +4,12 @@
 
     <Transition name="fade" mode="out-in">
       <!-- Gate 阶段：用户协议页面 -->
-      <AgreementPage v-if="!hasAgreed" key="agreement" @agreed="handleAgreed" @env-check-complete="handleEnvCheckComplete" />
+      <AgreementPage
+        v-if="!hasAgreed"
+        key="agreement"
+        @agreed="handleAgreed"
+        @env-check-complete="handleEnvCheckComplete"
+      />
 
       <!-- 正常阶段：展示区 + 步骤流程 -->
       <div v-else key="main">
@@ -50,7 +55,9 @@ function handleAgreed() {
   // 写入同意时间戳
   try {
     localStorage.setItem(AGREEMENT_KEY, String(Date.now()));
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 const currentStep = ref(0);

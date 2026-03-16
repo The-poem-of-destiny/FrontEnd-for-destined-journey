@@ -1,6 +1,5 @@
 <template>
   <div class="showcase-section">
-
     <!-- 制作人员展示区 -->
     <div class="credits-container">
       <div class="credits-title">❖ 制作团队 ❖</div>
@@ -266,7 +265,6 @@ const specialThanks = ['@FL已放弃治疗', '@tongtny123', '@肆祀一一', '@�
 
 /* Responsive */
 @media screen and (max-width: 600px) {
-
   .info-panel > summary {
     padding: 10px 15px;
   }

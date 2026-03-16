@@ -13,7 +13,23 @@
       @pointerdown.prevent="onDragStart"
       @click="handleToggleClick"
     >
-      <span class="mini-disc" :class="{ spinning: isPlaying }"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M6 12c0-1.7.7-3.2 1.8-4.2"/><circle cx="12" cy="12" r="2"/><path d="M18 12c0 1.7-.7 3.2-1.8 4.2"/></svg></span>
+      <span class="mini-disc" :class="{ spinning: isPlaying }"
+        ><svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M6 12c0-1.7.7-3.2 1.8-4.2" />
+          <circle cx="12" cy="12" r="2" />
+          <path d="M18 12c0 1.7-.7 3.2-1.8 4.2" /></svg
+      ></span>
     </button>
 
     <!-- 展开态 -->
@@ -255,7 +271,6 @@ onBeforeUnmount(() => {
   cursor: grabbing;
 }
 
-
 /* 折叠按钮 */
 .vinyl-toggle {
   width: 48px;
@@ -372,7 +387,9 @@ onBeforeUnmount(() => {
   height: 88px;
   border-radius: 50%;
   background: radial-gradient(circle, #444 0%, #383838 100%);
-  box-shadow: 0 0 0 2px #333, 0 1px 5px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 0 2px #333,
+    0 1px 5px rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -386,10 +403,14 @@ onBeforeUnmount(() => {
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    #1a1a1a 0%, #111 25%,
-    #1a1a1a 26%, #0d0d0d 50%,
-    #1a1a1a 51%, #111 75%,
-    #1a1a1a 76%, #0d0d0d 100%
+    #1a1a1a 0%,
+    #111 25%,
+    #1a1a1a 26%,
+    #0d0d0d 50%,
+    #1a1a1a 51%,
+    #111 75%,
+    #1a1a1a 76%,
+    #0d0d0d 100%
   );
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
   display: flex;
@@ -402,8 +423,12 @@ onBeforeUnmount(() => {
 }
 
 @keyframes spin-record {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .mini-groove {
@@ -413,9 +438,18 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.mini-g1 { width: 88%; height: 88%; }
-.mini-g2 { width: 68%; height: 68%; }
-.mini-g3 { width: 48%; height: 48%; }
+.mini-g1 {
+  width: 88%;
+  height: 88%;
+}
+.mini-g2 {
+  width: 68%;
+  height: 68%;
+}
+.mini-g3 {
+  width: 48%;
+  height: 48%;
+}
 
 .mini-center {
   width: 24px;
