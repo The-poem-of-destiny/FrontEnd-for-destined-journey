@@ -27,7 +27,7 @@
     "autoprefixer": "^10.4.27",
     "chokidar": "^5.0.0",
     "css-loader": "^7.1.4",
-    "eslint": "^10.0.3",
+    "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import-x": "^4.16.2",
@@ -62,7 +62,7 @@
     "tsconfig-paths-webpack-plugin": "^4.2.0",
     "tslib": "^2.8.1",
     "tsx": "^4.21.0",
-    "type-fest": "^5.4.4",
+    "type-fest": "^5.5.0",
     "typescript": "6.0.0-dev.20250807",
     "typescript-eslint": "^8.57.1",
     "unplugin-auto-import": "^21.0.0",
@@ -102,9 +102,9 @@
     "toastr": "^2.1.4",
     "vue": "^3.5.30",
     "vue-final-modal": "^4.5.5",
-    "vue-router": "^5.0.3",
+    "vue-router": "^5.0.4",
     "vue3-pixi": "1.0.0-beta.6",
-    "yaml": "^2.8.2",
+    "yaml": "^2.8.3",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
@@ -118,5 +118,9 @@
       "vue-demi"
     ]
   },
+<<<<<<< HEAD
   "version": "1.7.4"
+=======
+  "version": "1.7.5"
+>>>>>>> 65e0830 (feat(status): add reusable avatar management UI and unify avatar action logic)
 }

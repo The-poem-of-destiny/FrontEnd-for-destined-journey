@@ -1,0 +1,175 @@
+@use '../../styles/variables' as *;
+
+.avatarPanel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  min-width: 0;
+}
+
+.imageButton {
+  display: block;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.imageShell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 78%, transparent);
+  background: color-mix(in srgb, var(--theme-card-bg) 88%, transparent);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--theme-window-border) 10%, transparent);
+  transition:
+    transform $transition-fast,
+    box-shadow $transition-fast,
+    border-color $transition-fast;
+}
+
+.imageButton:hover .imageShell,
+.imageButton:focus-visible .imageShell {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--theme-card-border) 92%, transparent);
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--theme-window-border) 14%, transparent);
+}
+
+.imageButton:hover + .editHintButton,
+.imageButton:focus-visible + .editHintButton {
+  opacity: 1;
+  transform: translateY(-1px) scale(1.06);
+}
+
+.imageButton:focus-visible {
+  outline: none;
+}
+
+.imageShellFilled {
+  background: color-mix(in srgb, var(--theme-card-bg) 88%, transparent);
+}
+
+.imageShellEmpty {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.placeholderToneA {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+}
+
+.placeholderToneB {
+  background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+}
+
+.placeholderToneC {
+  background: linear-gradient(135deg, #059669 0%, #34d399 100%);
+}
+
+.placeholderToneD {
+  background: linear-gradient(135deg, #ea580c 0%, #f59e0b 100%);
+}
+
+.placeholderToneE {
+  background: linear-gradient(135deg, #dc2626 0%, #f43f5e 100%);
+}
+
+.placeholderToneF {
+  background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+}
+
+.placeholderText {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.editHintButton {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: color-mix(in srgb, var(--theme-text-primary) 92%, white 8%);
+  pointer-events: none;
+  opacity: 0.82;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.72)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.48));
+  transition:
+    transform $transition-fast,
+    opacity $transition-fast;
+
+  i {
+    font-size: 12px;
+    line-height: 1;
+  }
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sizeSm {
+  width: 64px;
+
+  .imageShell {
+    width: 64px;
+  }
+
+  .editHintButton {
+    top: -1px;
+    right: -1px;
+    width: 12px;
+    height: 12px;
+
+    i {
+      font-size: 10px;
+    }
+  }
+}
+
+.sizeMd {
+  width: 96px;
+
+  .imageShell {
+    width: 96px;
+  }
+}
+
+.sizeLg {
+  width: 120px;
+
+  .imageShell {
+    width: 120px;
+  }
+}
+
+@media (max-width: 540px) {
+  .sizeLg {
+    width: 96px;
+
+    .imageShell {
+      width: 96px;
+    }
+  }
+
+  .placeholderText {
+    font-size: 24px;
+  }
+}

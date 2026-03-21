@@ -1,8 +1,21 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
 import { useEditorSettingStore } from '../../core/stores';
 import {
+  exportAvatarFile,
+  getAvatarActionState,
+  getAvatarRecord,
+  getAvatarScopeKey,
+  isAvatarRemovedRecord,
+  markAvatarAsRemoved,
+  readAvatarFileAsDataUrl,
+  removeAvatarRecord,
+  saveAvatarRecord,
+} from '../../core/utils';
+import {
   Ascension,
+  AvatarActionModal,
+  AvatarPanel,
   Card,
   DeleteConfirmModal,
   DetailSheet,
@@ -51,7 +64,133 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const { deleteTarget, setDeleteTarget, handleDelete, cancelDelete, isConfirmOpen } =
     useDeleteConfirm();
   const [activeDetail, setActiveDetail] = useState<'status-effects' | 'ascension' | null>(null);
+  const [playerAvatarUrl, setPlayerAvatarUrl] = useState<string>('');
+  const [playerDefaultAvatarUrl, setPlayerDefaultAvatarUrl] = useState<string>('');
+  const [isPlayerAvatarRemoved, setIsPlayerAvatarRemoved] = useState(false);
+  const [isPlayerAvatarModalOpen, setIsPlayerAvatarModalOpen] = useState(false);
   const player = data.主角;
+  const avatarScopeKey = useMemo(() => getAvatarScopeKey(), []);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadPlayerAvatar = async () => {
+      try {
+        const [savedRecord, resolvedAvatarPath] = await Promise.all([
+          getAvatarRecord(avatarScopeKey, 'player', '主角'),
+          SillyTavern.substituteParams('{{userAvatarPath}}') as unknown as Promise<string>,
+        ]);
+        const normalizedAvatarPath = _.trim(resolvedAvatarPath || '');
+        const normalizedDefaultAvatarPath =
+          normalizedAvatarPath && normalizedAvatarPath !== '{{userAvatarPath}}'
+            ? normalizedAvatarPath
+            : '';
+
+        if (!ignore) {
+          setPlayerAvatarUrl(isAvatarRemovedRecord(savedRecord) ? '' : (savedRecord?.value ?? ''));
+          setIsPlayerAvatarRemoved(isAvatarRemovedRecord(savedRecord));
+          setPlayerDefaultAvatarUrl(normalizedDefaultAvatarPath);
+        }
+      } catch (error) {
+        console.warn('[StatusTab] 读取主角头像失败:', error);
+        if (!ignore) {
+          setPlayerAvatarUrl('');
+          setPlayerDefaultAvatarUrl('');
+          setIsPlayerAvatarRemoved(false);
+        }
+      }
+    };
+
+    void loadPlayerAvatar();
+
+    return () => {
+      ignore = true;
+    };
+  }, [avatarScopeKey]);
+
+  const handlePlayerAvatarUpload = async (file: File) => {
+    try {
+      const nextAvatarUrl = await readAvatarFileAsDataUrl(file);
+      if (!nextAvatarUrl) {
+        return;
+      }
+
+      await saveAvatarRecord({
+        scope_key: avatarScopeKey,
+        owner_type: 'player',
+        owner_name: '主角',
+        source_type: 'upload',
+        value: nextAvatarUrl,
+      });
+      setPlayerAvatarUrl(nextAvatarUrl);
+      setIsPlayerAvatarRemoved(false);
+    } catch (error) {
+      console.warn('[StatusTab] 上传主角头像失败:', error);
+    }
+  };
+
+  const handlePlayerAvatarUrlInput = async (url_input: string) => {
+    const nextAvatarUrl = _.trim(url_input || '');
+
+    if (!nextAvatarUrl) {
+      return;
+    }
+
+    try {
+      await saveAvatarRecord({
+        scope_key: avatarScopeKey,
+        owner_type: 'player',
+        owner_name: '主角',
+        source_type: 'url',
+        value: nextAvatarUrl,
+      });
+      setPlayerAvatarUrl(nextAvatarUrl);
+      setIsPlayerAvatarRemoved(false);
+    } catch (error) {
+      console.warn('[StatusTab] 保存主角头像链接失败:', error);
+    }
+  };
+
+  const handlePlayerAvatarExport = async () => {
+    if (!playerAvatarDisplayUrl) {
+      return;
+    }
+
+    try {
+      await exportAvatarFile('player-avatar.png', playerAvatarDisplayUrl);
+    } catch (error) {
+      console.warn('[StatusTab] 导出主角头像失败:', error);
+    }
+  };
+
+  const handlePlayerAvatarReset = async () => {
+    try {
+      await removeAvatarRecord(avatarScopeKey, 'player', '主角');
+      setPlayerAvatarUrl('');
+      setIsPlayerAvatarRemoved(false);
+    } catch (error) {
+      console.warn('[StatusTab] 恢复默认主角头像失败:', error);
+    }
+  };
+
+  const handlePlayerAvatarRemove = async () => {
+    try {
+      await markAvatarAsRemoved(avatarScopeKey, 'player', '主角');
+      setPlayerAvatarUrl('');
+      setIsPlayerAvatarRemoved(true);
+    } catch (error) {
+      console.warn('[StatusTab] 移除主角头像失败:', error);
+    }
+  };
+
+  const handlePlayerAvatarImageError = () => {
+    if (playerAvatarUrl) {
+      setPlayerAvatarUrl('');
+      return;
+    }
+
+    setPlayerDefaultAvatarUrl('');
+  };
 
   /**
    * 格式化基础信息显示值
@@ -166,6 +305,16 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const ascensionSummary = ascension?.是否开启
     ? _.compact(ascensionParts).join(' · ') || '已开启'
     : '未开启';
+  const playerAvatarDisplayUrl = isPlayerAvatarRemoved
+    ? ''
+    : playerAvatarUrl || playerDefaultAvatarUrl;
+
+  const playerAvatarActionState = getAvatarActionState({
+    current_url: playerAvatarDisplayUrl,
+    custom_url: playerAvatarUrl,
+    default_url: playerDefaultAvatarUrl,
+    removed: isPlayerAvatarRemoved,
+  });
 
   return (
     <div className={styles.statusTab}>
@@ -174,55 +323,71 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
           <div className={styles.overviewHeading}>
             <span className={styles.overviewEyebrow}>角色总览</span>
             <div className={styles.overviewTitleRow}>
-              <span className={styles.overviewLevel}>Lv.{player.等级 ?? 1}</span>
-              <span className={styles.overviewTier}>{player.生命层级 || '未记录生命层级'}</span>
+              <AvatarPanel
+                src={playerAvatarDisplayUrl}
+                alt="主角头像"
+                size="lg"
+                placeholderText="主"
+                showEditHint
+                className={styles.overviewAvatarInline}
+                onClick={() => setIsPlayerAvatarModalOpen(true)}
+                onImageError={handlePlayerAvatarImageError}
+              />
+              <div className={styles.overviewIdentityBlock}>
+                <div className={styles.overviewIdentityTopRow}>
+                  <span className={styles.overviewLevel}>Lv.{player.等级 ?? 1}</span>
+                  <span className={styles.overviewTier}>{player.生命层级 || '未记录生命层级'}</span>
+                </div>
+                <span className={styles.overviewSubtitle}>
+                  {player.冒险者等级 || '未评级冒险者'}
+                </span>
+              </div>
             </div>
-            <span className={styles.overviewSubtitle}>{player.冒险者等级 || '未评级冒险者'}</span>
-          </div>
-          <div className={styles.overviewStats}>
-            {_.map(player.属性, (value, key) => (
-              <div key={key} className={styles.overviewStatItem}>
-                <span className={styles.overviewStatLabel}>{key}</span>
+            <div className={styles.overviewStats}>
+              {_.map(player.属性, (value, key) => (
+                <div key={key} className={styles.overviewStatItem}>
+                  <span className={styles.overviewStatLabel}>{key}</span>
+                  {editEnabled ? (
+                    <EditableField
+                      path={`主角.属性.${key}`}
+                      value={value ?? 0}
+                      type="number"
+                      numberConfig={{ min: 0, max: 20, step: 1 }}
+                    />
+                  ) : (
+                    <span className={styles.overviewStatValue}>{value ?? 0}</span>
+                  )}
+                </div>
+              ))}
+              <div className={styles.overviewStatItem}>
+                <span className={styles.overviewStatLabel}>属性点</span>
                 {editEnabled ? (
                   <EditableField
-                    path={`主角.属性.${key}`}
-                    value={value ?? 0}
+                    path="主角.属性点"
+                    value={player.属性点 ?? 0}
                     type="number"
-                    numberConfig={{ min: 0, max: 20, step: 1 }}
+                    numberConfig={{ min: 0, step: 1 }}
                   />
                 ) : (
-                  <span className={styles.overviewStatValue}>{value ?? 0}</span>
+                  <span className={styles.overviewStatValue}>{player.属性点 ?? 0}</span>
                 )}
               </div>
-            ))}
-            <div className={styles.overviewStatItem}>
-              <span className={styles.overviewStatLabel}>属性点</span>
-              {editEnabled ? (
-                <EditableField
-                  path="主角.属性点"
-                  value={player.属性点 ?? 0}
-                  type="number"
-                  numberConfig={{ min: 0, step: 1 }}
+            </div>
+            <div className={styles.overviewSummaryGrid}>
+              <div className={styles.overviewSummaryItem}>
+                <span className={styles.overviewStatLabel}>状态效果</span>
+                <StatusEffectDisplay
+                  effects={statusEffects}
+                  mode="chips"
+                  maxVisible={4}
+                  showRemainingCount
+                  emptyText="无效果"
                 />
-              ) : (
-                <span className={styles.overviewStatValue}>{player.属性点 ?? 0}</span>
-              )}
-            </div>
-          </div>
-          <div className={styles.overviewSummaryGrid}>
-            <div className={styles.overviewSummaryItem}>
-              <span className={styles.overviewStatLabel}>状态效果</span>
-              <StatusEffectDisplay
-                effects={statusEffects}
-                mode="chips"
-                maxVisible={4}
-                showRemainingCount
-                emptyText="无效果"
-              />
-            </div>
-            <div className={styles.overviewSummaryItem}>
-              <span className={styles.overviewStatLabel}>登神长阶</span>
-              <span className={styles.overviewStatSummary}>{ascensionSummary}</span>
+              </div>
+              <div className={styles.overviewSummaryItem}>
+                <span className={styles.overviewStatLabel}>登神长阶</span>
+                <span className={styles.overviewStatSummary}>{ascensionSummary}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -356,6 +521,28 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
       >
         <Ascension data={player.登神长阶} editEnabled={editEnabled} pathPrefix="主角.登神长阶" />
       </DetailSheet>
+
+      <AvatarActionModal
+        open={isPlayerAvatarModalOpen}
+        title="主角头像"
+        subtitle={
+          playerAvatarDisplayUrl
+            ? '支持导入本地图片、保存图片链接、导出当前头像，或恢复到酒馆默认头像。'
+            : '当前未设置头像，可导入图片、填写图片链接，或恢复到酒馆默认头像。'
+        }
+        linkPlaceholder="请输入主角头像图片链接"
+        canExport={playerAvatarActionState.canExport}
+        canDelete={playerAvatarActionState.canDelete}
+        canReset={playerAvatarActionState.canReset}
+        deleteLabel="删除头像"
+        resetLabel="恢复默认"
+        onClose={() => setIsPlayerAvatarModalOpen(false)}
+        onUpload={handlePlayerAvatarUpload}
+        onSubmitLink={handlePlayerAvatarUrlInput}
+        onExport={handlePlayerAvatarExport}
+        onDelete={handlePlayerAvatarRemove}
+        onReset={handlePlayerAvatarReset}
+      />
 
       <DeleteConfirmModal
         open={isConfirmOpen}

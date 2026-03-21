@@ -1,5 +1,7 @@
 // 通用组件导出
 export { Ascension } from './Ascension';
+export { AvatarActionModal } from './AvatarActionModal/AvatarActionModal';
+export { AvatarPanel } from './AvatarPanel/AvatarPanel';
 export { Card } from './Card';
 export { Collapse } from './Collapse';
 export { ConfirmModal } from './ConfirmModal';
@@ -15,6 +17,8 @@ export { StatusEffectDisplay } from './StatusEffectDisplay';
 
 // 通用组件类型导出
 export type { AscensionProps } from './Ascension/Ascension';
+export type { AvatarActionModalProps } from './AvatarActionModal/AvatarActionModal';
+export type { AvatarPanelProps, AvatarPanelSize } from './AvatarPanel/AvatarPanel';
 export type { CardProps } from './Card/Card';
 export type { CollapseProps } from './Collapse/Collapse';
 export type {

@@ -16,7 +16,7 @@
 
 .overviewHeader {
   display: grid;
-  grid-template-columns: minmax(220px, 0.9fr) minmax(520px, 1.6fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: $spacing-lg;
   margin-bottom: $spacing-md;
@@ -38,6 +38,25 @@
 }
 
 .overviewTitleRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  min-width: 0;
+}
+
+.overviewAvatarInline {
+  flex: 0 0 auto;
+}
+
+.overviewIdentityBlock {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.overviewIdentityTopRow {
   display: flex;
   align-items: baseline;
   gap: $spacing-sm;
@@ -149,11 +168,6 @@
 }
 
 @media (max-width: 900px) {
-  .overviewHeader {
-    grid-template-columns: 1fr;
-    gap: $spacing-md;
-  }
-
   .overviewStats {
     grid-template-columns: repeat(4, minmax(56px, 1fr));
   }
@@ -165,6 +179,19 @@
 }
 
 @media (max-width: 540px) {
+  .overviewTitleRow {
+    align-items: flex-start;
+    gap: $spacing-sm;
+  }
+
+  .overviewIdentityBlock {
+    gap: 4px;
+  }
+
+  .overviewIdentityTopRow {
+    gap: 6px;
+  }
+
   .overviewLevel {
     font-size: 20px;
   }

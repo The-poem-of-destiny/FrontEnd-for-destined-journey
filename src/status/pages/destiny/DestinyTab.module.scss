@@ -74,9 +74,21 @@
   display: flex;
   min-width: 0;
   align-items: flex-start;
-  gap: $spacing-sm;
-  flex-wrap: wrap;
+  gap: $spacing-md;
+  flex-wrap: nowrap;
   padding-right: 36px;
+}
+
+.partnerAvatar {
+  flex: 0 0 auto;
+}
+
+.partnerTitleContent {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
 }
 
 .partnerMeta {
@@ -96,7 +108,7 @@
   .partnerTitleMain {
     width: 100%;
     align-items: flex-start;
-    gap: $spacing-xs;
+    gap: $spacing-sm;
     padding-right: 32px;
   }
 
@@ -365,7 +377,7 @@
 }
 
 .partnerName {
-  flex: 1 1 180px;
+  flex: 1 1 auto;
   font-weight: 500;
   color: var(--theme-text-primary);
   min-width: 0;
@@ -451,6 +463,24 @@
   @include list-container($spacing-sm);
 }
 
+.partnerOverviewIdentityRow {
+  display: flex;
+  align-items: stretch;
+  gap: $spacing-md;
+}
+
+.partnerOverviewAvatar {
+  flex: 0 0 auto;
+}
+
+.partnerOverviewIdentityMeta {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: $spacing-sm;
+  min-width: 0;
+}
+
 .partnerOverviewStats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -458,6 +488,10 @@
 }
 
 @media (max-width: 760px) {
+  .partnerOverviewIdentityRow {
+    align-items: flex-start;
+  }
+
   .partnerOverviewStats {
     grid-template-columns: 1fr;
   }
@@ -549,6 +583,10 @@
     min-width: 72px;
     padding-inline: 14px;
     white-space: nowrap;
+  }
+
+  .partnerOverviewIdentityRow {
+    flex-direction: column;
   }
 
   .partnerOverviewStats {
