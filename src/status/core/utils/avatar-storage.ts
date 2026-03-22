@@ -73,10 +73,8 @@ export const getAvatarScopeKey = () => {
     typeof getCurrentCharacterName === 'function'
       ? getCurrentCharacterName() || 'unknown-character'
       : 'unknown-character';
-  const message_id =
-    typeof getCurrentMessageId === 'function' ? getCurrentMessageId() : 'unknown-message';
 
-  return `status:${character_name}:${message_id}`;
+  return `status:${character_name}`;
 };
 
 export const getAvatarRecord = async (
