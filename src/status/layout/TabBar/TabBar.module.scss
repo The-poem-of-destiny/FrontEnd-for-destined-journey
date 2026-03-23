@@ -6,7 +6,12 @@
   border-bottom: 1px solid color-mix(in srgb, var(--theme-window-border) 62%, transparent);
   overflow-x: auto;
   position: relative;
-  @include custom-scrollbar(var(--theme-tab-indicator), 6px);
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE/Edge
+
+  &::-webkit-scrollbar {
+    display: none; // Chrome/Safari
+  }
 }
 
 .list {

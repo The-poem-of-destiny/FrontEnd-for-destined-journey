@@ -1,4 +1,4 @@
-import { FC, ReactNode, useEffect, useMemo, useState } from 'react';
+import { FC, KeyboardEvent, MouseEvent, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
 import { useEditorSettingStore } from '../../core/stores';
 import {
@@ -42,6 +42,8 @@ type PartnerDetailSection =
   | 'inventory'
   | 'background';
 
+type PartnerRecord = Record<string, any>;
+type PartnerAssetItem = Record<string, any>;
 type PartnerAssetSectionConfig = {
   key: Extract<PartnerDetailSection, 'equipment' | 'skills' | 'inventory'>;
   label: string;
@@ -49,7 +51,7 @@ type PartnerAssetSectionConfig = {
   filterKey: '位置' | '类型';
   itemCategory: 'equipment' | 'skill' | 'item';
   emptyText: string;
-  getTitleSuffix: (item: any) => ReactNode;
+  getTitleSuffix: (item: PartnerAssetItem) => ReactNode;
 };
 
 const ALL_FILTER = '全部';
@@ -57,7 +59,7 @@ const ALL_FILTER = '全部';
 const PartnerListCategories: Array<{
   key: PartnerListCategory;
   label: string;
-  matches: (partner: Record<string, any>) => boolean;
+  matches: (partner: PartnerRecord) => boolean;
 }> = [
   { key: 'all', label: '全部', matches: () => true },
   { key: 'present', label: '在场', matches: partner => Boolean(partner.在场) },
@@ -337,7 +339,10 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 option === ALL_FILTER
                   ? totalCount
                   : _.size(
-                      _.pickBy(source, item => _.get(item, sectionConfig.filterKey) === option),
+                      _.pickBy(
+                        source,
+                        (item: PartnerAssetItem) => _.get(item, sectionConfig.filterKey) === option,
+                      ),
                     );
 
               return (
@@ -420,7 +425,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     );
   };
 
-  const renderPartnerSummary = (partnerName: string, partner: Record<string, any>) => (
+  const renderPartnerSummary = (partnerName: string, partner: PartnerRecord) => (
     <div className={styles.partnerTitle}>
       <div className={styles.partnerTitleMain}>
         <AvatarPanel
@@ -449,7 +454,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       {editEnabled && (
         <button
           className={styles.deletePartnerBtn}
-          onClick={e => {
+          onClick={(e: MouseEvent<HTMLButtonElement>) => {
             e.stopPropagation();
             setDeleteTarget({
               type: '伙伴',
@@ -465,7 +470,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     </div>
   );
 
-  const getPartnerRoleText = (partner: Record<string, any>) => {
+  const getPartnerRoleText = (partner: PartnerRecord) => {
     const roleParts = [
       partner.种族,
       Array.isArray(partner.职业) ? partner.职业.join(' / ') : partner.职业,
@@ -476,7 +481,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     return _.compact(roleParts).join(' · ') || '暂无定位';
   };
 
-  const getPartnerStatusSummary = (partner: Record<string, any>) => {
+  const getPartnerStatusSummary = (partner: PartnerRecord) => {
     const effects = (partner.状态效果 ?? {}) as Parameters<
       typeof StatusEffectDisplay
     >[0]['effects'];
@@ -603,7 +608,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     setActiveAvatarPartnerName(null);
   };
 
-  const getPartnerSummaryText = (partner: Record<string, any>) => getPartnerRoleText(partner);
+  const getPartnerSummaryText = (partner: PartnerRecord) => getPartnerRoleText(partner);
 
   const handlePartnerSelect = (partnerName: string) => {
     setSelectedPartnerName(partnerName);
@@ -631,13 +636,13 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     setActivePartnerAssetFilter(ALL_FILTER);
   };
 
-  const renderPartnerListItem = (partnerName: string, partner: Record<string, any>) => (
+  const renderPartnerListItem = (partnerName: string, partner: PartnerRecord) => (
     <div
       className={`${styles.partnerSummaryCard} ${activePartnerName === partnerName ? styles.partnerSummaryCardActive : ''}`}
       onClick={() => handlePartnerSelect(partnerName)}
       role="button"
       tabIndex={0}
-      onKeyDown={event => {
+      onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           handlePartnerSelect(partnerName);
@@ -652,7 +657,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     </div>
   );
 
-  const renderPartnerDetails = (partnerName: string, partner: Record<string, any>) => {
+  const renderPartnerDetails = (partnerName: string, partner: PartnerRecord) => {
     const detailSections: Array<{ key: PartnerDetailSection; label: string }> = [
       { key: 'overview', label: '概览' },
       { key: 'status', label: '状态' },
@@ -773,7 +778,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                     <div
                       className={`${styles.attributeGrid} ${editEnabled ? styles.attributeGridEdit : ''}`}
                     >
-                      {_.map(partner.属性, (value, key) => (
+                      {_.map(partner.属性, (value: number | undefined, key: string) => (
                         <div
                           key={key}
                           className={`${styles.attributeItem} ${editEnabled ? styles.attributeItemEdit : ''}`}
@@ -1103,8 +1108,8 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
           canDelete={activePartnerAvatarActionState?.canDelete ?? false}
           deleteLabel="删除头像"
           onClose={closePartnerAvatarModal}
-          onUpload={file => handlePartnerAvatarUpload(activeAvatarPartnerName, file)}
-          onSubmitLink={url => handlePartnerAvatarUrlInput(activeAvatarPartnerName, url)}
+          onUpload={(file: File) => handlePartnerAvatarUpload(activeAvatarPartnerName, file)}
+          onSubmitLink={(url: string) => handlePartnerAvatarUrlInput(activeAvatarPartnerName, url)}
           onExport={() => handlePartnerAvatarExport(activeAvatarPartnerName)}
           onDelete={() => handlePartnerAvatarRemove(activeAvatarPartnerName)}
         />
