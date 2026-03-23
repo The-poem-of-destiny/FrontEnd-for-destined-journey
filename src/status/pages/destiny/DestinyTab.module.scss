@@ -68,6 +68,11 @@
   position: relative;
   width: 100%;
   min-width: 0;
+
+  > .deletePartnerBtn {
+    top: 50%;
+    transform: translateY(-50%);
+  }
 }
 
 .partnerTitleMain {
@@ -81,6 +86,7 @@
 
 .partnerAvatar {
   flex: 0 0 auto;
+  align-self: center;
 }
 
 .partnerTitleContent {
@@ -290,8 +296,35 @@
 }
 
 .partnerSummaryMain {
-  @include list-container(8px);
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-md;
   min-width: 0;
+}
+
+.partnerSummaryBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.partnerSummaryHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  min-width: 0;
+
+  > .deletePartnerBtn {
+    position: static;
+    top: auto;
+    right: auto;
+    margin-left: auto;
+    z-index: auto;
+    flex: 0 0 auto;
+  }
 }
 
 .partnerSummaryText {
@@ -994,6 +1027,14 @@
 }
 
 @media (max-width: 540px) {
+  .partnerSummaryMain {
+    gap: $spacing-sm;
+  }
+
+  .partnerSummaryHeader {
+    gap: 6px;
+  }
+
   .thoughtsRow,
   .backgroundRow {
     grid-template-columns: 1fr;

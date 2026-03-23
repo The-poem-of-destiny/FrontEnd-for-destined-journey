@@ -425,6 +425,53 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     );
   };
 
+  const renderPartnerDeleteButton = (partnerName: string) => {
+    if (!editEnabled) {
+      return null;
+    }
+
+    return (
+      <button
+        className={styles.deletePartnerBtn}
+        onClick={(e: MouseEvent<HTMLButtonElement>) => {
+          e.stopPropagation();
+          setDeleteTarget({
+            type: '伙伴',
+            path: `关系列表.${partnerName}`,
+            name: partnerName,
+          });
+        }}
+        title="删除关系"
+      >
+        <i className="fa-solid fa-trash" />
+      </button>
+    );
+  };
+
+  const renderPartnerIdentity = (
+    partnerName: string,
+    partner: PartnerRecord,
+    showDelete = false,
+  ) => (
+    <>
+      <div className={showDelete ? styles.partnerSummaryHeader : undefined}>
+        <IconTitle text={partnerName} className={styles.partnerName} />
+        {showDelete ? renderPartnerDeleteButton(partnerName) : null}
+      </div>
+      <div className={styles.partnerMeta}>
+        <span className={styles.affectionBadge}>好感度 {partner.好感度 ?? 0}</span>
+        <div className={styles.partnerTags}>
+          {partner.在场 && <span className={`${styles.tag} ${styles.tagPresent}`}>在场</span>}
+          {partner.命定契约 && (
+            <span className={`${styles.tag} ${styles.tagContract}`}>命定契约</span>
+          )}
+        </div>
+      </div>
+      <div className={styles.partnerSummaryText}>{getPartnerSummaryText(partner)}</div>
+      <div className={styles.partnerSummaryStatus}>{getPartnerStatusSummary(partner)}</div>
+    </>
+  );
+
   const renderPartnerSummary = (partnerName: string, partner: PartnerRecord) => (
     <div className={styles.partnerTitle}>
       <div className={styles.partnerTitleMain}>
@@ -439,34 +486,10 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
           onImageError={() => handlePartnerAvatarImageError(partnerName)}
         />
         <div className={styles.partnerTitleContent}>
-          <IconTitle text={partnerName} className={styles.partnerName} />
-          <div className={styles.partnerMeta}>
-            <span className={styles.affectionBadge}>好感度 {partner.好感度 ?? 0}</span>
-            <div className={styles.partnerTags}>
-              {partner.在场 && <span className={`${styles.tag} ${styles.tagPresent}`}>在场</span>}
-              {partner.命定契约 && (
-                <span className={`${styles.tag} ${styles.tagContract}`}>命定契约</span>
-              )}
-            </div>
-          </div>
+          {renderPartnerIdentity(partnerName, partner)}
         </div>
       </div>
-      {editEnabled && (
-        <button
-          className={styles.deletePartnerBtn}
-          onClick={(e: MouseEvent<HTMLButtonElement>) => {
-            e.stopPropagation();
-            setDeleteTarget({
-              type: '伙伴',
-              path: `关系列表.${partnerName}`,
-              name: partnerName,
-            });
-          }}
-          title="删除关系"
-        >
-          <i className="fa-solid fa-trash" />
-        </button>
-      )}
+      {renderPartnerDeleteButton(partnerName)}
     </div>
   );
 
@@ -650,9 +673,19 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       }}
     >
       <div className={styles.partnerSummaryMain}>
-        {renderPartnerSummary(partnerName, partner)}
-        <div className={styles.partnerSummaryText}>{getPartnerSummaryText(partner)}</div>
-        <div className={styles.partnerSummaryStatus}>{getPartnerStatusSummary(partner)}</div>
+        <AvatarPanel
+          src={getPartnerAvatarUrl(partnerName)}
+          alt={`${partnerName}头像`}
+          size="md"
+          placeholderText={partnerName}
+          showEditHint
+          className={styles.partnerAvatar}
+          onClick={() => openPartnerAvatarModal(partnerName)}
+          onImageError={() => handlePartnerAvatarImageError(partnerName)}
+        />
+        <div className={styles.partnerSummaryBody}>
+          {renderPartnerIdentity(partnerName, partner, true)}
+        </div>
       </div>
     </div>
   );
@@ -910,7 +943,6 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       <>
         <div className={styles.partnerDetailHeader}>
           {renderPartnerSummary(activePartnerName, activePartner)}
-          <div className={styles.partnerSummaryText}>{getPartnerSummaryText(activePartner)}</div>
         </div>
         {renderPartnerDetails(activePartnerName, activePartner)}
       </>

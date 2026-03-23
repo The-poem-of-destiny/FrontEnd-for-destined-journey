@@ -107,7 +107,6 @@
   color: color-mix(in srgb, var(--theme-text-primary) 92%, white 8%);
   pointer-events: none;
   opacity: 0.82;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.72)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.48));
   transition:
     transform $transition-fast,
     opacity $transition-fast;
