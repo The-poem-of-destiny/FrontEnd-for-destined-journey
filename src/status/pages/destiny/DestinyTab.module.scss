@@ -155,12 +155,14 @@
 
 .partnerSectionContent {
   @include list-container($spacing-md);
+  padding-top: 1px;
 }
 
 .partnerCategoryBar {
   display: flex;
   flex-wrap: wrap;
   gap: $spacing-xs;
+  padding-top: 1px;
 }
 
 .partnerCategoryBtn {
@@ -259,6 +261,7 @@
 .partnerSummaryList {
   @include list-container($spacing-sm);
   min-width: 0;
+  padding-top: 1px;
 }
 
 .partnerSummaryListHiddenMobile {

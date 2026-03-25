@@ -3,6 +3,7 @@
 
 .itemsTab {
   @include page-container;
+  min-height: 0;
 }
 
 .itemsTabLoading,
@@ -26,14 +27,22 @@
 }
 
 .itemsTabContent {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: clamp(360px, 48vh, 720px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding-top: 1px;
+  padding-right: 2px;
+  scrollbar-gutter: stable;
 }
 
 .filterBar {
   display: flex;
   flex-wrap: wrap;
   gap: $spacing-xs;
-  padding: 4px;
+  padding: 5px 4px 4px;
   border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
   border-radius: $border-radius-md;
   background: color-mix(in srgb, var(--theme-card-bg) 56%, transparent);
@@ -192,6 +201,11 @@
 }
 
 @media (max-width: 540px) {
+  .itemsTabContent {
+    max-height: clamp(320px, 42vh, 560px);
+    -webkit-overflow-scrolling: touch;
+  }
+
   .filterBar {
     flex-wrap: nowrap;
     overflow-x: auto;

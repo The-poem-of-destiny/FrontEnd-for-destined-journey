@@ -112,6 +112,10 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const partnerEntries = useMemo(() => Object.entries(partners ?? {}), [partners]);
   const partnerCategoryStorageKey = buildSessionKey('destiny', 'partner-category');
   const partnerNameStorageKey = buildSessionKey('destiny', 'partner-name');
+  const partnerMobileDetailOpenStorageKey = buildSessionKey(
+    'destiny',
+    'partner-mobile-detail-open',
+  );
   const partnerDetailStorageKey = buildSessionKey('destiny', 'partner-detail');
   const partnerFilterStorageKey = buildSessionKey('destiny', 'partner-filter');
   const avatarScopeKey = useMemo(() => getAvatarScopeKey(), []);
@@ -122,8 +126,8 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const [selectedPartnerName, setSelectedPartnerName] = useState<string | null>(() =>
     readSessionState<string | null>(partnerNameStorageKey, null),
   );
-  const [isPartnerDetailOpen, setIsPartnerDetailOpen] = useState(() =>
-    Boolean(readSessionState<string | null>(partnerNameStorageKey, null)),
+  const [isPartnerDetailOpen, setIsPartnerDetailOpen] = useState<boolean>(() =>
+    readSessionState<boolean>(partnerMobileDetailOpenStorageKey, false),
   );
   const [activePartnerDetailSection, setActivePartnerDetailSection] =
     useState<PartnerDetailSection>(() =>
@@ -158,6 +162,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       ? selectedPartnerName
       : (visiblePartnerEntries[0]?.[0] ?? null);
   const activePartner = activePartnerName ? partners?.[activePartnerName] : null;
+  const isPartnerDetailVisible = Boolean(isPartnerDetailOpen && activePartnerName && activePartner);
   const activePartnerAssetSection =
     PartnerAssetSections.find(section => section.key === activePartnerDetailSection) ?? null;
 
@@ -976,7 +981,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
         <div className={styles.partnerMasterDetail}>
           <div
-            className={`${styles.partnerSummaryList} ${isPartnerDetailOpen ? styles.partnerSummaryListHiddenMobile : ''}`}
+            className={`${styles.partnerSummaryList} ${isPartnerDetailVisible ? styles.partnerSummaryListHiddenMobile : ''}`}
           >
             {visiblePartnerEntries.length > 0 ? (
               visiblePartnerEntries.map(([name, partner]) => (
@@ -1053,13 +1058,15 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   useEffect(() => {
     if (!selectedPartnerName) {
       writeSessionState(partnerNameStorageKey, null);
-      setIsPartnerDetailOpen(false);
       return;
     }
 
     writeSessionState(partnerNameStorageKey, selectedPartnerName);
-    setIsPartnerDetailOpen(true);
   }, [partnerNameStorageKey, selectedPartnerName]);
+
+  useEffect(() => {
+    writeSessionState(partnerMobileDetailOpenStorageKey, isPartnerDetailOpen);
+  }, [isPartnerDetailOpen, partnerMobileDetailOpenStorageKey]);
 
   useEffect(() => {
     writeSessionState(partnerDetailStorageKey, activePartnerDetailSection);
@@ -1085,7 +1092,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   return (
     <div
-      className={`${styles.destinyTab} ${isPartnerDetailOpen ? styles.destinyTabDetailModeMobile : ''}`}
+      className={`${styles.destinyTab} ${isPartnerDetailVisible ? styles.destinyTabDetailModeMobile : ''}`}
     >
       {/* FP商店按钮（暂时禁用，待正式上线） */}
       <button className={styles.fpShopBtn} onClick={handleOpenFpShop} disabled title="待上线">
@@ -1118,7 +1125,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         {renderPartners()}
       </section>
 
-      {isPartnerDetailOpen && activePartnerName && activePartner && (
+      {isPartnerDetailVisible && (
         <div className={styles.partnerDetailPageMobile}>
           <div className={styles.partnerDetailPageTopbar}>
             <button className={styles.partnerBackBtn} onClick={handlePartnerDetailBack}>
