@@ -1,9 +1,8 @@
-import _ from 'lodash';
 import OpenSeadragon from 'openseadragon';
 import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { DrawStroke, useCanvasDraw } from '../../core/hooks/use-canvas-draw';
 import { useMapMarkers } from '../../core/hooks/use-map-markers';
-import { useMapViewer } from '../../core/hooks/use-map-viewer';
+import { MapViewerStatus, useMapViewer } from '../../core/hooks/use-map-viewer';
 import { MapMarker } from '../../core/types/map-markers';
 import { mapSourceList } from '../../core/types/map-source-list';
 import { DEFAULT_DRAW_COLOR } from '../../core/utils/map-constants';
@@ -16,7 +15,8 @@ export const MapTab: FC = () => {
   const [drawColor, setDrawColor] = useState(DEFAULT_DRAW_COLOR);
   const [mapSourceKey, setMapSourceKey] = useState<'small' | 'large'>('small');
   const [markerSearch, setMarkerSearch] = useState('');
-  const [isMapLoading, setIsMapLoading] = useState(true);
+  const [mapViewerStatus, setMapViewerStatus] = useState<MapViewerStatus>('loading');
+  const [mapLoadError, setMapLoadError] = useState('');
   const [isMarkerPanelVisible, setIsMarkerPanelVisible] = useState(false);
   const [activeMarkerCardPosition, setActiveMarkerCardPosition] = useState<{
     left: number;
@@ -338,8 +338,17 @@ export const MapTab: FC = () => {
     mapSourceKey,
     viewerRef,
     containerRef: inlineContainerRef,
-    onOpen: () => {
-      setIsMapLoading(false);
+    onBeforeOpen: () => {
+      setMapViewerStatus('loading');
+      setMapLoadError('');
+
+      const viewer = viewerRef.current;
+      if (!viewer) return;
+      overlayMapRef.current.clear();
+      viewer.clearOverlays();
+    },
+    onReady: () => {
+      setMapViewerStatus('ready');
       resizeCanvasRef.current();
       redrawRef.current();
       syncMarkerOverlaysRef.current();
@@ -349,12 +358,9 @@ export const MapTab: FC = () => {
       redrawRef.current();
       syncActiveMarkerCardPosition();
     },
-    onBeforeOpen: () => {
-      setIsMapLoading(true);
-      const viewer = viewerRef.current;
-      if (!viewer) return;
-      overlayMapRef.current.clear();
-      viewer.clearOverlays();
+    onError: error => {
+      setMapViewerStatus('error');
+      setMapLoadError(error.message || '地图加载失败');
     },
   });
 
@@ -491,7 +497,8 @@ export const MapTab: FC = () => {
         <MapStage
           drawMode={drawMode}
           markerAddMode={markerAddMode}
-          isMapLoading={isMapLoading}
+          mapViewerStatus={mapViewerStatus}
+          mapLoadError={mapLoadError}
           activeMarker={activeMarker}
           onFocusMarker={focusMarker}
           inlineContainerRef={inlineContainerRef}

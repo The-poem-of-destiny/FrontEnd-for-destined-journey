@@ -1,5 +1,6 @@
 import { FC, PointerEventHandler, RefObject, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { MapViewerStatus } from '../../../core/hooks/use-map-viewer';
 import { MapMarker } from '../../../core/types/map-markers';
 import {
   DEFAULT_MARKER_COLOR,
@@ -55,7 +56,8 @@ interface MarkerWorkbenchProps {
 interface MapStageProps {
   drawMode: boolean;
   markerAddMode: boolean;
-  isMapLoading: boolean;
+  mapViewerStatus: MapViewerStatus;
+  mapLoadError: string;
   activeMarker: MapMarker | null;
   onFocusMarker: (marker: MapMarker) => void;
   inlineContainerRef: RefObject<HTMLDivElement | null>;
@@ -451,7 +453,8 @@ export const MarkerWorkbench: FC<MarkerWorkbenchProps> = ({
 export const MapStage: FC<MapStageProps> = ({
   drawMode,
   markerAddMode,
-  isMapLoading,
+  mapViewerStatus,
+  mapLoadError,
   activeMarker,
   onFocusMarker,
   inlineContainerRef,
@@ -497,7 +500,11 @@ export const MapStage: FC<MapStageProps> = ({
               {drawMode ? '绘制模式' : markerAddMode ? '新增标记模式' : '浏览模式'}
             </span>
             <span className={styles.mapStageHint}>
-              {isMapLoading ? '地图资源加载中…' : '支持缩放、平移、点击标记与落点新增'}
+              {mapViewerStatus === 'loading'
+                ? '地图资源加载中…'
+                : mapViewerStatus === 'error'
+                  ? '地图加载失败，请稍后重试或切换地图源'
+                  : '支持缩放、平移、点击标记与落点新增'}
             </span>
           </div>
           <div className={styles.mapStageSelection}>
@@ -523,9 +530,15 @@ export const MapStage: FC<MapStageProps> = ({
         <div className={styles.mapViewport}>
           <div className={styles.mapFrame}>
             <div ref={inlineContainerRef} className={styles.mapViewer} />
-            {isMapLoading && (
+            {mapViewerStatus === 'loading' && (
               <div className={styles.mapPlaceholder}>
                 <span>地图加载中，请稍候…</span>
+              </div>
+            )}
+
+            {mapViewerStatus === 'error' && (
+              <div className={styles.mapPlaceholder}>
+                <span>{mapLoadError || '地图加载失败，请稍后重试'}</span>
               </div>
             )}
             <div className={drawLayerClassName}>
