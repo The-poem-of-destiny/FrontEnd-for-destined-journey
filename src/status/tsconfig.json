@@ -1,8 +1,14 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": ".",
+    "rootDir": "../..",
     "jsx": "react-jsx"
   },
-  "include": ["./**/*", "../../@types/**/*", "../../global.d.ts", "../../auto-imports.zod.d.ts"]
+  "include": [
+    "./**/*",
+    "../data_schema/**/*",
+    "../../@types/**/*",
+    "../../global.d.ts",
+    "../../auto-imports.zod.d.ts"
+  ]
 }
