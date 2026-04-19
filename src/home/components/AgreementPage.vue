@@ -280,8 +280,8 @@ function handleRecheck() {
 function confirmSkip() {
   showSkipConfirm.value = false;
   envPassed.value = true;
-  // 回访用户跳过检查后直接自动跳转
-  if (previouslyAgreed) {
+  // 回访用户跳过检查后直接自动跳转（需确认协议已同意）
+  if (isAgreed.value) {
     emit('agreed');
   }
 }
@@ -308,7 +308,7 @@ watch(
 
 // 回访用户：环境通过后自动跳转
 watch(envPassed, passed => {
-  if (passed && previouslyAgreed) {
+  if (passed && previouslyAgreed && isAgreed.value) {
     emit('agreed');
   }
 });
