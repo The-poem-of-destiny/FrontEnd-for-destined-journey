@@ -8,6 +8,7 @@ import {
   markerIconLabels,
   markerIconOptions,
 } from '../../../core/utils/map-constants';
+import { buildMarkerImageUrl } from '../../../core/utils/marker-image-url';
 import styles from '../MapTab.module.scss';
 
 interface MapToolbarProps {
@@ -405,7 +406,7 @@ export const MarkerWorkbench: FC<MarkerWorkbenchProps> = ({
                           .map((url, index) => (
                             <div key={index} className={styles.imagePreviewItem}>
                               <img
-                                src={url}
+                                src={buildMarkerImageUrl(url)}
                                 alt={`预览 ${index + 1}`}
                                 className={styles.imagePreviewThumb}
                                 onError={event => {
@@ -587,7 +588,7 @@ export const MapStage: FC<MapStageProps> = ({
                         </button>
                       )}
                       <img
-                        src={activeImageUrl}
+                        src={buildMarkerImageUrl(activeImageUrl)}
                         alt={`${activeMarker.name || '标记'}主视觉`}
                         className={styles.mapMarkerCardHeroImage}
                         onError={event => {
