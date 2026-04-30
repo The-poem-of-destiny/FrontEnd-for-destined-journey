@@ -1,10 +1,10 @@
 export const mapSources = {
   small: {
     type: 'image',
-    url: 'https://i.ibb.co/07F075B/Maplite.webp',
+    url: 'https://i.ibb.co/VY5scrwY/MAP.webp',
   },
   large: {
     type: 'image',
-    url: 'https://i.ibb.co/wFQqdywB/Map.webp',
+    url: 'https://i.ibb.co/TMs8gf4p/Map-Full.webp',
   },
 } as const;
