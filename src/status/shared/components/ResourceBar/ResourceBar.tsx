@@ -32,7 +32,10 @@ export const ResourceBar: FC<ResourceBarProps> = ({
 
   return (
     <div className={`${styles.resourceBar} ${typeClass}`}>
-      <div className={styles.resourceBarLabel}>{label}</div>
+      <div className={styles.resourceBarLabelGroup}>
+        <span className={styles.resourceBarAccent} />
+        <div className={styles.resourceBarLabel}>{label}</div>
+      </div>
       <div className={styles.resourceBarTrack}>
         <div className={styles.resourceBarFill} style={{ width: `${percentage}%` }} />
         {showValues && (

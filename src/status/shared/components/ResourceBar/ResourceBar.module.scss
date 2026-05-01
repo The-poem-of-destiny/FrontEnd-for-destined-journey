@@ -3,15 +3,29 @@
 
 .resourceBar {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
   gap: $spacing-sm;
   min-width: 0;
 }
 
+.resourceBarLabelGroup {
+  display: grid;
+  grid-template-columns: 4px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.resourceBarAccent {
+  width: 4px;
+  height: 13px;
+  border-radius: 999px;
+  background: var(--theme-text-muted);
+}
+
 .resourceBarLabel {
   flex-shrink: 0;
-  width: 32px;
   font-size: 11px;
   color: var(--theme-text-secondary);
   text-align: right;
@@ -20,14 +34,9 @@
 
 @media (max-width: 540px) {
   .resourceBar {
-    grid-template-columns: 28px minmax(0, 1fr);
+    grid-template-columns: 24px minmax(0, 1fr);
     align-items: center;
     gap: 10px;
-  }
-
-  .resourceBarLabel {
-    width: 28px;
-    text-align: right;
   }
 }
 
@@ -51,11 +60,14 @@
 
 .resourceBarValues {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 10px;
   font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
   color: var(--theme-resource-text);
   text-shadow:
     0 0 2px rgba(0, 0, 0, 0.55),
@@ -67,18 +79,12 @@
 }
 
 // 类型颜色
-.resourceBarHp .resourceBarFill {
-  background: var(--theme-resource-hp);
+.resourceBarFill, 
+.resourceBarAccent {
+  background: var(--bar-color);
 }
 
-.resourceBarMp .resourceBarFill {
-  background: var(--theme-resource-mp);
-}
-
-.resourceBarSp .resourceBarFill {
-  background: var(--theme-resource-sp);
-}
-
-.resourceBarExp .resourceBarFill {
-  background: var(--theme-resource-exp);
-}
+.resourceBarHp  { --bar-color: var(--theme-resource-hp); }
+.resourceBarMp  { --bar-color: var(--theme-resource-mp); }
+.resourceBarSp  { --bar-color: var(--theme-resource-sp); }
+.resourceBarExp { --bar-color: var(--theme-resource-exp); }
