@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CategorySelectionLayout from '../../components/CategorySelectionLayout.vue';
+import ConfirmModal from '../../components/ConfirmModal.vue';
 import { getBackgrounds } from '../../data/backgrounds';
 import { getAllPartners } from '../../data/destined-ones';
 import { useCharacterStore } from '../../store/character';
@@ -15,6 +16,8 @@ import PartnerList from './components/PartnerList.vue';
 const characterStore = useCharacterStore();
 const customContentStore = useCustomContentStore();
 const customPartnerFormRef = ref<InstanceType<typeof CustomPartnerForm> | null>(null);
+const partnerToRemove = ref<Partner | null>(null);
+const showClearConfirm = ref(false);
 
 // 伙伴相关状态
 const currentLevel = ref<string>('');
@@ -25,6 +28,12 @@ const currentBackgroundCategory = ref<string>('');
 // 提取分类和层级为计算属性，遵循 DRY 原则
 const partnerLevels = computed(() => Object.keys(getAllPartners()));
 const backgroundCategories = computed(() => Object.keys(getBackgrounds()));
+
+const syncCurrentOption = (current: { value: string }, options: string[]) => {
+  if (!options.includes(current.value)) {
+    current.value = options[0] || '';
+  }
+};
 
 // 获取当前层级的伙伴列表
 const currentPartners = computed<Partner[]>(() => {
@@ -49,7 +58,7 @@ const handleSelectPartner = (partner: Partner) => {
 };
 
 const handleDeselectPartner = (partner: Partner) => {
-  characterStore.removePartner(partner);
+  partnerToRemove.value = partner;
 };
 
 const handleAddCustomPartner = (partner: Partner, replaceName?: string) => {
@@ -96,22 +105,33 @@ const handleUpdateCustomDescription = (value: string) => {
 
 // 清空所有选择
 const handleClearAll = () => {
+  showClearConfirm.value = true;
+};
+
+const confirmRemovePartner = () => {
+  if (!partnerToRemove.value) return;
+  characterStore.removePartner(partnerToRemove.value);
+  partnerToRemove.value = null;
+};
+
+const cancelRemovePartner = () => {
+  partnerToRemove.value = null;
+};
+
+const confirmClearAll = () => {
   characterStore.clearPartners();
   characterStore.setBackground(null);
   customContentStore.updateCustomBackgroundDescription('');
+  showClearConfirm.value = false;
 };
 
-// 初始化
-onMounted(() => {
-  // 初始化伙伴层级
-  if (partnerLevels.value.length > 0) {
-    currentLevel.value = partnerLevels.value[0];
-  }
+const cancelClearAll = () => {
+  showClearConfirm.value = false;
+};
 
-  // 初始化背景分类
-  if (backgroundCategories.value.length > 0) {
-    currentBackgroundCategory.value = backgroundCategories.value[0];
-  }
+watch(partnerLevels, (levels) => syncCurrentOption(currentLevel, levels), { immediate: true });
+watch(backgroundCategories, (categories) => syncCurrentOption(currentBackgroundCategory, categories), {
+  immediate: true,
 });
 </script>
 
@@ -233,6 +253,28 @@ onMounted(() => {
         </div>
       </div>
     </section>
+
+    <ConfirmModal
+      :visible="Boolean(partnerToRemove)"
+      title="确认移除伙伴"
+      :message="`确定要移除「${partnerToRemove?.name || ''}」吗？`"
+      confirm-text="确认移除"
+      cancel-text="取消"
+      type="danger"
+      @confirm="confirmRemovePartner"
+      @cancel="cancelRemovePartner"
+    />
+
+    <ConfirmModal
+      :visible="showClearConfirm"
+      title="确认清空选择"
+      message="确定要清空已选伙伴和开局剧情吗？自定义开局草稿也会被清空。"
+      confirm-text="清空选择"
+      cancel-text="取消"
+      type="danger"
+      @confirm="confirmClearAll"
+      @cancel="cancelClearAll"
+    />
   </div>
 </template>
 
@@ -506,6 +548,28 @@ onMounted(() => {
 
   .summary-section {
     position: static;
+  }
+
+  .background-section {
+    :deep(.category-selection-layout) {
+      display: flex;
+      flex-direction: column;
+      height: auto !important;
+      max-height: none !important;
+      min-height: 0;
+      overflow: visible !important;
+    }
+
+    :deep(.content-area),
+    :deep(.content-main),
+    :deep(.background-list) {
+      display: flex;
+      flex-direction: column;
+      height: auto !important;
+      max-height: none !important;
+      min-height: 140px;
+      overflow: visible !important;
+    }
   }
 
   .summary-items {

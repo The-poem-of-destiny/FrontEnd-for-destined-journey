@@ -34,6 +34,11 @@ const handleReset = () => {
   characterStore.updateCharacterField('money', 0);
   pointsToExchange.value = 0;
 };
+
+defineProps<{
+  defaultExpanded?: boolean;
+  forceExpanded?: boolean;
+}>();
 </script>
 
 <template>
@@ -52,6 +57,8 @@ const handleReset = () => {
     exchange-all-title="将所有剩余转生点数兑换为金钱"
     reset-title="重置已兑换的金钱"
     :reset-disabled="characterStore.character.money <= 0"
+    :default-expanded="defaultExpanded"
+    :force-expanded="forceExpanded"
     @exchange="handleExchange"
     @exchange-all="handleExchangeAll"
     @reset="handleReset"

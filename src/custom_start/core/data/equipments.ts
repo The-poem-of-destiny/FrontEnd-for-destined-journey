@@ -1,4 +1,5 @@
 import type { Equipment } from '../types';
+import { getLibraryDataByType } from '../utils/custom-library';
 import { loadCustomEquipments, mergeData } from '../utils/loader';
 
 interface EquipmentData {
@@ -27,7 +28,10 @@ async function initializeEquipments() {
  * 获取合并后的装备数据
  */
 export function getEquipments(): EquipmentData {
-  return mergedEquipmentsData || Equipments;
+  return mergeData(
+    mergedEquipmentsData || Equipments,
+    getLibraryDataByType<Equipment>('equipment'),
+  ) as EquipmentData;
 }
 
 // 自动初始化

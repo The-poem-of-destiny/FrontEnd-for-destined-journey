@@ -370,6 +370,9 @@ watch(
   .background-list {
     padding: var(--spacing-sm);
     gap: var(--spacing-sm);
+    height: auto;
+    min-height: 120px;
+    overflow-y: visible;
   }
 
   .background-card {

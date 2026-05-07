@@ -3,6 +3,7 @@
  * 动态数组输入组件
  */
 import { computed, ref } from 'vue';
+import ConfirmModal from '../ConfirmModal.vue';
 
 interface Props {
   modelValue: string[];
@@ -37,6 +38,7 @@ const editingIndex = ref<number | null>(null);
 
 // 编辑项的临时值
 const editingValue = ref('');
+const itemToRemoveIndex = ref<number | null>(null);
 
 // 计算属性：是否可以添加更多
 const canAddMore = computed(() => {
@@ -62,10 +64,20 @@ const addItem = () => {
 // 删除项
 const removeItem = (index: number) => {
   if (!canRemove.value) return;
+  itemToRemoveIndex.value = index;
+};
+
+const confirmRemoveItem = () => {
+  if (itemToRemoveIndex.value === null) return;
 
   const newArray = [...props.modelValue];
-  newArray.splice(index, 1);
+  newArray.splice(itemToRemoveIndex.value, 1);
   emit('update:modelValue', newArray);
+  itemToRemoveIndex.value = null;
+};
+
+const cancelRemoveItem = () => {
+  itemToRemoveIndex.value = null;
 };
 
 // 更新项
@@ -226,6 +238,17 @@ const handleKeydown = (event: KeyboardEvent) => {
       <span class="count-max">{{ maxItems }}</span>
       <span class="count-label">项</span>
     </div>
+
+    <ConfirmModal
+      :visible="itemToRemoveIndex !== null"
+      title="确认删除项目"
+      :message="`确定要删除「${itemToRemoveIndex !== null ? modelValue[itemToRemoveIndex] || '' : ''}」吗？`"
+      confirm-text="确认删除"
+      cancel-text="取消"
+      type="danger"
+      @confirm="confirmRemoveItem"
+      @cancel="cancelRemoveItem"
+    />
   </div>
 </template>
 

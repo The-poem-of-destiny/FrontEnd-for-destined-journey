@@ -5,6 +5,7 @@ import PresetModal from '../components/PresetModal.vue';
 import { useJourney, usePoints, usePresetModal, useStepNavigation } from '../composables';
 import { STEP_CONFIGS } from '../router/route-constants';
 import { useCharacterStore } from '../store';
+import { syncLibraryStorageFromWorldbook } from '../utils/custom-library';
 import { findMatchingPreset } from '../utils/preset-manager';
 import { scrollToIframe } from '../utils/scroll';
 
@@ -40,6 +41,8 @@ const stepTitles = STEP_CONFIGS.map(c => ({ title: c.shortTitle }));
 
 // 组件挂载时检查是否有预设
 onMounted(() => {
+  void syncLibraryStorageFromWorldbook({ silent: true });
+
   setTimeout(() => {
     checkAndShowLoadModal();
   }, 300);
@@ -152,6 +155,8 @@ const nextButtonText = computed(() => {
 .layout {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
   min-height: 500px;
   padding: var(--spacing-xl);
 }
@@ -164,7 +169,26 @@ const nextButtonText = computed(() => {
 
 @media (max-width: 768px) {
   .layout {
-    padding: var(--spacing-md);
+    aspect-ratio: 9 / 17.5;
+    min-height: 0;
+    padding: var(--spacing-sm);
+    gap: var(--spacing-sm);
+    overflow: hidden;
+  }
+
+  .main-title {
+    flex: none;
+    margin-bottom: 0;
+    font-size: 1.1rem;
+    line-height: 1.2;
+    letter-spacing: 0;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 480px) {
+  .layout {
+    aspect-ratio: 9 / 19.5;
   }
 }
 </style>

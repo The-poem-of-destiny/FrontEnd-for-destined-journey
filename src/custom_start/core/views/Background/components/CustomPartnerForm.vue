@@ -557,7 +557,7 @@ const confirmAdd = () => {
 
   .form-body {
     padding: var(--spacing-lg);
-    max-height: 70vh;
+    max-height: min(560px, 130vw);
     overflow-y: auto;
   }
 
@@ -702,7 +702,7 @@ const confirmAdd = () => {
 
     .form-body {
       padding: var(--spacing-md);
-      max-height: 60vh;
+      max-height: min(460px, 125vw);
     }
 
     .form-row {

@@ -96,10 +96,14 @@ const handleDeselect = (item: Equipment | Item | Skill) => {
 }
 
 @media (max-width: 768px) {
+  .item-list {
+    min-height: 0;
+  }
+
   .item-grid {
     grid-template-columns: 1fr;
-    gap: var(--spacing-md);
-    padding: var(--spacing-sm);
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs);
   }
 
   .empty-state {

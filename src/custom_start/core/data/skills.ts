@@ -1,4 +1,5 @@
 import { Skill } from '../types';
+import { getLibraryDataByType } from '../utils/custom-library';
 import { loadCustomSkills, mergeData } from '../utils/loader';
 
 /**
@@ -25,7 +26,7 @@ async function initializeSkills() {
  * 获取合并后的技能数据
  */
 export function getSkills(): Skills {
-  return mergedSkillsData || SkillGroups;
+  return mergeData(mergedSkillsData || SkillGroups, getLibraryDataByType<Skill>('skill'));
 }
 
 // 自动初始化

@@ -1,4 +1,3 @@
-level-tabs
 <script setup lang="ts">
 interface Props {
   modelValue: string;
@@ -67,12 +66,24 @@ const handleSelect = (level: string) => {
 
 @media (max-width: 768px) {
   .level-tabs {
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   .level-tab {
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: 0.95rem;
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding: 7px var(--spacing-sm);
+    border-width: 1px;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    white-space: nowrap;
   }
 }
 </style>

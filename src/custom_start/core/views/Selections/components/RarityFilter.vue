@@ -97,28 +97,42 @@ const handleSelect = (value: Rarity | 'all') => {
 // 响应式设计
 @media (max-width: 768px) {
   .rarity-filter {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    gap: var(--spacing-sm);
+    flex-wrap: nowrap;
+    padding: 0;
+    gap: var(--spacing-xs);
 
     .filter-label {
-      font-size: 0.85rem;
+      flex: none;
+      font-size: 0.8rem;
+      max-width: 3.5em;
+      white-space: normal;
+      line-height: 1.15;
     }
 
     .filter-buttons {
+      flex-wrap: nowrap;
       gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
 
     .filter-btn {
       font-size: 0.8rem;
-      padding: 3px var(--spacing-xs);
+      min-height: 30px;
+      padding: 4px 8px;
+      flex: 0 0 auto;
     }
   }
 }
 
 @media (max-width: 480px) {
   .rarity-filter {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     gap: var(--spacing-xs);
 
     .filter-label {
@@ -132,7 +146,8 @@ const handleSelect = (value: Rarity | 'all') => {
 
     .filter-btn {
       font-size: 0.75rem;
-      padding: 2px 6px;
+      min-height: 30px;
+      padding: 4px 7px;
     }
   }
 }

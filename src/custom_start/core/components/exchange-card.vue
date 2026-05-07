@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import ConfirmModal from './ConfirmModal.vue';
 import { FormNumber } from './Form';
 
 type ExchangeTheme = 'gold' | 'violet';
@@ -19,6 +20,8 @@ type ExchangeCardProps = {
   exchangeAllTitle?: string;
   resetTitle?: string;
   resetDisabled?: boolean;
+  defaultExpanded?: boolean;
+  forceExpanded?: boolean;
 };
 
 const props = withDefaults(defineProps<ExchangeCardProps>(), {
@@ -27,6 +30,8 @@ const props = withDefaults(defineProps<ExchangeCardProps>(), {
   exchangeAllTitle: '将所有剩余转生点数兑换',
   resetTitle: '重置已兑换内容',
   resetDisabled: false,
+  defaultExpanded: false,
+  forceExpanded: false,
 });
 
 const emit = defineEmits<{
@@ -47,6 +52,49 @@ const isExchangeDisabled = computed(
 );
 const isAllDisabled = computed(() => props.maxExchangeable <= 0);
 const themeClass = computed(() => `exchange-card--${props.theme}`);
+const isExpanded = ref(props.defaultExpanded);
+const isMobileViewport = ref(false);
+const showResetConfirm = ref(false);
+
+let mediaQuery: MediaQueryList | null = null;
+
+const updateViewportMode = () => {
+  isMobileViewport.value = Boolean(mediaQuery?.matches);
+};
+
+onMounted(() => {
+  mediaQuery = window.matchMedia('(max-width: 768px)');
+  updateViewportMode();
+  mediaQuery.addEventListener('change', updateViewportMode);
+});
+
+onUnmounted(() => {
+  mediaQuery?.removeEventListener('change', updateViewportMode);
+});
+
+const isBodyVisible = computed(
+  () => props.forceExpanded || !isMobileViewport.value || isExpanded.value,
+);
+
+const toggleExpanded = () => {
+  if (props.forceExpanded) return;
+  if (!isMobileViewport.value) return;
+  isExpanded.value = !isExpanded.value;
+};
+
+const requestReset = () => {
+  if (props.resetDisabled) return;
+  showResetConfirm.value = true;
+};
+
+const confirmReset = () => {
+  showResetConfirm.value = false;
+  emit('reset');
+};
+
+const cancelReset = () => {
+  showResetConfirm.value = false;
+};
 </script>
 
 <template>
@@ -57,9 +105,22 @@ const themeClass = computed(() => `exchange-card--${props.theme}`);
       </span>
       <span class="exchange-title">{{ title }}</span>
       <span class="exchange-rate">{{ rateText }}</span>
+      <span class="mobile-current">
+        {{ currentValue }}<span v-if="currentUnit"> {{ currentUnit }}</span>
+      </span>
+      <button
+        v-if="!forceExpanded"
+        class="exchange-toggle"
+        type="button"
+        :aria-expanded="isBodyVisible"
+        @click="toggleExpanded"
+      >
+        <span>{{ isExpanded ? '收起' : '兑换' }}</span>
+        <i class="fa-solid fa-chevron-down" :class="{ rotated: isExpanded }"></i>
+      </button>
     </div>
 
-    <div class="exchange-body">
+    <div v-show="isBodyVisible" class="exchange-body">
       <div class="current-display">
         <span class="label">{{ currentLabel }}</span>
         <span class="value">{{ currentValue }}</span>
@@ -93,12 +154,23 @@ const themeClass = computed(() => `exchange-card--${props.theme}`);
           :disabled="resetDisabled"
           :title="resetTitle"
           aria-label="重置"
-          @click="emit('reset')"
+          @click="requestReset"
         >
           <i class="fa-solid fa-rotate-left"></i>
         </button>
       </div>
     </div>
+
+    <ConfirmModal
+      :visible="showResetConfirm"
+      title="确认重置兑换"
+      :message="`${resetTitle}？此操作会清除当前已兑换数值。`"
+      confirm-text="确认重置"
+      cancel-text="取消"
+      type="danger"
+      @confirm="confirmReset"
+      @cancel="cancelReset"
+    />
   </div>
 </template>
 
@@ -152,6 +224,11 @@ const themeClass = computed(() => `exchange-card--${props.theme}`);
   .exchange-rate {
     font-size: 0.85rem;
     color: var(--text-light);
+  }
+
+  .mobile-current,
+  .exchange-toggle {
+    display: none;
   }
 }
 
@@ -278,7 +355,68 @@ const themeClass = computed(() => `exchange-card--${props.theme}`);
 }
 
 @media (max-width: 768px) {
+  .exchange-card {
+    padding: var(--spacing-sm);
+    border-width: 1px;
+    border-radius: var(--radius-md);
+  }
+
+  .exchange-header {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+
+    .exchange-icon {
+      font-size: 1rem;
+    }
+
+    .exchange-title {
+      font-size: 0.9rem;
+    }
+
+    .exchange-rate {
+      display: none;
+    }
+
+    .mobile-current {
+      display: inline-flex;
+      margin-left: auto;
+      color: var(--exchange-accent-strong);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .exchange-toggle {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 8px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: var(--input-bg);
+      color: var(--title-color);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+
+      i {
+        font-size: 0.7rem;
+        transition: transform var(--transition-fast);
+
+        &.rotated {
+          transform: rotate(180deg);
+        }
+      }
+    }
+  }
+
   .exchange-body {
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border-color);
     flex-direction: column;
     align-items: stretch;
 
@@ -287,16 +425,33 @@ const themeClass = computed(() => `exchange-card--${props.theme}`);
     }
 
     .exchange-controls {
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: var(--spacing-xs);
 
       .exchange-input {
-        flex: 1;
+        width: auto;
+        min-width: 0;
       }
 
       .exchange-button,
       .exchange-all-button,
       .exchange-reset-icon {
+        min-height: 38px;
         flex-shrink: 0;
+      }
+
+      .exchange-button {
+        grid-column: 1 / -1;
+      }
+
+      .exchange-all-button {
+        padding: var(--spacing-sm);
+      }
+
+      .exchange-reset-icon {
+        width: 38px;
+        height: 38px;
       }
     }
   }

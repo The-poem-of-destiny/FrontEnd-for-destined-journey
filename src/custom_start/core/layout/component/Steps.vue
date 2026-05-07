@@ -123,27 +123,40 @@ defineExpose({
 // 移动设备适配
 @media (max-width: 640px) {
   .steps {
-    gap: 1px;
+    flex: none;
+    gap: var(--spacing-xs);
+    overflow-x: auto;
+    padding-bottom: 0;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
 
     .step {
-      font-size: 12px;
-      padding: 8px 10px;
-      margin-left: -4px;
-      clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 12px 100%, 0 50%);
+      flex: 0 0 auto;
+      min-width: 76px;
+      min-height: 32px;
+      font-size: 0.75rem;
+      padding: 5px 8px;
+      margin-left: 0;
+      clip-path: none;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
 
       &:first-child {
-        clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 0 100%, 0 50%);
-        padding-left: 10px;
+        clip-path: none;
+        padding-left: 8px;
         margin-left: 0;
       }
 
       &:last-child {
-        clip-path: polygon(12px 0, 100% 0, 100% 50%, 100% 100%, 12px 100%, 0 50%);
-        padding-right: 10px;
+        clip-path: none;
+        padding-right: 8px;
       }
 
       .title {
-        line-height: 1.5;
+        line-height: 1.25;
       }
     }
   }
@@ -152,27 +165,28 @@ defineExpose({
 // 小屏幕设备适配
 @media (max-width: 480px) {
   .steps {
-    gap: 0;
+    gap: var(--spacing-xs);
 
     .step {
-      font-size: 10px;
-      padding: 6px 8px;
-      margin-left: -3px;
-      clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 10px 100%, 0 50%);
+      min-width: 72px;
+      font-size: 0.7rem;
+      padding: 5px 7px;
+      margin-left: 0;
+      clip-path: none;
 
       &:first-child {
-        clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%, 0 50%);
-        padding-left: 8px;
+        clip-path: none;
+        padding-left: 7px;
         margin-left: 0;
       }
 
       &:last-child {
-        clip-path: polygon(10px 0, 100% 0, 100% 50%, 100% 100%, 10px 100%, 0 50%);
-        padding-right: 8px;
+        clip-path: none;
+        padding-right: 7px;
       }
 
       .title {
-        line-height: 1.5;
+        line-height: 1.25;
       }
     }
   }

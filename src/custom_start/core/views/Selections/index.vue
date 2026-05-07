@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { nextTick, onMounted, onUnmounted, ref, computed, watch } from 'vue';
+
 import CategorySelectionLayout from '../../components/CategorySelectionLayout.vue';
 import { getRaceCosts } from '../../data/base-info';
 import { getEquipments } from '../../data/equipments';
@@ -7,6 +9,11 @@ import { getSkills } from '../../data/skills';
 import { useCharacterStore } from '../../store/character';
 import { useCustomContentStore } from '../../store/customContent';
 import type { Equipment, Item, Rarity, Skill } from '../../types';
+import {
+  createLibraryEntries,
+  getLibraryUpdateEventName,
+  upsertLibraryEntries,
+} from '../../utils/custom-library';
 
 import CategoryTabs, { type CategoryType } from './components/CategoryTabs.vue';
 import CustomItemForm from './components/CustomItemForm.vue';
@@ -18,6 +25,7 @@ import SelectedPanel from './components/SelectedPanel.vue';
 const characterStore = useCharacterStore();
 const customContentStore = useCustomContentStore();
 const customItemFormRef = ref<InstanceType<typeof CustomItemForm> | null>(null);
+type UtilityPanel = 'none' | 'money' | 'custom' | 'selected';
 
 // 当前选中的大分类
 const currentCategory = ref<CategoryType>('equipment');
@@ -28,14 +36,70 @@ const currentSubCategory = ref<string>('');
 // 当前选中的品质筛选
 const currentRarity = ref<Rarity | 'all'>('all');
 
+const activeUtilityPanel = ref<UtilityPanel>('none');
+const isMobileViewport = ref(false);
+const libraryRevision = ref(0);
+let mobileMediaQuery: MediaQueryList | null = null;
+
+const selectedTotalCount = computed(
+  () =>
+    characterStore.selectedEquipments.length +
+    characterStore.selectedItems.length +
+    characterStore.selectedSkills.length,
+);
+
+const mobilePanelTitle = computed(() => {
+  switch (activeUtilityPanel.value) {
+    case 'money':
+      return '金钱兑换';
+    case 'custom':
+      return '自定义';
+    case 'selected':
+      return '已选项目';
+    default:
+      return '';
+  }
+});
+
+const toggleUtilityPanel = (panel: UtilityPanel) => {
+  activeUtilityPanel.value = activeUtilityPanel.value === panel ? 'none' : panel;
+};
+
+const closeUtilityPanel = () => {
+  activeUtilityPanel.value = 'none';
+};
+
+const trackLibraryRevision = () => libraryRevision.value;
+
+const updateMobileViewport = () => {
+  isMobileViewport.value = Boolean(mobileMediaQuery?.matches);
+
+  if (!isMobileViewport.value) {
+    activeUtilityPanel.value = 'none';
+  }
+};
+
 // 获取显示用的分类名称
 const getCategoryDisplayName = (name: string): string => {
   return name;
 };
 
-const equipments = computed(() => getEquipments());
-const initialItems = computed(() => getInitialItems());
-const skillGroups = computed(() => getSkills());
+const equipments = computed(() => {
+  trackLibraryRevision();
+  return getEquipments();
+});
+const initialItems = computed(() => {
+  trackLibraryRevision();
+  return getInitialItems();
+});
+const skillGroups = computed(() => {
+  trackLibraryRevision();
+  return getSkills();
+});
+
+const refreshLibraryData = () => {
+  libraryRevision.value += 1;
+};
 
 const currentRace = computed(() => {
   return characterStore.character.race === '自定义'
@@ -95,6 +159,16 @@ watch(currentCategory, () => {
 // 初始化子分类
 onMounted(() => {
   currentSubCategory.value = subCategories.value[0] || '';
+
+  mobileMediaQuery = window.matchMedia('(max-width: 768px)');
+  updateMobileViewport();
+  mobileMediaQuery.addEventListener('change', updateMobileViewport);
+  window.addEventListener(getLibraryUpdateEventName(), refreshLibraryData);
+});
+
+onUnmounted(() => {
+  mobileMediaQuery?.removeEventListener('change', updateMobileViewport);
+  window.removeEventListener(getLibraryUpdateEventName(), refreshLibraryData);
 });
 
 // 监听种族变化，确保当前技能分类可用
@@ -234,6 +308,10 @@ const handleAddCustomItem = (
       break;
   }
 
+  upsertLibraryEntries(createLibraryEntries([{ type, item }]), {
+    deleteIds: targetName && targetName !== item.name ? [`${type}:${targetName}`] : [],
+  });
+  refreshLibraryData();
   customContentStore.updateEditingCustomItemName('');
 };
 
@@ -242,10 +320,20 @@ const handleEditCustomItem = (
   item: Equipment | Item | Skill,
   type: 'equipment' | 'item' | 'skill',
 ) => {
-  customItemFormRef.value?.fillFormByItem(item, type);
-  toastr.info(
-    `已回填自定义${type === 'equipment' ? '装备' : type === 'item' ? '道具' : '技能'}「${item.name}」`,
-  );
+  const fillForm = () => {
+    customItemFormRef.value?.fillFormByItem(item, type);
+    toastr.info(
+      `已回填自定义${type === 'equipment' ? '装备' : type === 'item' ? '道具' : '技能'}「${item.name}」`,
+    );
+  };
+
+  if (isMobileViewport.value) {
+    activeUtilityPanel.value = 'custom';
+    nextTick(fillForm);
+    return;
+  }
+
+  fillForm();
 };
 </script>
 
@@ -281,14 +369,12 @@ const handleEditCustomItem = (
         </CategorySelectionLayout>
       </div>
 
-      <!-- 自定义物品区域 -->
-      <div class="custom-area">
+      <div v-if="!isMobileViewport" class="custom-area">
         <MoneyExchangeCard />
         <CustomItemForm ref="customItemFormRef" @add="handleAddCustomItem" />
       </div>
 
-      <!-- 下半部分：已选面板 -->
-      <div class="summary-area">
+      <div v-if="!isMobileViewport" class="summary-area">
         <SelectedPanel
           :equipments="characterStore.selectedEquipments"
           :items="characterStore.selectedItems"
@@ -296,7 +382,73 @@ const handleEditCustomItem = (
           @remove="handleRemoveFromPanel"
           @edit-custom="handleEditCustomItem"
           @clear="handleClearAll"
+          @library-updated="refreshLibraryData"
         />
+      </div>
+
+      <div v-if="isMobileViewport" class="mobile-utility-dock">
+        <button
+          class="dock-button"
+          :class="{ active: activeUtilityPanel === 'money' }"
+          @click="toggleUtilityPanel('money')"
+        >
+          <i class="fa-solid fa-coins" aria-hidden="true"></i>
+          <span>金钱</span>
+          <strong>{{ characterStore.character.money }}G</strong>
+        </button>
+        <button
+          class="dock-button"
+          :class="{ active: activeUtilityPanel === 'custom' }"
+          @click="toggleUtilityPanel('custom')"
+        >
+          <i class="fa-solid fa-sparkles" aria-hidden="true"></i>
+          <span>自定义</span>
+        </button>
+        <button
+          class="dock-button"
+          :class="{ active: activeUtilityPanel === 'selected' }"
+          @click="toggleUtilityPanel('selected')"
+        >
+          <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+          <span>已选</span>
+          <strong>{{ selectedTotalCount }}</strong>
+        </button>
+      </div>
+
+      <div
+        v-if="isMobileViewport && activeUtilityPanel !== 'none'"
+        class="mobile-utility-sheet"
+      >
+        <div class="sheet-header">
+          <h3>{{ mobilePanelTitle }}</h3>
+          <button class="sheet-close" aria-label="关闭面板" @click="closeUtilityPanel">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="sheet-body">
+          <MoneyExchangeCard
+            v-if="activeUtilityPanel === 'money'"
+            default-expanded
+            force-expanded
+          />
+          <CustomItemForm
+            v-if="activeUtilityPanel === 'custom'"
+            ref="customItemFormRef"
+            default-expanded
+            hide-header
+            @add="handleAddCustomItem"
+          />
+          <SelectedPanel
+            v-if="activeUtilityPanel === 'selected'"
+            :equipments="characterStore.selectedEquipments"
+            :items="characterStore.selectedItems"
+            :skills="characterStore.selectedSkills"
+            @remove="handleRemoveFromPanel"
+            @edit-custom="handleEditCustomItem"
+            @clear="handleClearAll"
+            @library-updated="refreshLibraryData"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -331,13 +483,149 @@ const handleEditCustomItem = (
 
 // 响应式设计
 @media (max-width: 768px) {
-  .selections-container {
-    gap: var(--spacing-md);
+  .selections {
+    height: 100%;
+    min-height: 0;
   }
 
-  .summary-area {
-    height: auto;
-    max-height: none;
+  .selections-container {
+    position: relative;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    height: 100%;
+    min-height: 0;
+    gap: var(--spacing-xs);
+    overflow: hidden;
+  }
+
+  .selection-area {
+    flex: 1 1 0;
+    min-height: 0;
+    min-width: 0;
+    max-width: 100%;
+
+    :deep(.category-tabs) {
+      flex: none;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    :deep(.category-selection-layout) {
+      flex: 1 1 0;
+      height: auto;
+      max-height: none;
+      min-width: 0;
+      max-width: 100%;
+    }
+  }
+
+  .mobile-utility-dock {
+    min-width: 0;
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-xs);
+    padding-top: var(--spacing-xs);
+    border-top: 1px solid var(--border-color);
+  }
+
+  .dock-button {
+    min-width: 0;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 4px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--input-bg);
+    color: var(--title-color);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+
+    i {
+      color: var(--accent-color);
+    }
+
+    span,
+    strong {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    strong {
+      color: var(--accent-color);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+    }
+
+    &.active {
+      background: var(--accent-color);
+      border-color: var(--accent-color);
+      color: var(--primary-bg);
+
+      i,
+      strong {
+        color: currentColor;
+      }
+    }
+  }
+
+  .mobile-utility-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 50px;
+    z-index: 30;
+    max-height: calc(100% - 58px);
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--card-bg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+
+  .sheet-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--input-bg);
+
+    h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-family: var(--font-body);
+      letter-spacing: 0;
+    }
+  }
+
+  .sheet-close {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--card-bg);
+    color: var(--title-color);
+    cursor: pointer;
+  }
+
+  .sheet-body {
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--spacing-xs);
   }
 }
 </style>

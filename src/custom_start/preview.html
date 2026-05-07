@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>custom_start local preview</title>
+    <link
+      rel="stylesheet"
+      href="https://testingcf.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.7.2/css/all.min.css"
+    />
+    <style>
+      #preview-error {
+        position: fixed;
+        inset: 16px;
+        z-index: 2147483647;
+        display: none;
+        overflow: auto;
+        padding: 16px;
+        border: 1px solid #d4c4b0;
+        border-radius: 8px;
+        background: #fff9f0;
+        color: #3a3a3a;
+        font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+        line-height: 1.6;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      #preview-error h1 {
+        margin: 0 0 8px;
+        color: #5c4033;
+        font-size: 20px;
+      }
+
+      #preview-error code {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: #f0e6d2;
+        color: #5c4033;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="preview-error"></div>
+    <div id="app"></div>
+
+    <script type="module">
+      const DEFAULT_ROUTE = '/basic';
+
+      const showError = (title, details = '') => {
+        const box = document.querySelector('#preview-error');
+        box.style.display = 'block';
+        box.innerHTML = `
+          <h1>${title}</h1>
+          <p>${details}</p>
+          <p>请在仓库根目录运行：<code>python -m http.server 8765</code></p>
+          <p>然后打开：<code>http://127.0.0.1:8765/src/custom_start/preview.html</code></p>
+        `;
+      };
+
+      if (location.protocol === 'file:') {
+        showError(
+          '需要通过本地 HTTP 服务打开',
+          '浏览器会拦截 file:// 页面读取 dist/custom_start/index.html，所以不能直接双击预览。',
+        );
+        throw new Error('Open preview.html through a local HTTP server.');
+      }
+
+      const importMap = {
+        vue: 'https://testingcf.jsdelivr.net/npm/vue@3.5.30/+esm',
+        vueRouter: 'https://testingcf.jsdelivr.net/npm/vue-router@5.0.4/+esm',
+        lodash: 'https://testingcf.jsdelivr.net/npm/lodash@4.17.23/+esm',
+      };
+
+      const [VueNS, VueRouterNS, lodashModule] = await Promise.all([
+        import(importMap.vue),
+        import(importMap.vueRouter),
+        import(importMap.lodash),
+      ]);
+
+      window.Vue = VueNS;
+      window.VueRouter = {
+        ...VueRouterNS,
+        createMemoryHistory: base => VueRouterNS.createWebHashHistory(base),
+        createRouter: options => {
+          const router = VueRouterNS.createRouter(options);
+          window.__customStartRouter = router;
+          return router;
+        },
+      };
+      window._ = lodashModule.default || lodashModule;
+
+      const toast = type => message => {
+        console[type === 'error' ? 'error' : type === 'warning' ? 'warn' : 'log'](message);
+      };
+      window.toastr = {
+        info: toast('info'),
+        success: toast('success'),
+        warning: toast('warning'),
+        error: toast('error'),
+      };
+
+      window.$ = callback => {
+        if (typeof callback === 'function') {
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', callback, { once: true });
+          } else {
+            callback();
+          }
+        }
+        return {
+          on() {},
+          ready(cb) {
+            if (cb) cb();
+          },
+        };
+      };
+
+      const previewStorageKey = 'custom_start_preview_variables';
+      const readPreviewVariables = () => {
+        try {
+          return JSON.parse(localStorage.getItem(previewStorageKey) || '{}');
+        } catch {
+          return {};
+        }
+      };
+      const writePreviewVariables = value => {
+        localStorage.setItem(previewStorageKey, JSON.stringify(value));
+      };
+
+      window.getVariables = () => readPreviewVariables();
+      window.insertOrAssignVariables = value => {
+        writePreviewVariables(_.merge({}, readPreviewVariables(), value));
+      };
+
+      const previewWorldbookStorageKey = 'custom_start_preview_worldbooks';
+      const readPreviewWorldbooks = () => {
+        try {
+          return JSON.parse(localStorage.getItem(previewWorldbookStorageKey) || '{}');
+        } catch {
+          return {};
+        }
+      };
+      const writePreviewWorldbooks = value => {
+        localStorage.setItem(previewWorldbookStorageKey, JSON.stringify(value));
+      };
+      window.getWorldbookNames = () => Object.keys(readPreviewWorldbooks());
+      window.getWorldbook = async bookName => {
+        const books = readPreviewWorldbooks();
+        if (!books[bookName]) {
+          throw new Error(`Worldbook not found: ${bookName}`);
+        }
+        return _.cloneDeep(books[bookName]);
+      };
+      window.createWorldbook = async (bookName, entries = []) => {
+        const books = readPreviewWorldbooks();
+        const didCreate = !books[bookName];
+        books[bookName] = _.cloneDeep(entries);
+        writePreviewWorldbooks(books);
+        return didCreate;
+      };
+      window.createOrReplaceWorldbook = async (bookName, entries = []) => {
+        const books = readPreviewWorldbooks();
+        const didCreate = !books[bookName];
+        books[bookName] = _.cloneDeep(entries);
+        writePreviewWorldbooks(books);
+        return didCreate;
+      };
+      window.updateWorldbookWith = async (bookName, updater) => {
+        const books = readPreviewWorldbooks();
+        const current = _.cloneDeep(books[bookName] || []);
+        const next = await updater(current);
+        books[bookName] = _.cloneDeep(next);
+        writePreviewWorldbooks(books);
+        return _.cloneDeep(next);
+      };
+      window.waitGlobalInitialized = async () => true;
+      window.Mvu = {
+        getMvuData: () => ({ stat_data: {} }),
+        replaceMvuData: async data => {
+          window.__customStartPreviewMvuData = data;
+          console.log('[preview] Mvu.replaceMvuData', data);
+        },
+      };
+      window.createChatMessages = async messages => {
+        window.__customStartPreviewMessages = messages;
+        console.log('[preview] createChatMessages', messages);
+      };
+      window.triggerSlash = async command => {
+        console.log('[preview] triggerSlash', command);
+      };
+
+      if (!location.hash) {
+        location.hash = `#${DEFAULT_ROUTE}`;
+      }
+
+      const bundleCandidates = [
+        new URL('./index.html', location.href),
+        new URL('../../dist/custom_start/index.html', location.href),
+      ];
+
+      const loadBundleHtml = async () => {
+        const errors = [];
+        for (const url of bundleCandidates) {
+          try {
+            const response = await fetch(url, { cache: 'no-store' });
+            if (!response.ok) {
+              errors.push(`${url.pathname}: ${response.status}`);
+              continue;
+            }
+
+            const html = await response.text();
+            if (!/<script\s+type=["']module["']/.test(html) || !/<style>/.test(html)) {
+              errors.push(`${url.pathname}: 不是已构建的 dist HTML`);
+              continue;
+            }
+            return html;
+          } catch (error) {
+            errors.push(`${url.pathname}: ${error.message}`);
+          }
+        }
+
+        throw new Error(errors.join('\n'));
+      };
+
+      const bundledHtml = await loadBundleHtml().catch(error => {
+        showError(
+          '没有找到可预览的构建产物',
+          `请先运行构建命令生成 dist/custom_start/index.html。<br /><br /><code>${error.message}</code>`,
+        );
+        throw error;
+      });
+
+      const styleMatch = bundledHtml.match(/<style>([\s\S]*?)<\/style>/i);
+      const scriptMatch = bundledHtml.match(/<script\s+type=["']module["']>([\s\S]*?)<\/script>/i);
+
+      const style = document.createElement('style');
+      style.textContent = styleMatch[1];
+      document.head.append(style);
+
+      await import(
+        URL.createObjectURL(new Blob([scriptMatch[1]], { type: 'text/javascript' }))
+      );
+    </script>
+  </body>
+</html>

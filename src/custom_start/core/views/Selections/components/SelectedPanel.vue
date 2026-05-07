@@ -1,6 +1,15 @@
 <script setup lang="ts">
+import ConfirmModal from '../../../components/ConfirmModal.vue';
 import { useStorePoints } from '../../../composables/use-store-points';
 import type { Equipment, Item, Skill } from '../../../types';
+import {
+  createLibraryEntries,
+  downloadContentPack,
+  downloadWorldbookEntries,
+  importContentPackFromFile,
+  upsertLibraryEntries,
+  type LibraryEntry,
+} from '../../../utils/custom-library';
 
 interface Props {
   equipments: Equipment[];
@@ -12,24 +21,195 @@ interface Emits {
   (e: 'remove', item: Equipment | Item | Skill, type: 'equipment' | 'item' | 'skill'): void;
   (e: 'edit-custom', item: Equipment | Item | Skill, type: 'equipment' | 'item' | 'skill'): void;
   (e: 'clear'): void;
+  (e: 'library-updated'): void;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const { availablePoints, totalPoints, consumedPoints } = useStorePoints();
+type SelectionType = 'equipment' | 'item' | 'skill';
 
-const handleRemove = (item: Equipment | Item | Skill, type: 'equipment' | 'item' | 'skill') => {
-  emit('remove', item, type);
-};
+interface BatchEntry {
+  key: string;
+  item: Equipment | Item | Skill;
+  type: SelectionType;
+}
+
+const isBatchMode = ref(false);
+const selectedBatchKeys = ref<string[]>([]);
+const showBatchDeleteConfirm = ref(false);
+const showClearConfirm = ref(false);
+
+const createBatchKey = (item: Equipment | Item | Skill, type: SelectionType) =>
+  `${type}:${item.name}`;
 
 const handleEditCustom = (item: Equipment | Item | Skill, type: 'equipment' | 'item' | 'skill') => {
   emit('edit-custom', item, type);
 };
 
-const handleClear = () => {
-  emit('clear');
+const createBatchEntry = (
+  item: Equipment | Item | Skill,
+  type: SelectionType,
+): BatchEntry => ({
+  key: createBatchKey(item, type),
+  item,
+  type,
+});
+
+const allBatchEntries = computed<BatchEntry[]>(() => [
+  ...props.equipments.map(item => createBatchEntry(item, 'equipment')),
+  ...props.items.map(item => createBatchEntry(item, 'item')),
+  ...props.skills.map(item => createBatchEntry(item, 'skill')),
+]);
+
+const selectedBatchKeySet = computed(() => new Set(selectedBatchKeys.value));
+
+const selectedBatchEntries = computed(() =>
+  allBatchEntries.value.filter(entry => selectedBatchKeySet.value.has(entry.key)),
+);
+
+const selectedBatchCount = computed(() => selectedBatchEntries.value.length);
+
+const buildSelectedLibraryEntries = (): LibraryEntry[] =>
+  createLibraryEntries(
+    selectedBatchEntries.value.map(entry => ({
+      type: entry.type,
+      item: entry.item,
+    })),
+  );
+
+const toggleBatchMode = () => {
+  if (totalCount.value === 0) {
+    toastr.warning('没有可批量操作的项目');
+    return;
+  }
+
+  isBatchMode.value = !isBatchMode.value;
+  selectedBatchKeys.value = [];
 };
+
+const isBatchItemSelected = (item: Equipment | Item | Skill, type: SelectionType) => {
+  return selectedBatchKeySet.value.has(createBatchKey(item, type));
+};
+
+const toggleBatchItem = (item: Equipment | Item | Skill, type: SelectionType) => {
+  const key = createBatchKey(item, type);
+  const nextKeys = new Set(selectedBatchKeys.value);
+
+  if (nextKeys.has(key)) {
+    nextKeys.delete(key);
+  } else {
+    nextKeys.add(key);
+  }
+
+  selectedBatchKeys.value = Array.from(nextKeys);
+};
+
+const handleItemClick = (item: Equipment | Item | Skill, type: SelectionType) => {
+  if (isBatchMode.value) {
+    toggleBatchItem(item, type);
+    return;
+  }
+
+  if (item.isCustom) {
+    handleEditCustom(item, type);
+  }
+};
+
+const handleClear = () => {
+  showClearConfirm.value = true;
+};
+
+const requestBatchDelete = () => {
+  if (selectedBatchCount.value === 0) {
+    toastr.warning('请先选择要删除的项目');
+    return;
+  }
+
+  showBatchDeleteConfirm.value = true;
+};
+
+const confirmBatchDelete = () => {
+  const deleteCount = selectedBatchCount.value;
+
+  selectedBatchEntries.value.forEach(entry => {
+    emit('remove', entry.item, entry.type);
+  });
+
+  selectedBatchKeys.value = [];
+  isBatchMode.value = false;
+  showBatchDeleteConfirm.value = false;
+  toastr.info(`已删除 ${deleteCount} 个项目`);
+};
+
+const cancelBatchDelete = () => {
+  showBatchDeleteConfirm.value = false;
+};
+
+const saveSelectedToLibrary = () => {
+  if (selectedBatchCount.value === 0) {
+    toastr.warning('请先选择要存入素材库的项目');
+    return;
+  }
+
+  const savedCount = upsertLibraryEntries(buildSelectedLibraryEntries());
+  emit('library-updated');
+  toastr.success(`已存入素材库 ${savedCount} 个项目，之后可直接复用`);
+};
+
+const exportSelectedJson = () => {
+  if (selectedBatchCount.value === 0) {
+    toastr.warning('请先选择要导出的项目');
+    return;
+  }
+
+  downloadContentPack(buildSelectedLibraryEntries());
+};
+
+const exportSelectedWorldbook = () => {
+  if (selectedBatchCount.value === 0) {
+    toastr.warning('请先选择要导出的项目');
+    return;
+  }
+
+  downloadWorldbookEntries(buildSelectedLibraryEntries());
+};
+
+const importJsonToLibrary = async () => {
+  try {
+    const importedCount = await importContentPackFromFile();
+    if (importedCount > 0) {
+      emit('library-updated');
+    }
+  } catch (error) {
+    if ((error as Error).message !== '用户取消') {
+      toastr.error('导入素材失败：JSON 格式不正确');
+    }
+  }
+};
+
+const confirmClear = () => {
+  emit('clear');
+  showClearConfirm.value = false;
+};
+
+const cancelClear = () => {
+  showClearConfirm.value = false;
+};
+
+watch(
+  allBatchEntries,
+  entries => {
+    const validKeys = new Set(entries.map(entry => entry.key));
+    selectedBatchKeys.value = selectedBatchKeys.value.filter(key => validKeys.has(key));
+
+    if (entries.length === 0) {
+      isBatchMode.value = false;
+    }
+  },
+  { deep: true },
+);
 
 const totalCount = computed(() => {
   return props.equipments.length + props.items.length + props.skills.length;
@@ -45,11 +225,26 @@ const totalCost = computed(() =>
 </script>
 
 <template>
-  <div class="selected-panel">
+  <div class="selected-panel" :class="{ 'batch-mode-active': isBatchMode }">
     <div class="panel-header">
       <div class="header-top">
         <h3 class="title">已选项目</h3>
-        <div class="count-badge">{{ totalCount }}</div>
+        <div class="header-actions">
+          <button
+            v-if="totalCount > 0"
+            class="batch-toggle"
+            :class="{ active: isBatchMode }"
+            @click="toggleBatchMode"
+          >
+            <i
+              class="fa-solid"
+              :class="isBatchMode ? 'fa-check' : 'fa-list-check'"
+              aria-hidden="true"
+            ></i>
+            {{ isBatchMode ? '完成' : '批量操作' }}
+          </button>
+          <div class="count-badge">{{ totalCount }}</div>
+        </div>
       </div>
       <div class="points-info">
         <span class="points-label">转生点数：</span>
@@ -76,9 +271,19 @@ const totalCost = computed(() =>
             v-for="item in equipments"
             :key="item.name"
             class="selected-item"
-            :class="{ 'is-custom': item.isCustom }"
-            @click="item.isCustom && handleEditCustom(item, 'equipment')"
+            :class="{
+              'is-custom': item.isCustom,
+              'batch-mode': isBatchMode,
+              selected: isBatchItemSelected(item, 'equipment'),
+            }"
+            @click="handleItemClick(item, 'equipment')"
           >
+            <span v-if="isBatchMode" class="batch-check" aria-hidden="true">
+              <i
+                class="fa-solid"
+                :class="isBatchItemSelected(item, 'equipment') ? 'fa-check' : 'fa-plus'"
+              ></i>
+            </span>
             <div class="item-info">
               <div class="item-name">
                 <span class="name-text">{{ item.name }}</span>
@@ -88,9 +293,6 @@ const totalCost = computed(() =>
               </div>
               <div class="item-cost">{{ item.cost }} 点</div>
             </div>
-            <button class="remove-btn" @click.stop="handleRemove(item, 'equipment')">
-              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-            </button>
           </div>
         </div>
       </div>
@@ -109,9 +311,19 @@ const totalCost = computed(() =>
             v-for="item in items"
             :key="item.name"
             class="selected-item"
-            :class="{ 'is-custom': item.isCustom }"
-            @click="item.isCustom && handleEditCustom(item, 'item')"
+            :class="{
+              'is-custom': item.isCustom,
+              'batch-mode': isBatchMode,
+              selected: isBatchItemSelected(item, 'item'),
+            }"
+            @click="handleItemClick(item, 'item')"
           >
+            <span v-if="isBatchMode" class="batch-check" aria-hidden="true">
+              <i
+                class="fa-solid"
+                :class="isBatchItemSelected(item, 'item') ? 'fa-check' : 'fa-plus'"
+              ></i>
+            </span>
             <div class="item-info">
               <div class="item-name">
                 <span class="name-text">{{ item.name }}</span>
@@ -122,9 +334,6 @@ const totalCost = computed(() =>
               </div>
               <div class="item-cost">{{ item.cost }} 点</div>
             </div>
-            <button class="remove-btn" @click.stop="handleRemove(item, 'item')">
-              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-            </button>
           </div>
         </div>
       </div>
@@ -143,9 +352,19 @@ const totalCost = computed(() =>
             v-for="item in skills"
             :key="item.name"
             class="selected-item"
-            :class="{ 'is-custom': item.isCustom }"
-            @click="item.isCustom && handleEditCustom(item, 'skill')"
+            :class="{
+              'is-custom': item.isCustom,
+              'batch-mode': isBatchMode,
+              selected: isBatchItemSelected(item, 'skill'),
+            }"
+            @click="handleItemClick(item, 'skill')"
           >
+            <span v-if="isBatchMode" class="batch-check" aria-hidden="true">
+              <i
+                class="fa-solid"
+                :class="isBatchItemSelected(item, 'skill') ? 'fa-check' : 'fa-plus'"
+              ></i>
+            </span>
             <div class="item-info">
               <div class="item-name">
                 <span class="name-text">{{ item.name }}</span>
@@ -155,9 +374,6 @@ const totalCost = computed(() =>
               </div>
               <div class="item-cost">{{ item.cost }} 点</div>
             </div>
-            <button class="remove-btn" @click.stop="handleRemove(item, 'skill')">
-              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-            </button>
           </div>
         </div>
       </div>
@@ -170,12 +386,68 @@ const totalCost = computed(() =>
     </div>
 
     <div class="panel-footer">
-      <div class="total-info">
-        <span class="label">总消耗：</span>
-        <span class="value">{{ totalCost }} 点</span>
+      <div v-if="isBatchMode" class="batch-footer">
+        <div class="batch-status">
+          <span>已选</span>
+          <strong>{{ selectedBatchCount }}</strong>
+        </div>
+        <div class="batch-actions">
+          <button class="batch-action danger" :disabled="selectedBatchCount === 0" @click="requestBatchDelete">
+            <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+            删除
+          </button>
+          <button class="batch-action" :disabled="selectedBatchCount === 0" @click="exportSelectedJson">
+            <i class="fa-solid fa-file-export" aria-hidden="true"></i>
+            JSON
+          </button>
+          <button class="batch-action" :disabled="selectedBatchCount === 0" @click="saveSelectedToLibrary">
+            <i class="fa-solid fa-box-archive" aria-hidden="true"></i>
+            素材库
+          </button>
+          <button
+            class="batch-action"
+            :disabled="selectedBatchCount === 0"
+            @click="exportSelectedWorldbook"
+          >
+            <i class="fa-solid fa-book" aria-hidden="true"></i>
+            世界书
+          </button>
+          <button class="batch-action" @click="importJsonToLibrary">
+            <i class="fa-solid fa-file-import" aria-hidden="true"></i>
+            导入
+          </button>
+        </div>
       </div>
-      <button v-if="totalCount > 0" class="clear-btn" @click="handleClear">清空全部</button>
+      <template v-else>
+        <div class="total-info">
+          <span class="label">总消耗：</span>
+          <span class="value">{{ totalCost }} 点</span>
+        </div>
+        <button v-if="totalCount > 0" class="clear-btn" @click="handleClear">清空全部</button>
+      </template>
     </div>
+
+    <ConfirmModal
+      :visible="showBatchDeleteConfirm"
+      title="确认批量删除"
+      :message="`确定要删除已选的 ${selectedBatchCount} 个项目吗？此操作不可撤销。`"
+      confirm-text="删除所选"
+      cancel-text="取消"
+      type="danger"
+      @confirm="confirmBatchDelete"
+      @cancel="cancelBatchDelete"
+    />
+
+    <ConfirmModal
+      :visible="showClearConfirm"
+      title="确认清空全部"
+      message="确定要清空所有已选装备、道具和技能吗？此操作不可撤销。"
+      confirm-text="清空全部"
+      cancel-text="取消"
+      type="danger"
+      @confirm="confirmClear"
+      @cancel="cancelClear"
+    />
   </div>
 </template>
 
@@ -199,6 +471,7 @@ const totalCost = computed(() =>
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: var(--spacing-sm);
     }
 
     .title {
@@ -206,6 +479,45 @@ const totalCost = computed(() =>
       margin: 0;
       color: var(--title-color);
       font-weight: 700;
+    }
+
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--spacing-xs);
+      flex: none;
+    }
+
+    .batch-toggle {
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px var(--spacing-sm);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: var(--input-bg);
+      color: var(--title-color);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      i {
+        color: var(--accent-color);
+      }
+
+      &:hover,
+      &.active {
+        background: var(--accent-color);
+        border-color: var(--accent-color);
+        color: var(--primary-bg);
+
+        i {
+          color: currentColor;
+        }
+      }
     }
 
     .count-badge {
@@ -305,6 +617,7 @@ const totalCost = computed(() =>
 
       .selected-item {
         display: flex;
+        gap: var(--spacing-sm);
         justify-content: space-between;
         align-items: center;
         padding: var(--spacing-sm);
@@ -316,6 +629,36 @@ const totalCost = computed(() =>
         &:hover {
           border-color: var(--accent-color);
           box-shadow: var(--shadow-sm);
+        }
+
+        &.batch-mode {
+          cursor: pointer;
+        }
+
+        &.selected {
+          background: rgba(212, 175, 55, 0.14);
+          border-color: var(--accent-color);
+          box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.2);
+
+          .batch-check {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: var(--primary-bg);
+          }
+        }
+
+        .batch-check {
+          flex: none;
+          width: 28px;
+          height: 28px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-sm);
+          background: var(--card-bg);
+          color: var(--text-light);
+          font-size: 0.82rem;
         }
 
         .item-info {
@@ -382,24 +725,6 @@ const totalCost = computed(() =>
           }
         }
 
-        .remove-btn {
-          width: 24px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--error-color);
-          color: white;
-          border: none;
-          border-radius: 50%;
-          cursor: pointer;
-          margin-left: var(--spacing-sm);
-          font-size: 0.75rem;
-
-          &:hover {
-            background: #b71c1c;
-          }
-        }
       }
     }
 
@@ -468,6 +793,89 @@ const totalCost = computed(() =>
         box-shadow: var(--shadow-sm);
       }
     }
+
+    .batch-footer {
+      width: 100%;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .batch-status {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      color: var(--text-light);
+      font-size: 0.9rem;
+
+      strong {
+        min-width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--accent-color);
+        color: var(--primary-bg);
+        border-radius: 50%;
+        font-family: var(--font-mono);
+      }
+    }
+
+    .batch-actions {
+      min-width: 0;
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--spacing-xs);
+      flex-wrap: wrap;
+    }
+
+    .batch-action {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px var(--spacing-sm);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: var(--input-bg);
+      color: var(--title-color);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      i {
+        color: var(--accent-color);
+      }
+
+      &:hover:not(:disabled) {
+        border-color: var(--accent-color);
+        box-shadow: var(--shadow-sm);
+      }
+
+      &.danger {
+        background: rgba(211, 47, 47, 0.08);
+        border-color: rgba(211, 47, 47, 0.3);
+        color: var(--error-color);
+
+        i {
+          color: currentColor;
+        }
+
+        &:hover:not(:disabled) {
+          background: var(--error-color);
+          border-color: var(--error-color);
+          color: white;
+        }
+      }
+
+      &:disabled {
+        opacity: 0.48;
+        cursor: not-allowed;
+      }
+    }
   }
 }
 
@@ -496,12 +904,25 @@ const totalCost = computed(() =>
 @media (max-width: 768px) {
   .selected-panel {
     max-height: none;
+    border-width: 1px;
+    border-radius: var(--radius-md);
 
     .panel-header {
-      padding: var(--spacing-md);
+      padding: var(--spacing-sm);
+      border-bottom: 1px solid var(--border-color);
 
       .title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
+      }
+
+      .header-actions {
+        gap: 4px;
+      }
+
+      .batch-toggle {
+        min-height: 30px;
+        padding: 5px 7px;
+        font-size: 0.76rem;
       }
 
       .count-badge {
@@ -509,10 +930,24 @@ const totalCost = computed(() =>
         height: 28px;
         font-size: 0.9rem;
       }
+
+      .points-info {
+        flex-wrap: wrap;
+        font-size: 0.8rem;
+
+        .points-value {
+          font-size: 0.95rem;
+        }
+
+        .points-consumed {
+          font-size: 0.75rem;
+        }
+      }
     }
 
     .panel-body {
       padding: var(--spacing-md);
+      max-height: 260px;
 
       .section {
         .section-title {
@@ -521,6 +956,12 @@ const totalCost = computed(() =>
 
         .selected-item {
           padding: var(--spacing-xs) var(--spacing-sm);
+          gap: var(--spacing-xs);
+
+          .batch-check {
+            width: 30px;
+            height: 30px;
+          }
 
           .item-info {
             .item-name {
@@ -532,10 +973,6 @@ const totalCost = computed(() =>
             }
           }
 
-          .remove-btn {
-            width: 24px;
-            height: 24px;
-          }
         }
       }
 
@@ -553,25 +990,49 @@ const totalCost = computed(() =>
     }
 
     .panel-footer {
-      padding: var(--spacing-md);
-      flex-direction: column;
-      align-items: stretch;
+      padding: var(--spacing-sm);
+      flex-direction: row;
+      align-items: center;
+      border-top: none;
 
       .total-info {
-        justify-content: center;
+        justify-content: flex-start;
+        flex: 1;
 
         .label {
-          font-size: 0.9rem;
+          font-size: 0.8rem;
         }
 
         .value {
-          font-size: 1.1rem;
+          font-size: 0.95rem;
         }
       }
 
       .clear-btn {
-        width: 100%;
-        font-size: 0.85rem;
+        width: auto;
+        min-height: 34px;
+        padding: 6px var(--spacing-sm);
+        font-size: 0.8rem;
+      }
+
+      .batch-footer {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+      }
+
+      .batch-status {
+        justify-content: space-between;
+      }
+
+      .batch-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .batch-action {
+        min-height: 36px;
+        padding: 6px 4px;
+        font-size: 0.76rem;
       }
     }
   }
