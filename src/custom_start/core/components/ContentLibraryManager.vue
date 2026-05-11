@@ -3,11 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 
 import ConfirmModal from './ConfirmModal.vue';
 import type { Equipment, Item, Rarity, Skill } from '../types';
-import {
-  RARITY_OPTIONS,
-  getRarityColor,
-  getRarityLabel,
-} from '../utils/form-options';
+import { RARITY_OPTIONS, getRarityColor, getRarityLabel } from '../utils/form-options';
 import {
   configureLibraryWorldbook,
   createLibraryEntries,
@@ -329,7 +325,11 @@ onMounted(refreshEntries);
           type="text"
           placeholder="输入用于存储自定义内容的世界书名称"
         />
-        <button class="manager-button primary" :disabled="isWorldbookBusy" @click="saveWorldbookName">
+        <button
+          class="manager-button primary"
+          :disabled="isWorldbookBusy"
+          @click="saveWorldbookName"
+        >
           <i class="fa-solid fa-link" aria-hidden="true"></i>
           连接/保存
         </button>
@@ -339,7 +339,9 @@ onMounted(refreshEntries);
         </button>
       </div>
       <p class="helper-text">
-        默认使用 custom_start_database；不会绑定角色世界书、聊天世界书或全局世界书。内容会自动写入该世界书里的隐藏 JSON 条目。
+        默认使用
+        custom_start_database；不会绑定角色世界书、聊天世界书或全局世界书。内容会自动写入该世界书里的隐藏
+        JSON 条目。
       </p>
     </section>
 
@@ -376,7 +378,12 @@ onMounted(refreshEntries);
         </label>
         <label v-if="type === 'skill'" class="field">
           <span>技能消耗</span>
-          <input v-model="form.consume" class="text-input" type="text" placeholder="例如：[动作: 50 SP]" />
+          <input
+            v-model="form.consume"
+            class="text-input"
+            type="text"
+            placeholder="例如：[动作: 50 SP]"
+          />
         </label>
       </div>
 
@@ -419,10 +426,18 @@ onMounted(refreshEntries);
       <div class="field">
         <span>效果</span>
         <div class="effect-list">
-          <div v-for="([effectKey, effectValue], index) in Object.entries(form.effect)" :key="effectKey" class="effect-row">
+          <div
+            v-for="([effectKey, effectValue], index) in Object.entries(form.effect)"
+            :key="effectKey"
+            class="effect-row"
+          >
             <strong>{{ index + 1 }}. {{ effectKey }}</strong>
             <span>{{ effectValue }}</span>
-            <button class="icon-button danger" aria-label="删除效果" @click="removeEffect(effectKey)">
+            <button
+              class="icon-button danger"
+              aria-label="删除效果"
+              @click="removeEffect(effectKey)"
+            >
               <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
           </div>
@@ -510,7 +525,9 @@ onMounted(refreshEntries);
               <span>{{ formatTime(entry.updatedAt) }}</span>
             </div>
             <div v-if="entry.data.tag?.length" class="tag-list compact">
-              <span v-for="tag in entry.data.tag" :key="tag" class="tag-chip passive">{{ tag }}</span>
+              <span v-for="tag in entry.data.tag" :key="tag" class="tag-chip passive">{{
+                tag
+              }}</span>
             </div>
             <div v-if="getEffectRows(entry.data).length" class="effect-preview">
               <span v-for="[effectKey, effectValue] in getEffectRows(entry.data)" :key="effectKey">

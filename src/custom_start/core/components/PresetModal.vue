@@ -260,7 +260,12 @@ const cancelImport = () => {
         </div>
         <!-- 内容区域 -->
         <div class="modal-content">
-          <div v-if="showSaveSection" class="manage-tabs" role="tablist" aria-label="管理自定义内容">
+          <div
+            v-if="showSaveSection"
+            class="manage-tabs"
+            role="tablist"
+            aria-label="管理自定义内容"
+          >
             <button
               v-for="section in manageSections"
               :key="section.key"
@@ -276,119 +281,116 @@ const cancelImport = () => {
           </div>
 
           <div v-if="showPresetManager" class="preset-manager-section">
-          <!-- 保存新预设区域 -->
-          <div v-if="showSaveSection" class="save-section">
-            <h3 class="section-title"><i class="fa-solid fa-floppy-disk"></i> 保存当前配置</h3>
-            <div class="save-row">
-              <input
-                v-model="newPresetName"
-                type="text"
-                class="preset-input"
-                placeholder="输入预设名称..."
-                @keyup.enter="handleSavePreset"
-              />
-              <button
-                class="action-button save-button"
-                :class="{ confirm: presetToOverwrite === newPresetName.trim() }"
-                @click="handleSavePreset"
-              >
-                <i
-                  class="fa-solid"
-                  :class="presetToOverwrite === newPresetName.trim() ? 'fa-check' : 'fa-save'"
-                ></i>
-                {{ presetToOverwrite === newPresetName.trim() ? '确认覆盖' : '保存预设' }}
-              </button>
+            <!-- 保存新预设区域 -->
+            <div v-if="showSaveSection" class="save-section">
+              <h3 class="section-title"><i class="fa-solid fa-floppy-disk"></i> 保存当前配置</h3>
+              <div class="save-row">
+                <input
+                  v-model="newPresetName"
+                  type="text"
+                  class="preset-input"
+                  placeholder="输入预设名称..."
+                  @keyup.enter="handleSavePreset"
+                />
+                <button
+                  class="action-button save-button"
+                  :class="{ confirm: presetToOverwrite === newPresetName.trim() }"
+                  @click="handleSavePreset"
+                >
+                  <i
+                    class="fa-solid"
+                    :class="presetToOverwrite === newPresetName.trim() ? 'fa-check' : 'fa-save'"
+                  ></i>
+                  {{ presetToOverwrite === newPresetName.trim() ? '确认覆盖' : '保存预设' }}
+                </button>
+              </div>
             </div>
-          </div>
 
-          <!-- 导入预设区域 -->
-          <div v-if="showSaveSection" class="import-section">
-            <h3 class="section-title"><i class="fa-solid fa-file-import"></i> 导入预设</h3>
-            <div class="import-row">
-              <button class="action-button import-button" @click="handleImport">
-                <i class="fa-solid fa-upload"></i> 导入预设文件
-              </button>
-              <span class="import-hint">支持 .json 格式的预设文件</span>
+            <!-- 导入预设区域 -->
+            <div v-if="showSaveSection" class="import-section">
+              <h3 class="section-title"><i class="fa-solid fa-file-import"></i> 导入预设</h3>
+              <div class="import-row">
+                <button class="action-button import-button" @click="handleImport">
+                  <i class="fa-solid fa-upload"></i> 导入预设文件
+                </button>
+                <span class="import-hint">支持 .json 格式的预设文件</span>
+              </div>
             </div>
-          </div>
 
-          <!-- 预设列表 -->
-          <div class="list-section">
-            <div class="list-header">
-              <h3 class="section-title"><i class="fa-solid fa-list"></i> 已保存的预设</h3>
-              <button
-                v-if="presetList.length > 0 && showSaveSection"
-                class="action-button export-all-button"
-                @click="handleExportAll"
-              >
-                <i class="fa-solid fa-file-export"></i> 全部导出
-              </button>
-            </div>
-            <div v-if="presetList.length === 0" class="empty-state">
-              <i class="fa-solid fa-inbox empty-icon"></i>
-              <p>暂无保存的预设</p>
-              <p v-if="showSaveSection" class="hint">在上方输入名称保存当前配置</p>
-            </div>
-            <div v-else class="preset-list">
-              <div
-                v-for="preset in presetList"
-                :key="preset.name"
-                class="preset-item"
-                :class="{ 'delete-pending': presetToDelete === preset.name }"
-              >
-                <div class="preset-main">
-                  <div class="preset-info">
-                    <span class="preset-name">{{ preset.name }}</span>
-                    <span class="preset-time">{{ formatPresetTime(preset.updatedAt) }}</span>
+            <!-- 预设列表 -->
+            <div class="list-section">
+              <div class="list-header">
+                <h3 class="section-title"><i class="fa-solid fa-list"></i> 已保存的预设</h3>
+                <button
+                  v-if="presetList.length > 0 && showSaveSection"
+                  class="action-button export-all-button"
+                  @click="handleExportAll"
+                >
+                  <i class="fa-solid fa-file-export"></i> 全部导出
+                </button>
+              </div>
+              <div v-if="presetList.length === 0" class="empty-state">
+                <i class="fa-solid fa-inbox empty-icon"></i>
+                <p>暂无保存的预设</p>
+                <p v-if="showSaveSection" class="hint">在上方输入名称保存当前配置</p>
+              </div>
+              <div v-else class="preset-list">
+                <div
+                  v-for="preset in presetList"
+                  :key="preset.name"
+                  class="preset-item"
+                  :class="{ 'delete-pending': presetToDelete === preset.name }"
+                >
+                  <div class="preset-main">
+                    <div class="preset-info">
+                      <span class="preset-name">{{ preset.name }}</span>
+                      <span class="preset-time">{{ formatPresetTime(preset.updatedAt) }}</span>
+                    </div>
+                    <div class="preset-meta">
+                      <span class="meta-item"
+                        ><i class="fa-solid fa-user"></i>
+                        {{ preset.character.name || '未命名' }}</span
+                      >
+                      <span class="meta-item"
+                        ><i class="fa-solid fa-star"></i> Lv.{{ preset.character.level }}</span
+                      >
+                      <span class="meta-item"
+                        ><i class="fa-solid fa-shield"></i> {{ preset.equipments.length }}</span
+                      >
+                      <span class="meta-item"
+                        ><i class="fa-solid fa-wand-magic-sparkles"></i>
+                        {{ preset.skills.length }}</span
+                      >
+                      <span class="meta-item"
+                        ><i class="fa-solid fa-heart"></i> {{ preset.partners.length }}</span
+                      >
+                    </div>
                   </div>
-                  <div class="preset-meta">
-                    <span class="meta-item"
-                      ><i class="fa-solid fa-user"></i>
-                      {{ preset.character.name || '未命名' }}</span
+                  <div class="preset-actions">
+                    <button class="action-button load-button" @click="handleLoadPreset(preset)">
+                      <i class="fa-solid fa-download"></i> 加载
+                    </button>
+                    <button
+                      v-if="showSaveSection"
+                      class="action-button export-button"
+                      @click="handleExportPreset(preset)"
                     >
-                    <span class="meta-item"
-                      ><i class="fa-solid fa-star"></i> Lv.{{ preset.character.level }}</span
+                      <i class="fa-solid fa-file-export"></i> 导出
+                    </button>
+                    <button
+                      v-if="showSaveSection"
+                      class="action-button delete-button"
+                      @click="requestDeletePreset(preset.name)"
                     >
-                    <span class="meta-item"
-                      ><i class="fa-solid fa-shield"></i> {{ preset.equipments.length }}</span
-                    >
-                    <span class="meta-item"
-                      ><i class="fa-solid fa-wand-magic-sparkles"></i>
-                      {{ preset.skills.length }}</span
-                    >
-                    <span class="meta-item"
-                      ><i class="fa-solid fa-heart"></i> {{ preset.partners.length }}</span
-                    >
+                      <i class="fa-solid fa-trash"></i> 删除
+                    </button>
                   </div>
-                </div>
-                <div class="preset-actions">
-                  <button class="action-button load-button" @click="handleLoadPreset(preset)">
-                    <i class="fa-solid fa-download"></i> 加载
-                  </button>
-                  <button
-                    v-if="showSaveSection"
-                    class="action-button export-button"
-                    @click="handleExportPreset(preset)"
-                  >
-                    <i class="fa-solid fa-file-export"></i> 导出
-                  </button>
-                  <button
-                    v-if="showSaveSection"
-                    class="action-button delete-button"
-                    @click="requestDeletePreset(preset.name)"
-                  >
-                    <i class="fa-solid fa-trash"></i> 删除
-                  </button>
                 </div>
               </div>
             </div>
           </div>
-          </div>
 
-          <ContentLibraryManager
-            v-else
-            :type="activeLibraryType"
-          />
+          <ContentLibraryManager v-else :type="activeLibraryType" />
         </div>
         <!-- 底部按钮 -->
         <div class="modal-footer">

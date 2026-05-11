@@ -36,7 +36,11 @@ const emit = defineEmits<{
         <i class="fa-solid fa-dice"></i>
         <span class="button-text">Roll 点数</span>
       </button>
-      <button class="control-button preset-button" title="管理预设、武器、技能和道具" @click="emit('openPreset')">
+      <button
+        class="control-button preset-button"
+        title="管理预设、武器、技能和道具"
+        @click="emit('openPreset')"
+      >
         <i class="fa-solid fa-folder-tree"></i>
         <span class="button-text">内容管理</span>
       </button>

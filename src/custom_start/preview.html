@@ -20,7 +20,7 @@
         border-radius: 8px;
         background: #fff9f0;
         color: #3a3a3a;
-        font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+        font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         line-height: 1.6;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
       }
@@ -238,9 +238,7 @@
       style.textContent = styleMatch[1];
       document.head.append(style);
 
-      await import(
-        URL.createObjectURL(new Blob([scriptMatch[1]], { type: 'text/javascript' }))
-      );
+      await import(URL.createObjectURL(new Blob([scriptMatch[1]], { type: 'text/javascript' })));
     </script>
   </body>
 </html>
