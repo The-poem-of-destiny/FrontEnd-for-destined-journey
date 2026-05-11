@@ -3,6 +3,7 @@
  * 技能编辑器组件
  */
 import { computed, ref, watch } from 'vue';
+import ConfirmModal from '../../../components/ConfirmModal.vue';
 import {
   FormArrayInput,
   FormInput,
@@ -69,6 +70,7 @@ const editingSkill = ref<SkillItem | null>(null);
 
 // 是否显示添加表单
 const showAddForm = ref(false);
+const skillToRemoveIndex = ref<number | null>(null);
 
 // 计算属性：是否可以添加更多
 const canAddMore = computed(() => {
@@ -109,10 +111,20 @@ const addSkill = () => {
 // 删除技能
 const removeSkill = (index: number) => {
   if (props.disabled) return;
+  skillToRemoveIndex.value = index;
+};
+
+const confirmRemoveSkill = () => {
+  if (skillToRemoveIndex.value === null) return;
 
   const newArray = [...props.modelValue];
-  newArray.splice(index, 1);
+  newArray.splice(skillToRemoveIndex.value, 1);
   emit('update:modelValue', newArray);
+  skillToRemoveIndex.value = null;
+};
+
+const cancelRemoveSkill = () => {
+  skillToRemoveIndex.value = null;
 };
 
 // 开始编辑
@@ -390,6 +402,17 @@ watch(
       <span class="count-max">{{ maxItems }}</span>
       <span class="count-label">个技能</span>
     </div>
+
+    <ConfirmModal
+      :visible="skillToRemoveIndex !== null"
+      title="确认删除技能"
+      :message="`确定要删除「${skillToRemoveIndex !== null ? modelValue[skillToRemoveIndex]?.name || '' : ''}」吗？`"
+      confirm-text="确认删除"
+      cancel-text="取消"
+      type="danger"
+      @confirm="confirmRemoveSkill"
+      @cancel="cancelRemoveSkill"
+    />
   </div>
 </template>
 

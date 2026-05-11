@@ -92,6 +92,9 @@ const isCategoryDisabled = (category: string) => props.disabledCategories.includ
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
   gap: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: var(--content-max-height);
   max-height: var(--content-max-height);
   border: 2px solid var(--border-color);
@@ -184,6 +187,7 @@ const isCategoryDisabled = (category: string) => props.disabledCategories.includ
 
 // 右侧内容区域
 .content-area {
+  min-width: 0;
   background: var(--card-bg);
   overflow-y: auto;
   height: 100%;
@@ -227,39 +231,85 @@ const isCategoryDisabled = (category: string) => props.disabledCategories.includ
 // 响应式设计
 @media (max-width: 768px) {
   .category-selection-layout {
-    grid-template-columns: 120px 1fr;
-    height: 450px;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    min-width: 0;
+    max-width: 100%;
+    border-width: 1px;
+    border-radius: var(--radius-md);
   }
 
   .category-sidebar {
+    flex: none;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+
     .category-list {
-      padding: var(--spacing-xs) 4px;
+      flex-direction: row;
+      gap: var(--spacing-xs);
+      padding: var(--spacing-xs);
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
 
     .category-item {
+      flex: 0 0 auto;
+      min-width: 76px;
+      max-width: 124px;
+      min-height: 38px;
       font-size: 0.8rem;
-      padding: var(--spacing-xs) var(--spacing-sm);
-      min-height: 28px;
+      padding: 7px var(--spacing-sm);
       line-height: 1.3;
+      text-align: center;
+      white-space: normal;
+      word-break: keep-all;
     }
+  }
+
+  .content-area {
+    flex: none;
+    min-height: 120px;
+    overflow: visible;
+  }
+
+  .filter-area {
+    flex: none;
+    padding: 4px var(--spacing-xs);
+    border-bottom-width: 1px;
+    box-shadow: none;
+  }
+
+  .content-main {
+    min-height: 120px;
+    overflow-y: visible;
   }
 }
 
 @media (max-width: 480px) {
   .category-selection-layout {
-    grid-template-columns: 100px 1fr;
-    height: 400px;
+    height: auto;
+    max-height: none;
   }
 
   .category-sidebar {
     .category-list {
-      padding: var(--spacing-xs) 3px;
+      padding: 4px;
     }
 
     .category-item {
-      font-size: 0.75rem;
-      padding: 3px 5px;
-      min-height: 24px;
+      font-size: 0.78rem;
+      padding: 7px 9px;
+      min-height: 38px;
     }
   }
 }

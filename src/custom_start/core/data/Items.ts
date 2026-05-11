@@ -1,4 +1,5 @@
 import type { Item } from '../types';
+import { getLibraryDataByType } from '../utils/custom-library';
 import { loadCustomItems, mergeData } from '../utils/loader';
 
 interface ItemData {
@@ -26,7 +27,7 @@ async function initializeItems() {
  * 获取合并后的道具数据
  */
 export function getInitialItems(): ItemData {
-  return mergedItemsData || InitialItems;
+  return mergeData(mergedItemsData || InitialItems, getLibraryDataByType<Item>('item')) as ItemData;
 }
 
 // 自动初始化

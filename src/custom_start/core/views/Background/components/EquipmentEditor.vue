@@ -3,6 +3,7 @@
  * 装备编辑器组件
  */
 import { computed, ref, watch } from 'vue';
+import ConfirmModal from '../../../components/ConfirmModal.vue';
 import {
   FormArrayInput,
   FormInput,
@@ -67,6 +68,7 @@ const editingEquipment = ref<EquipmentItem | null>(null);
 
 // 是否显示添加表单
 const showAddForm = ref(false);
+const equipmentToRemoveIndex = ref<number | null>(null);
 
 // 计算属性：是否可以添加更多
 const canAddMore = computed(() => {
@@ -105,10 +107,20 @@ const addEquipment = () => {
 // 删除装备
 const removeEquipment = (index: number) => {
   if (props.disabled) return;
+  equipmentToRemoveIndex.value = index;
+};
+
+const confirmRemoveEquipment = () => {
+  if (equipmentToRemoveIndex.value === null) return;
 
   const newArray = [...props.modelValue];
-  newArray.splice(index, 1);
+  newArray.splice(equipmentToRemoveIndex.value, 1);
   emit('update:modelValue', newArray);
+  equipmentToRemoveIndex.value = null;
+};
+
+const cancelRemoveEquipment = () => {
+  equipmentToRemoveIndex.value = null;
 };
 
 // 开始编辑
@@ -374,6 +386,17 @@ watch(
       <span class="count-max">{{ maxItems }}</span>
       <span class="count-label">件装备</span>
     </div>
+
+    <ConfirmModal
+      :visible="equipmentToRemoveIndex !== null"
+      title="确认删除装备"
+      :message="`确定要删除「${equipmentToRemoveIndex !== null ? modelValue[equipmentToRemoveIndex]?.name || '' : ''}」吗？`"
+      confirm-text="确认删除"
+      cancel-text="取消"
+      type="danger"
+      @confirm="confirmRemoveEquipment"
+      @cancel="cancelRemoveEquipment"
+    />
   </div>
 </template>
 

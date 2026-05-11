@@ -43,6 +43,9 @@ const handleTabClick = (key: CategoryType) => {
 <style lang="scss" scoped>
 .category-tabs {
   display: flex;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm);
   background: var(--card-bg);
@@ -53,6 +56,7 @@ const handleTabClick = (key: CategoryType) => {
 
 .tab-button {
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,6 +92,10 @@ const handleTabClick = (key: CategoryType) => {
   }
 
   .tab-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-family: var(--font-title);
     font-size: 0.9rem;
   }
@@ -96,21 +104,27 @@ const handleTabClick = (key: CategoryType) => {
 // 响应式设计
 @media (max-width: 768px) {
   .category-tabs {
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm);
+    flex: none;
+    gap: var(--spacing-xs);
+    padding: 4px;
+    margin-bottom: var(--spacing-xs);
+    border-radius: var(--radius-md);
   }
 
   .tab-button {
-    flex-direction: column;
-    padding: var(--spacing-sm);
+    min-height: 34px;
+    flex-direction: row;
+    padding: 5px var(--spacing-sm);
     gap: var(--spacing-xs);
+    border-radius: var(--radius-md);
 
     .tab-icon {
-      font-size: 1.2rem;
+      font-size: 1rem;
     }
 
     .tab-label {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
+      font-family: var(--font-body);
     }
   }
 }

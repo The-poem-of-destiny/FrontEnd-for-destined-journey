@@ -1,3 +1,5 @@
+import { shallowRef } from 'vue';
+
 import type { Background } from '../types';
 import { loadCustomBackgrounds, mergeData } from '../utils/loader';
 
@@ -15,21 +17,21 @@ const Backgrounds: Backgrounds = {
 };
 
 // 加载并合并自定义初始剧情数据
-let mergedBackgroundsData: Backgrounds | null = null;
+const mergedBackgroundsData = shallowRef<Backgrounds>(Backgrounds);
 
 /**
  * 初始化初始剧情数据（加载自定义数据并合并）
  */
 async function initializeBackgrounds() {
   const customData = await loadCustomBackgrounds();
-  mergedBackgroundsData = mergeData(Backgrounds, customData) as Backgrounds;
+  mergedBackgroundsData.value = mergeData(Backgrounds, customData) as Backgrounds;
 }
 
 /**
  * 获取初始剧情数据
  */
 export function getBackgrounds(): Backgrounds {
-  return mergedBackgroundsData || Backgrounds;
+  return mergedBackgroundsData.value;
 }
 
 initializeBackgrounds();

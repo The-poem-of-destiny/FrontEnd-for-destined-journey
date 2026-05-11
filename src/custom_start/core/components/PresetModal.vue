@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import ConfirmModal from './ConfirmModal.vue';
+import ContentLibraryManager from './ContentLibraryManager.vue';
 import { useCharacterStore } from '../store/character';
 import { useCustomContentStore } from '../store/customContent';
+import type { LibraryItemType } from '../utils/custom-library';
 import {
   applyPresetToStore,
   countConflicts,
@@ -34,6 +37,17 @@ const emit = defineEmits<{
 const characterStore = useCharacterStore();
 const customContentStore = useCustomContentStore();
 
+type ManageSection = 'preset' | LibraryItemType;
+
+const manageSections: Array<{ key: ManageSection; label: string; icon: string }> = [
+  { key: 'preset', label: '预设', icon: 'fa-solid fa-bookmark' },
+  { key: 'equipment', label: '武器', icon: 'fa-solid fa-shield-halved' },
+  { key: 'skill', label: '技能', icon: 'fa-solid fa-wand-magic-sparkles' },
+  { key: 'item', label: '道具', icon: 'fa-solid fa-box-open' },
+];
+
+const activeManageSection = ref<ManageSection>('preset');
+
 // 预设列表
 const presetList = ref<CharacterPreset[]>([]);
 
@@ -56,6 +70,7 @@ watch(
       refreshPresetList();
       newPresetName.value = '';
       presetToDelete.value = null;
+      activeManageSection.value = 'preset';
       scrollToIframe();
     }
   },
@@ -115,20 +130,19 @@ const handleLoadPreset = (preset: CharacterPreset) => {
   emit('close');
 };
 
-// 请求删除预设（第一次点击）
+// 请求删除预设
 const requestDeletePreset = (name: string) => {
-  if (presetToDelete.value === name) {
-    // 二次点击确认删除
-    deletePreset(name);
-    presetToDelete.value = null;
-    refreshPresetList();
-  } else {
-    presetToDelete.value = name;
-    presetToOverwrite.value = null;
-  }
+  presetToDelete.value = name;
+  presetToOverwrite.value = null;
 };
 
-// 取消删除
+const confirmDeletePreset = () => {
+  if (!presetToDelete.value) return;
+  deletePreset(presetToDelete.value);
+  presetToDelete.value = null;
+  refreshPresetList();
+};
+
 const cancelDelete = () => {
   presetToDelete.value = null;
 };
@@ -140,12 +154,20 @@ const handleClose = () => {
 
 // 弹窗标题
 const modalTitle = computed(() => {
-  return props.mode === 'load' ? '加载预设' : '预设管理';
+  return props.mode === 'load' ? '加载预设' : '管理自定义内容';
 });
 
 // 是否显示保存区域
 const showSaveSection = computed(() => {
   return props.mode !== 'load';
+});
+
+const showPresetManager = computed(() => {
+  return props.mode === 'load' || activeManageSection.value === 'preset';
+});
+
+const activeLibraryType = computed<LibraryItemType>(() => {
+  return activeManageSection.value === 'preset' ? 'equipment' : activeManageSection.value;
 });
 
 // 导入/导出
@@ -238,6 +260,22 @@ const cancelImport = () => {
         </div>
         <!-- 内容区域 -->
         <div class="modal-content">
+          <div v-if="showSaveSection" class="manage-tabs" role="tablist" aria-label="管理自定义内容">
+            <button
+              v-for="section in manageSections"
+              :key="section.key"
+              class="manage-tab"
+              :class="{ active: activeManageSection === section.key }"
+              role="tab"
+              :aria-selected="activeManageSection === section.key"
+              @click="activeManageSection = section.key"
+            >
+              <i :class="section.icon" aria-hidden="true"></i>
+              <span>{{ section.label }}</span>
+            </button>
+          </div>
+
+          <div v-if="showPresetManager" class="preset-manager-section">
           <!-- 保存新预设区域 -->
           <div v-if="showSaveSection" class="save-section">
             <h3 class="section-title"><i class="fa-solid fa-floppy-disk"></i> 保存当前配置</h3>
@@ -324,40 +362,33 @@ const cancelImport = () => {
                   </div>
                 </div>
                 <div class="preset-actions">
-                  <template v-if="presetToDelete === preset.name">
-                    <button
-                      class="action-button confirm-delete"
-                      @click="requestDeletePreset(preset.name)"
-                    >
-                      <i class="fa-solid fa-check"></i> 确认删除
-                    </button>
-                    <button class="action-button cancel-button" @click="cancelDelete">
-                      <i class="fa-solid fa-xmark"></i> 取消
-                    </button>
-                  </template>
-                  <template v-else>
-                    <button class="action-button load-button" @click="handleLoadPreset(preset)">
-                      <i class="fa-solid fa-download"></i> 加载
-                    </button>
-                    <button
-                      v-if="showSaveSection"
-                      class="action-button export-button"
-                      @click="handleExportPreset(preset)"
-                    >
-                      <i class="fa-solid fa-file-export"></i> 导出
-                    </button>
-                    <button
-                      v-if="showSaveSection"
-                      class="action-button delete-button"
-                      @click="requestDeletePreset(preset.name)"
-                    >
-                      <i class="fa-solid fa-trash"></i> 删除
-                    </button>
-                  </template>
+                  <button class="action-button load-button" @click="handleLoadPreset(preset)">
+                    <i class="fa-solid fa-download"></i> 加载
+                  </button>
+                  <button
+                    v-if="showSaveSection"
+                    class="action-button export-button"
+                    @click="handleExportPreset(preset)"
+                  >
+                    <i class="fa-solid fa-file-export"></i> 导出
+                  </button>
+                  <button
+                    v-if="showSaveSection"
+                    class="action-button delete-button"
+                    @click="requestDeletePreset(preset.name)"
+                  >
+                    <i class="fa-solid fa-trash"></i> 删除
+                  </button>
                 </div>
               </div>
             </div>
           </div>
+          </div>
+
+          <ContentLibraryManager
+            v-else
+            :type="activeLibraryType"
+          />
         </div>
         <!-- 底部按钮 -->
         <div class="modal-footer">
@@ -365,6 +396,17 @@ const cancelImport = () => {
         </div>
       </div>
     </div>
+
+    <ConfirmModal
+      :visible="Boolean(presetToDelete)"
+      title="确认删除预设"
+      :message="`确定要删除预设「${presetToDelete || ''}」吗？此操作不可撤销。`"
+      confirm-text="确认删除"
+      cancel-text="取消"
+      type="danger"
+      @confirm="confirmDeletePreset"
+      @cancel="cancelDelete"
+    />
 
     <!-- 导入冲突确认弹窗 -->
     <div
@@ -418,8 +460,8 @@ const cancelImport = () => {
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-color);
   width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
+  max-width: 760px;
+  max-height: min(720px, 150vw);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -462,6 +504,64 @@ const cancelImport = () => {
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-lg);
+}
+
+.manage-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-xs);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: rgba(255, 249, 240, 0.48);
+}
+
+.manage-tab {
+  min-width: 0;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--title-color);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-fast);
+
+  i,
+  span {
+    min-width: 0;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  i {
+    color: var(--accent-color);
+  }
+
+  &:hover {
+    border-color: var(--border-color);
+    background: var(--input-bg);
+  }
+
+  &.active {
+    border-color: var(--accent-color);
+    background: var(--accent-color);
+    color: var(--primary-bg);
+
+    i {
+      color: currentColor;
+    }
+  }
 }
 
 .section-title {
@@ -928,7 +1028,20 @@ const cancelImport = () => {
 @media (max-width: 600px) {
   .modal-container {
     width: 95%;
-    max-height: 90vh;
+    max-height: min(640px, 168vw);
+  }
+
+  .modal-content {
+    padding: var(--spacing-md);
+  }
+
+  .manage-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .manage-tab {
+    min-height: 36px;
+    font-size: 0.82rem;
   }
 
   .save-row {

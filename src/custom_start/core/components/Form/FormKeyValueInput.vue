@@ -3,6 +3,7 @@
  * 键值对输入组件（用于效果等结构化字段）
  */
 import { computed, ref, watch } from 'vue';
+import ConfirmModal from '../ConfirmModal.vue';
 
 type KeyValueItem = {
   key: string;
@@ -41,6 +42,7 @@ const newKey = ref('');
 const newValue = ref('');
 const editingIndex = ref<number | null>(null);
 const editingItem = ref<KeyValueItem | null>(null);
+const itemToRemoveIndex = ref<number | null>(null);
 
 const canAddMore = computed(() => !props.disabled && items.value.length < props.maxItems);
 const canRemove = computed(() => !props.disabled && items.value.length > props.minItems);
@@ -90,10 +92,20 @@ const addItem = () => {
 
 const removeItem = (index: number) => {
   if (!canRemove.value) return;
+  itemToRemoveIndex.value = index;
+};
+
+const confirmRemoveItem = () => {
+  if (itemToRemoveIndex.value === null) return;
   const next_items = [...items.value];
-  next_items.splice(index, 1);
+  next_items.splice(itemToRemoveIndex.value, 1);
   items.value = next_items;
   syncToModel(next_items);
+  itemToRemoveIndex.value = null;
+};
+
+const cancelRemoveItem = () => {
+  itemToRemoveIndex.value = null;
 };
 
 const startEdit = (index: number) => {
@@ -221,6 +233,17 @@ const handleKeydown = (event: KeyboardEvent) => {
       <span class="count-max">{{ maxItems }}</span>
       <span class="count-label">项</span>
     </div>
+
+    <ConfirmModal
+      :visible="itemToRemoveIndex !== null"
+      title="确认删除条目"
+      :message="`确定要删除「${itemToRemoveIndex !== null ? items[itemToRemoveIndex]?.key || '' : ''}」吗？`"
+      confirm-text="确认删除"
+      cancel-text="取消"
+      type="danger"
+      @confirm="confirmRemoveItem"
+      @cancel="cancelRemoveItem"
+    />
   </div>
 </template>
 

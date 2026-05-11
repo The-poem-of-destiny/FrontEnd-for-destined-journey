@@ -57,6 +57,8 @@ body {
   font-family: var(--font-body);
   color: var(--text-color);
   line-height: 1.6;
+  max-width: 100%;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

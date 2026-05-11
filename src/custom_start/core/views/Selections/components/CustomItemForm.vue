@@ -14,6 +14,11 @@ import type { Equipment, Item, Rarity, Skill } from '../../../types';
 import { calculateCostByPosition, getCostRange } from '../../../utils/cost-calculator';
 import { CATEGORY_OPTIONS, RARITY_OPTIONS } from '../../../utils/form-options';
 
+interface Props {
+  defaultExpanded?: boolean;
+  hideHeader?: boolean;
+}
+
 interface Emits {
   (
     e: 'add',
@@ -23,13 +28,19 @@ interface Emits {
   ): void;
 }
 
+const props = withDefaults(defineProps<Props>(), {
+  defaultExpanded: false,
+  hideHeader: false,
+});
+
 const emit = defineEmits<Emits>();
 
 // 使用自定义内容 store
 const customContentStore = useCustomContentStore();
 
 // 折叠状态
-const isExpanded = ref(false);
+const isExpanded = ref(props.defaultExpanded);
+const isBodyVisible = computed(() => props.hideHeader || isExpanded.value);
 
 // 确认弹窗状态
 const showResetConfirm = ref(false);
@@ -209,8 +220,8 @@ const confirmAdd = () => {
 </script>
 
 <template>
-  <div class="custom-item-form" :class="{ expanded: isExpanded }">
-    <div class="form-header" @click="isExpanded = !isExpanded">
+  <div class="custom-item-form" :class="{ expanded: isBodyVisible, 'hide-header': hideHeader }">
+    <div v-if="!hideHeader" class="form-header" @click="isExpanded = !isExpanded">
       <div class="header-left">
         <h3 class="form-title">✨ 自定义</h3>
         <div class="form-desc">创建您的专属物品、装备或技能</div>
@@ -218,7 +229,7 @@ const confirmAdd = () => {
       <div class="toggle-icon" :class="{ rotated: isExpanded }">▼</div>
     </div>
 
-    <div v-show="isExpanded" class="form-body">
+    <div v-show="isBodyVisible" class="form-body">
       <!-- 大分类选择 -->
       <div class="form-row">
         <label class="form-label">添加到分类</label>
@@ -418,6 +429,16 @@ const confirmAdd = () => {
 
   .form-body {
     padding: var(--spacing-lg);
+  }
+
+  &.hide-header {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+
+    .form-body {
+      padding: var(--spacing-sm);
+    }
   }
 
   .form-row {

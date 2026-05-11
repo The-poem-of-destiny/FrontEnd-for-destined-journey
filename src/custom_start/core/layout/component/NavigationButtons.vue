@@ -77,14 +77,30 @@ const emit = defineEmits<{
 
 @media (max-width: 768px) {
   .navigation {
-    flex-wrap: wrap;
-    justify-content: center;
+    flex: none;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
   }
 
   .nav-button {
     flex: 1;
-    min-width: 120px;
+    min-width: 0;
+    min-height: 46px;
+    padding: var(--spacing-sm) var(--spacing-md);
     justify-content: center;
+    border-radius: var(--radius-md);
+
+    &.next-button {
+      background: var(--accent-color);
+      border-color: var(--accent-color);
+      color: #fff;
+    }
   }
 }
 </style>
