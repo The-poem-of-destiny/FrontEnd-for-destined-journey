@@ -166,6 +166,16 @@ onMounted(() => {
   window.addEventListener(getLibraryUpdateEventName(), refreshLibraryData);
 });
 
+watch(
+  subCategories,
+  categories => {
+    if (!categories.includes(currentSubCategory.value)) {
+      currentSubCategory.value = categories[0] || '';
+    }
+  },
+  { immediate: true },
+);
+
 onUnmounted(() => {
   mobileMediaQuery?.removeEventListener('change', updateMobileViewport);
   window.removeEventListener(getLibraryUpdateEventName(), refreshLibraryData);

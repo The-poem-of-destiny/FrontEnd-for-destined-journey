@@ -7,7 +7,7 @@ import { STEP_CONFIGS } from '../router/route-constants';
 import { useCharacterStore } from '../store';
 import { syncLibraryStorageFromWorldbook } from '../utils/custom-library';
 import { findMatchingPreset } from '../utils/preset-manager';
-import { scrollToIframe } from '../utils/scroll';
+import { scrollToIframe, setupIframeWheelScrollBridge } from '../utils/scroll';
 
 import ContentArea from './component/ContentArea.vue';
 import HeaderControls from './component/HeaderControls.vue';
@@ -40,6 +40,7 @@ const showStartConfirm = ref(false);
 const isFullscreen = ref(false);
 const isFullscreenFallback = ref(false);
 let originalFrameStyle: Partial<CSSStyleDeclaration> | null = null;
+let cleanupWheelScrollBridge: (() => void) | null = null;
 
 // 步骤标题（用于 Steps 组件）
 const stepTitles = STEP_CONFIGS.map(c => ({ title: c.shortTitle }));
@@ -59,6 +60,10 @@ onMounted(() => {
   } catch {
     // Parent access may be blocked outside srcdoc; local fullscreen state still works.
   }
+
+  cleanupWheelScrollBridge = setupIframeWheelScrollBridge({
+    isFullscreen: () => isFullscreen.value,
+  });
 });
 
 onUnmounted(() => {
@@ -70,6 +75,8 @@ onUnmounted(() => {
     // Ignore cross-origin parent documents.
   }
 
+  cleanupWheelScrollBridge?.();
+  cleanupWheelScrollBridge = null;
   restoreFrameFullscreen();
 });
 
@@ -163,9 +170,11 @@ const getParentFullscreenElement = (): Element | null => {
 };
 
 const updateFullscreenState = () => {
-  isFullscreen.value = Boolean(
+  const nextFullscreen = Boolean(
     document.fullscreenElement || getParentFullscreenElement() || isFullscreenFallback.value,
   );
+  isFullscreen.value = nextFullscreen;
+  document.documentElement.classList.toggle('creator-fullscreen', nextFullscreen);
 };
 
 const applyFrameFullscreen = () => {
@@ -197,7 +206,6 @@ const applyFrameFullscreen = () => {
     background: '#f5efe6',
   });
 
-  document.documentElement.classList.add('creator-fullscreen');
   isFullscreenFallback.value = true;
   updateFullscreenState();
   return true;
@@ -212,7 +220,6 @@ const restoreFrameFullscreen = () => {
 
   originalFrameStyle = null;
   isFullscreenFallback.value = false;
-  document.documentElement.classList.remove('creator-fullscreen');
   updateFullscreenState();
 };
 
