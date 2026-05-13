@@ -256,6 +256,7 @@ const isCategoryDisabled = (category: string) => props.disabledCategories.includ
       overflow-x: auto;
       overflow-y: hidden;
       scrollbar-width: none;
+      touch-action: pan-x;
 
       &::-webkit-scrollbar {
         display: none;
@@ -292,6 +293,7 @@ const isCategoryDisabled = (category: string) => props.disabledCategories.includ
   .content-main {
     min-height: 120px;
     overflow-y: visible;
+    touch-action: pan-y;
   }
 }
 

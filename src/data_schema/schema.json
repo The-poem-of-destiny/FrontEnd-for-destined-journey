@@ -13,11 +13,9 @@
       "type": "object",
       "properties": {
         "时间": {
-          "default": "",
           "type": "string"
         },
         "地点": {
-          "default": "",
           "type": "string"
         }
       }
@@ -33,7 +31,6 @@
         "type": "object",
         "properties": {
           "状态": {
-            "default": "",
             "type": "string"
           },
           "关注度": {
@@ -46,19 +43,15 @@
             ]
           },
           "进展": {
-            "default": "",
             "type": "string"
           },
           "详情": {
-            "default": "",
             "type": "string"
           },
           "目标": {
-            "default": "",
             "type": "string"
           },
           "奖励": {
-            "default": "",
             "type": "string"
           }
         }
@@ -96,7 +89,6 @@
           "$ref": "#/$defs/__schema13"
         },
         "累计经验值": {
-          "default": 0,
           "type": "number"
         },
         "升级所需经验": {
@@ -116,31 +108,24 @@
           "type": "string"
         },
         "生命值": {
-          "default": 0,
           "type": "number"
         },
         "生命值上限": {
-          "default": 0,
           "type": "number"
         },
         "法力值": {
-          "default": 0,
           "type": "number"
         },
         "法力值上限": {
-          "default": 0,
           "type": "number"
         },
         "体力值": {
-          "default": 0,
           "type": "number"
         },
         "体力值上限": {
-          "default": 0,
           "type": "number"
         },
         "属性点": {
-          "default": 0,
           "type": "number"
         },
         "背包": {
@@ -154,7 +139,6 @@
           }
         },
         "金钱": {
-          "default": 0,
           "type": "number"
         },
         "状态效果": {
@@ -170,7 +154,6 @@
       }
     },
     "命运点数": {
-      "default": 0,
       "type": "number"
     },
     "关系列表": {
@@ -211,31 +194,24 @@
             "$ref": "#/$defs/__schema13"
           },
           "在场": {
-            "default": false,
             "type": "boolean"
           },
           "性格": {
-            "default": "",
             "type": "string"
           },
           "喜爱": {
-            "default": "",
             "type": "string"
           },
           "外貌": {
-            "default": "",
             "type": "string"
           },
           "着装": {
-            "default": "",
             "type": "string"
           },
           "命定契约": {
-            "default": false,
             "type": "boolean"
           },
           "好感度": {
-            "default": 0,
             "type": "number"
           },
           "状态效果": {
@@ -259,11 +235,9 @@
             }
           },
           "心里话": {
-            "default": "",
             "type": "string"
           },
           "背景故事": {
-            "default": "",
             "type": "string"
           }
         }
@@ -278,23 +252,18 @@
           "type": "object",
           "properties": {
             "势力要闻": {
-              "default": "",
               "type": "string"
             },
             "尊位行迹": {
-              "default": "",
               "type": "string"
             },
             "军事行动": {
-              "default": "",
               "type": "string"
             },
             "经济动脉": {
-              "default": "",
               "type": "string"
             },
             "灾害预警": {
-              "default": "",
               "type": "string"
             }
           }
@@ -304,23 +273,18 @@
           "type": "object",
           "properties": {
             "高额悬赏": {
-              "default": "",
               "type": "string"
             },
             "冒险发现": {
-              "default": "",
               "type": "string"
             },
             "怪物异动": {
-              "default": "",
               "type": "string"
             },
             "通缉要犯": {
-              "default": "",
               "type": "string"
             },
             "宝物传闻": {
-              "default": "",
               "type": "string"
             }
           }
@@ -330,19 +294,15 @@
           "type": "object",
           "properties": {
             "社交逸闻": {
-              "default": "",
               "type": "string"
             },
             "千里远望": {
-              "default": "",
               "type": "string"
             },
             "命运涟漪": {
-              "default": "",
               "type": "string"
             },
             "邂逅预兆": {
-              "default": "",
               "type": "string"
             }
           }
@@ -356,11 +316,9 @@
       "type": "number"
     },
     "__schema1": {
-      "default": "",
       "type": "string"
     },
     "__schema2": {
-      "default": "",
       "type": "string"
     },
     "__schema3": {
@@ -382,23 +340,18 @@
       "type": "object",
       "properties": {
         "力量": {
-          "default": 0,
           "type": "number"
         },
         "敏捷": {
-          "default": 0,
           "type": "number"
         },
         "体质": {
-          "default": 0,
           "type": "number"
         },
         "智力": {
-          "default": 0,
           "type": "number"
         },
         "精神": {
-          "default": 0,
           "type": "number"
         }
       }
@@ -428,18 +381,15 @@
             "$ref": "#/$defs/__schema11"
           },
           "位置": {
-            "default": "",
             "type": "string"
           }
         }
       }
     },
     "__schema7": {
-      "default": "",
       "type": "string"
     },
     "__schema8": {
-      "default": "",
       "type": "string"
     },
     "__schema9": {
@@ -460,7 +410,6 @@
       }
     },
     "__schema11": {
-      "default": "",
       "type": "string"
     },
     "__schema12": {
@@ -488,7 +437,6 @@
             "$ref": "#/$defs/__schema11"
           },
           "消耗": {
-            "default": "",
             "type": "string"
           }
         }
@@ -499,7 +447,6 @@
       "type": "object",
       "properties": {
         "是否开启": {
-          "default": false,
           "type": "boolean"
         },
         "要素": {
@@ -551,7 +498,6 @@
           }
         },
         "神位": {
-          "default": "",
           "type": "string"
         },
         "神国": {
@@ -559,11 +505,9 @@
           "type": "object",
           "properties": {
             "名称": {
-              "default": "",
               "type": "string"
             },
             "描述": {
-              "default": "",
               "type": "string"
             }
           }
@@ -608,7 +552,6 @@
           ]
         },
         "效果": {
-          "default": "",
           "type": "string"
         },
         "层数": {
@@ -616,11 +559,9 @@
           "type": "number"
         },
         "剩余时间": {
-          "default": "",
           "type": "string"
         },
         "来源": {
-          "default": "",
           "type": "string"
         }
       }

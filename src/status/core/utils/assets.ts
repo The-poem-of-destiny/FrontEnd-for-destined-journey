@@ -1,7 +1,7 @@
 import { sortEntriesByQuality } from './quality';
 
 export type AssetCollectionDataKey = '装备' | '技能' | '背包';
-export type AssetCollectionFilterKey = string;
+export type AssetCollectionFilterKey = '位置' | '类型';
 
 export type AssetCollectionItem = { 品质?: string } & Record<string, any>;
 export type AssetCollectionSource = Record<string, AssetCollectionItem>;

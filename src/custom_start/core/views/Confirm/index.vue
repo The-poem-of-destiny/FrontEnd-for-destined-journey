@@ -99,7 +99,9 @@ const getStairwayView = (partner: Partner) => {
       <!-- 标题 -->
       <div class="panel-header">
         <h2 class="panel-title">信息确认</h2>
-        <p class="panel-subtitle">非自定义数据（除了装备）会直接写入 MVU 变量中，不会发送给 AI</p>
+        <p class="panel-subtitle">
+          基础字段、属性、装备与预设内容会写入 MVU；自定义内容按下方选项处理
+        </p>
       </div>
 
       <!-- 文档内容 -->
@@ -443,6 +445,28 @@ const getStairwayView = (partner: Partner) => {
           <p v-else class="empty-text">未选择初始开局剧情</p>
         </section>
 
+        <!-- 注入选项 -->
+        <section class="doc-section">
+          <h3 class="section-title">
+            <i class="fa-solid fa-code-branch" aria-hidden="true"></i>
+            <span>开局变量处理</span>
+          </h3>
+          <div class="journey-options">
+            <label class="option-row" title="仅当装备、道具、技能不会影响 HP/MP/SP 时建议开启">
+              <input v-model="characterStore.journeyOptions.injectResources" type="checkbox" />
+              <span>HP/MP/SP 直接注入</span>
+            </label>
+            <label class="option-row" title="不勾选时交给 LLM 检查名称、类型、效果与描述">
+              <input v-model="characterStore.journeyOptions.injectCustomItems" type="checkbox" />
+              <span>自定义道具直接注入</span>
+            </label>
+            <label class="option-row" title="不勾选时交给 LLM 检查名称、类型、消耗与效果">
+              <input v-model="characterStore.journeyOptions.injectCustomSkills" type="checkbox" />
+              <span>自定义技能直接注入</span>
+            </label>
+          </div>
+        </section>
+
         <!-- 提示信息 -->
         <div v-if="remainingPoints !== 0" class="final-notice">
           <div v-if="remainingPoints < 0" class="notice warning">
@@ -705,6 +729,35 @@ const getStairwayView = (partner: Partner) => {
   font-style: italic;
 }
 
+.journey-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-height: 44px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-color);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  input {
+    flex: none;
+  }
+
+  span {
+    min-width: 0;
+  }
+}
+
 // 最终提示
 .final-notice {
   margin-top: var(--spacing-lg);
@@ -753,6 +806,10 @@ const getStairwayView = (partner: Partner) => {
   }
 
   .doc-text.attributes {
+    grid-template-columns: 1fr;
+  }
+
+  .journey-options {
     grid-template-columns: 1fr;
   }
 

@@ -86,9 +86,9 @@ interface Track {
 }
 
 const tracks: Track[] = [
-  { name: '第一乐章', url: 'https://files.catbox.moe/b0o5l9.mp3' },
-  { name: '第二乐章', url: 'https://files.catbox.moe/o1o64d.mp3' },
-  { name: '第三乐章', url: 'https://files.catbox.moe/vqs5tw.mp3' },
+  { name: '第一乐章', url: 'https://files.catbox.moe/scmu3o.mp3' },
+  { name: '第二乐章', url: 'https://files.catbox.moe/3df28k.mp3' },
+  { name: '第三乐章', url: 'https://files.catbox.moe/3lrlbi.mp3' },
 ];
 
 const currentIndex = ref(0);
@@ -208,10 +208,6 @@ function onDocumentClick(e: PointerEvent) {
 
 onMounted(() => {
   document.addEventListener('pointerdown', onDocumentClick, true);
-  // 默认开始播放
-  createAudio();
-  audio?.play();
-  isPlaying.value = true;
 });
 
 function handleEnded() {

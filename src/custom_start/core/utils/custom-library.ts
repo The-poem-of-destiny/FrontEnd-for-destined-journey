@@ -462,8 +462,14 @@ export function createContentPack(entries: LibraryEntry[]): LibraryContentPack {
       _.filter(entries, { type: 'equipment' }),
       entry => klona(entry.data) as Equipment,
     ),
-    items: _.map(_.filter(entries, { type: 'item' }), entry => klona(entry.data) as Item),
-    skills: _.map(_.filter(entries, { type: 'skill' }), entry => klona(entry.data) as Skill),
+    items: _.map(
+      _.filter(entries, { type: 'item' }),
+      entry => klona(entry.data) as Item,
+    ),
+    skills: _.map(
+      _.filter(entries, { type: 'skill' }),
+      entry => klona(entry.data) as Skill,
+    ),
   };
 }
 

@@ -48,7 +48,7 @@ type PartnerAssetSectionConfig = {
   key: Extract<PartnerDetailSection, 'equipment' | 'skills' | 'inventory'>;
   label: string;
   dataKey: '装备' | '技能' | '背包';
-  filterKey: string;
+  filterKey: '位置' | '类型';
   itemCategory: 'equipment' | 'skill' | 'item';
   emptyText: string;
   getTitleSuffix: (item: PartnerAssetItem) => ReactNode;
@@ -72,7 +72,7 @@ const PartnerAssetSections: PartnerAssetSectionConfig[] = [
     key: 'equipment',
     label: '装备',
     dataKey: '装备',
-    filterKey: '类型',
+    filterKey: '位置',
     itemCategory: 'equipment',
     emptyText: '暂无装备',
     getTitleSuffix: item =>
@@ -459,11 +459,8 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     showDelete = false,
   ) => (
     <>
-      <div className={showDelete ? styles.partnerSummaryHeader : styles.partnerIdentityHeader}>
-        <div className={styles.partnerIdentityTitleRow}>
-          <IconTitle text={partnerName} className={styles.partnerName} />
-          {!hasPartnerAvatar(partnerName) ? renderPartnerAvatarAddInlineButton(partnerName) : null}
-        </div>
+      <div className={showDelete ? styles.partnerSummaryHeader : undefined}>
+        <IconTitle text={partnerName} className={styles.partnerName} />
         {showDelete ? renderPartnerDeleteButton(partnerName) : null}
       </div>
       <div className={styles.partnerMeta}>
@@ -483,7 +480,16 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const renderPartnerSummary = (partnerName: string, partner: PartnerRecord) => (
     <div className={styles.partnerTitle}>
       <div className={styles.partnerTitleMain}>
-        {renderPartnerAvatar(partnerName)}
+        <AvatarPanel
+          src={getPartnerAvatarUrl(partnerName)}
+          alt={`${partnerName}头像`}
+          size="md"
+          placeholderText={partnerName}
+          showEditHint
+          className={styles.partnerAvatar}
+          onClick={() => openPartnerAvatarModal(partnerName)}
+          onImageError={() => handlePartnerAvatarImageError(partnerName)}
+        />
         <div className={styles.partnerTitleContent}>
           {renderPartnerIdentity(partnerName, partner)}
         </div>
@@ -529,8 +535,6 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
     return partnerAvatarMap[partner_name] ?? '';
   };
-
-  const hasPartnerAvatar = (partner_name: string) => Boolean(getPartnerAvatarUrl(partner_name));
 
   const handlePartnerAvatarUpload = async (partner_name: string, file: File) => {
     try {
@@ -632,40 +636,6 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     setActiveAvatarPartnerName(null);
   };
 
-  const renderPartnerAvatarAddInlineButton = (partnerName: string) => (
-    <button
-      type="button"
-      className={styles.partnerAvatarInlineButton}
-      onClick={(event: MouseEvent<HTMLButtonElement>) => {
-        event.stopPropagation();
-        openPartnerAvatarModal(partnerName);
-      }}
-      aria-label={`为${partnerName}添加头像`}
-      title={`为${partnerName}添加头像`}
-    >
-      <i className="fa-solid fa-plus" />
-      <span>添加头像</span>
-    </button>
-  );
-
-  const renderPartnerAvatar = (partnerName: string) => {
-    if (!hasPartnerAvatar(partnerName)) return null;
-
-    return (
-      <AvatarPanel
-        src={getPartnerAvatarUrl(partnerName)}
-        alt={`${partnerName}头像`}
-        size="md"
-        className={styles.partnerAvatar}
-        onClick={(event: MouseEvent<HTMLButtonElement>) => {
-          event.stopPropagation();
-          openPartnerAvatarModal(partnerName);
-        }}
-        onImageError={() => handlePartnerAvatarImageError(partnerName)}
-      />
-    );
-  };
-
   const getPartnerSummaryText = (partner: PartnerRecord) => getPartnerRoleText(partner);
 
   const handlePartnerSelect = (partnerName: string) => {
@@ -694,34 +664,6 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     setActivePartnerAssetFilter(ALL_FILTER);
   };
 
-  const renderPartnerThoughtsPreview = (partner: PartnerRecord) => {
-    const thoughts = _.trim(partner.心里话 || '');
-    if (!thoughts) return null;
-
-    const thoughtSentences = thoughts
-      .split(/[。！？.!?\n]+/)
-      .map(sentence => _.trim(sentence))
-      .filter(Boolean);
-
-    const shouldShowButton = thoughtSentences.length > 3 || thoughts.length > 100;
-
-    return (
-      <div className={styles.partnerThoughtsPreview}>
-        <div className={styles.sectionLabel}>心里话</div>
-        <div className={styles.partnerThoughtsText}>{thoughts}</div>
-        {shouldShowButton ? (
-          <button
-            type="button"
-            className={styles.partnerThoughtsButton}
-            onClick={() => handlePartnerDetailSectionChange('background')}
-          >
-            查看全部
-          </button>
-        ) : null}
-      </div>
-    );
-  };
-
   const renderPartnerListItem = (partnerName: string, partner: PartnerRecord) => (
     <div
       className={`${styles.partnerSummaryCard} ${activePartnerName === partnerName ? styles.partnerSummaryCardActive : ''}`}
@@ -736,7 +678,16 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       }}
     >
       <div className={styles.partnerSummaryMain}>
-        {renderPartnerAvatar(partnerName)}
+        <AvatarPanel
+          src={getPartnerAvatarUrl(partnerName)}
+          alt={`${partnerName}头像`}
+          size="md"
+          placeholderText={partnerName}
+          showEditHint
+          className={styles.partnerAvatar}
+          onClick={() => openPartnerAvatarModal(partnerName)}
+          onImageError={() => handlePartnerAvatarImageError(partnerName)}
+        />
         <div className={styles.partnerSummaryBody}>
           {renderPartnerIdentity(partnerName, partner, true)}
         </div>
@@ -786,8 +737,6 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                     renderAffectionBar(partner.好感度 ?? 0)
                   )}
                 </div>
-
-                {renderPartnerThoughtsPreview(partner)}
 
                 {editEnabled && (
                   <div className={styles.partnerStatusToggles}>

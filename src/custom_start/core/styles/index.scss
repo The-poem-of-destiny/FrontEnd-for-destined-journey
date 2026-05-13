@@ -59,8 +59,26 @@ body {
   line-height: 1.6;
   max-width: 100%;
   overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html.creator-fullscreen,
+html.creator-fullscreen body,
+html.creator-fullscreen #app {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+button,
+[role='button'] {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 // ============ 标题样式 ============

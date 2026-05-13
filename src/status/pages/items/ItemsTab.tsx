@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { FC, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
 import { useEditorSettingStore } from '../../core/stores';
@@ -36,7 +37,7 @@ const ItemCategories = [
     id: 'equipment',
     label: '装备',
     icon: 'fa-solid fa-shield',
-    filterKey: '类型',
+    filterKey: '位置',
     pathPrefix: '主角.装备',
     itemCategory: 'equipment' as const,
   },
@@ -55,6 +56,7 @@ type CategoryId = (typeof ItemCategories)[number]['id'];
 type InspectItemState = {
   categoryId: CategoryId;
   name: string;
+  data: ItemData;
 } | null;
 
 /** 全部筛选项 */
@@ -78,6 +80,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     readSessionState<string>(filterStorageKey, ALL_FILTER),
   );
   const [inspectItem, setInspectItem] = useState<InspectItemState>(null);
+
   const player = data.主角;
 
   /** 获取当前类别配置 */
@@ -104,9 +107,6 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   );
 
   const inspectCategoryConfig = inspectItem ? getCategoryConfig(inspectItem.categoryId) : null;
-  const inspectCategoryData = inspectItem ? getCategoryData(inspectItem.categoryId) : null;
-  const inspectedItemData =
-    inspectItem && inspectCategoryData ? inspectCategoryData[inspectItem.name] : undefined;
 
   useEffect(() => {
     if (activeCategoryConfig.id !== activeCategory) {
@@ -164,10 +164,11 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     setInspectItem(null);
   };
 
-  const handleInspectItem = (name: string) => {
+  const handleInspectItem = (name: string, item: ItemData) => {
     setInspectItem({
       categoryId: activeCategory,
       name,
+      data: item,
     });
   };
 
@@ -226,7 +227,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
             onDelete={() => handleDeleteItem(name)}
             itemCategory={activeCategoryConfig.itemCategory}
             displayMode="panel-card"
-            onInspect={() => handleInspectItem(name)}
+            onInspect={() => handleInspectItem(name, item)}
           />
         ))}
       </div>
@@ -328,19 +329,19 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
         }
         onClose={handleCloseInspect}
       >
-        {inspectItem && inspectCategoryConfig && inspectedItemData ? (
+        {inspectItem && inspectCategoryConfig ? (
           <ItemDetail
             name={inspectItem.name}
-            data={inspectedItemData}
+            data={inspectItem.data}
             titleSuffix={
               inspectCategoryConfig.itemCategory === 'item' ? (
-                <span className={styles.itemCount}>×{inspectedItemData.数量}</span>
+                <span className={styles.itemCount}>×{inspectItem.data.数量}</span>
               ) : inspectCategoryConfig.itemCategory === 'equipment' ? (
-                inspectedItemData.位置 ? (
-                  <span className={styles.itemSlot}>[{inspectedItemData.位置}]</span>
+                inspectItem.data.位置 ? (
+                  <span className={styles.itemSlot}>[{inspectItem.data.位置}]</span>
                 ) : null
-              ) : inspectedItemData.消耗 ? (
-                <span className={styles.itemCost}>{inspectedItemData.消耗}</span>
+              ) : inspectItem.data.消耗 ? (
+                <span className={styles.itemCost}>{inspectItem.data.消耗}</span>
               ) : null
             }
             editEnabled={editEnabled}

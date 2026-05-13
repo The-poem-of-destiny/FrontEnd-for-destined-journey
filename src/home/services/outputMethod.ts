@@ -5,7 +5,6 @@ import { getWorldBookName, updateWorldBook } from '@/home/services/worldbookload
 // 固定的条目名称
 const OUTPUT_ENTRY_MAIN_API = 'output_format (随AI输出开，主API)';
 const OUTPUT_ENTRY_EXTRA_API = '[mvu_update]output_format (使用额外模型更新变量开)';
-const OUTPUT_ENTRY_EXTRA_API_LATEST_INPUT = '[mvu_update]用户最新输入(使用额外模型更新变量开)';
 
 // 变量输出方式选项
 export const OUTPUT_OPTIONS = [
@@ -13,13 +12,13 @@ export const OUTPUT_OPTIONS = [
     value: '主API',
     label: '主API',
     desc: '使用主API解析变量更新',
-    entryNames: [OUTPUT_ENTRY_MAIN_API],
+    entryName: OUTPUT_ENTRY_MAIN_API,
   },
   {
     value: '额外API',
     label: '额外API',
     desc: '使用额外API解析变量更新',
-    entryNames: [OUTPUT_ENTRY_EXTRA_API, OUTPUT_ENTRY_EXTRA_API_LATEST_INPUT],
+    entryName: OUTPUT_ENTRY_EXTRA_API,
   },
 ];
 
@@ -34,13 +33,11 @@ export async function saveOutputSelection(selectedValue: string): Promise<void> 
     return;
   }
 
-  // 根据选择构建更新条目；选中的输出方式会启用其对应的全部条目
-  const updatedEntries = OUTPUT_OPTIONS.flatMap(opt =>
-    opt.entryNames.map(name => ({
-      name,
-      enabled: opt.value === selectedValue,
-    })),
-  );
+  // 根据选择构建更新条目
+  const updatedEntries = OUTPUT_OPTIONS.map(opt => ({
+    name: opt.entryName,
+    enabled: opt.value === selectedValue,
+  }));
 
   await updateWorldBook(updatedEntries, bookName);
 }

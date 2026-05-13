@@ -7,6 +7,7 @@ import { useCustomContentStore } from '../store/customContent';
 import type { LibraryItemType } from '../utils/custom-library';
 import {
   applyPresetToStore,
+  clearLatestMessageStatData,
   countConflicts,
   createPresetFromStore,
   deletePreset,
@@ -57,6 +58,9 @@ const newPresetName = ref('');
 // 当前选中的预设（用于确认删除）
 const presetToDelete = ref<string | null>(null);
 
+// 当前待加载的预设（加载前需要确认清空楼层变量）
+const presetToLoad = ref<CharacterPreset | null>(null);
+
 // 刷新预设列表
 const refreshPresetList = () => {
   presetList.value = listPresets();
@@ -70,6 +74,7 @@ watch(
       refreshPresetList();
       newPresetName.value = '';
       presetToDelete.value = null;
+      presetToLoad.value = null;
       activeManageSection.value = 'preset';
       scrollToIframe();
     }
@@ -120,8 +125,8 @@ const handleSavePreset = () => {
 // 待覆盖的预设名称
 const presetToOverwrite = ref<string | null>(null);
 
-// 加载预设
-const handleLoadPreset = (preset: CharacterPreset) => {
+// 真正加载预设
+const loadPresetNow = (preset: CharacterPreset) => {
   applyPresetToStore(preset, characterStore);
   const isCustomBackground = preset.background?.name === '【自定义开局】';
   const description = isCustomBackground ? (preset.background?.description ?? '') : '';
@@ -130,10 +135,37 @@ const handleLoadPreset = (preset: CharacterPreset) => {
   emit('close');
 };
 
+// 加载预设前先提醒会清空当前楼层变量
+const requestLoadPreset = (preset: CharacterPreset) => {
+  presetToLoad.value = preset;
+  presetToDelete.value = null;
+  presetToOverwrite.value = null;
+};
+
+const confirmLoadPreset = () => {
+  if (!presetToLoad.value) return;
+  const preset = presetToLoad.value;
+  const cleared = clearLatestMessageStatData();
+
+  if (!cleared) {
+    toastr.error('清空当前楼层变量失败，已取消加载预设');
+    return;
+  }
+
+  toastr.info('已清空当前最新楼层的 stat_data 变量');
+  presetToLoad.value = null;
+  loadPresetNow(preset);
+};
+
+const cancelLoadPreset = () => {
+  presetToLoad.value = null;
+};
+
 // 请求删除预设
 const requestDeletePreset = (name: string) => {
   presetToDelete.value = name;
   presetToOverwrite.value = null;
+  presetToLoad.value = null;
 };
 
 const confirmDeletePreset = () => {
@@ -150,6 +182,12 @@ const cancelDelete = () => {
 // 关闭弹窗
 const handleClose = () => {
   emit('close');
+};
+
+const handleCloseInteraction = (event?: Event) => {
+  event?.preventDefault();
+  event?.stopPropagation();
+  handleClose();
 };
 
 // 弹窗标题
@@ -251,21 +289,30 @@ const cancelImport = () => {
 
 <template>
   <Teleport to="body">
-    <div v-if="visible" class="modal-overlay" @click.self="handleClose">
-      <div class="modal-container">
+    <div
+      v-if="visible"
+      class="modal-overlay"
+      @click.self="handleCloseInteraction"
+      @pointerup.self="handleCloseInteraction"
+    >
+      <div class="modal-container" @click.stop @pointerup.stop>
         <!-- 标题栏 -->
         <div class="modal-header">
           <h2 class="modal-title">{{ modalTitle }}</h2>
-          <button class="close-button" title="关闭" @click="handleClose">✕</button>
+          <button
+            type="button"
+            class="close-button"
+            title="关闭"
+            aria-label="关闭弹窗"
+            @click.stop.prevent="handleCloseInteraction"
+            @pointerup.stop.prevent="handleCloseInteraction"
+          >
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
         </div>
         <!-- 内容区域 -->
         <div class="modal-content">
-          <div
-            v-if="showSaveSection"
-            class="manage-tabs"
-            role="tablist"
-            aria-label="管理自定义内容"
-          >
+          <div v-if="showSaveSection" class="manage-tabs" role="tablist" aria-label="管理自定义内容">
             <button
               v-for="section in manageSections"
               :key="section.key"
@@ -281,123 +328,144 @@ const cancelImport = () => {
           </div>
 
           <div v-if="showPresetManager" class="preset-manager-section">
-            <!-- 保存新预设区域 -->
-            <div v-if="showSaveSection" class="save-section">
-              <h3 class="section-title"><i class="fa-solid fa-floppy-disk"></i> 保存当前配置</h3>
-              <div class="save-row">
-                <input
-                  v-model="newPresetName"
-                  type="text"
-                  class="preset-input"
-                  placeholder="输入预设名称..."
-                  @keyup.enter="handleSavePreset"
-                />
-                <button
-                  class="action-button save-button"
-                  :class="{ confirm: presetToOverwrite === newPresetName.trim() }"
-                  @click="handleSavePreset"
-                >
-                  <i
-                    class="fa-solid"
-                    :class="presetToOverwrite === newPresetName.trim() ? 'fa-check' : 'fa-save'"
-                  ></i>
-                  {{ presetToOverwrite === newPresetName.trim() ? '确认覆盖' : '保存预设' }}
-                </button>
-              </div>
+          <!-- 保存新预设区域 -->
+          <div v-if="showSaveSection" class="save-section">
+            <h3 class="section-title"><i class="fa-solid fa-floppy-disk"></i> 保存当前配置</h3>
+            <div class="save-row">
+              <input
+                v-model="newPresetName"
+                type="text"
+                class="preset-input"
+                placeholder="输入预设名称..."
+                @keyup.enter="handleSavePreset"
+              />
+              <button
+                class="action-button save-button"
+                :class="{ confirm: presetToOverwrite === newPresetName.trim() }"
+                @click="handleSavePreset"
+              >
+                <i
+                  class="fa-solid"
+                  :class="presetToOverwrite === newPresetName.trim() ? 'fa-check' : 'fa-save'"
+                ></i>
+                {{ presetToOverwrite === newPresetName.trim() ? '确认覆盖' : '保存预设' }}
+              </button>
             </div>
+          </div>
 
-            <!-- 导入预设区域 -->
-            <div v-if="showSaveSection" class="import-section">
-              <h3 class="section-title"><i class="fa-solid fa-file-import"></i> 导入预设</h3>
-              <div class="import-row">
-                <button class="action-button import-button" @click="handleImport">
-                  <i class="fa-solid fa-upload"></i> 导入预设文件
-                </button>
-                <span class="import-hint">支持 .json 格式的预设文件</span>
-              </div>
+          <!-- 导入预设区域 -->
+          <div v-if="showSaveSection" class="import-section">
+            <h3 class="section-title"><i class="fa-solid fa-file-import"></i> 导入预设</h3>
+            <div class="import-row">
+              <button class="action-button import-button" @click="handleImport">
+                <i class="fa-solid fa-upload"></i> 导入预设文件
+              </button>
+              <span class="import-hint">支持 .json 格式的预设文件</span>
             </div>
+          </div>
 
-            <!-- 预设列表 -->
-            <div class="list-section">
-              <div class="list-header">
-                <h3 class="section-title"><i class="fa-solid fa-list"></i> 已保存的预设</h3>
-                <button
-                  v-if="presetList.length > 0 && showSaveSection"
-                  class="action-button export-all-button"
-                  @click="handleExportAll"
-                >
-                  <i class="fa-solid fa-file-export"></i> 全部导出
-                </button>
-              </div>
-              <div v-if="presetList.length === 0" class="empty-state">
-                <i class="fa-solid fa-inbox empty-icon"></i>
-                <p>暂无保存的预设</p>
-                <p v-if="showSaveSection" class="hint">在上方输入名称保存当前配置</p>
-              </div>
-              <div v-else class="preset-list">
-                <div
-                  v-for="preset in presetList"
-                  :key="preset.name"
-                  class="preset-item"
-                  :class="{ 'delete-pending': presetToDelete === preset.name }"
-                >
-                  <div class="preset-main">
-                    <div class="preset-info">
-                      <span class="preset-name">{{ preset.name }}</span>
-                      <span class="preset-time">{{ formatPresetTime(preset.updatedAt) }}</span>
-                    </div>
-                    <div class="preset-meta">
-                      <span class="meta-item"
-                        ><i class="fa-solid fa-user"></i>
-                        {{ preset.character.name || '未命名' }}</span
-                      >
-                      <span class="meta-item"
-                        ><i class="fa-solid fa-star"></i> Lv.{{ preset.character.level }}</span
-                      >
-                      <span class="meta-item"
-                        ><i class="fa-solid fa-shield"></i> {{ preset.equipments.length }}</span
-                      >
-                      <span class="meta-item"
-                        ><i class="fa-solid fa-wand-magic-sparkles"></i>
-                        {{ preset.skills.length }}</span
-                      >
-                      <span class="meta-item"
-                        ><i class="fa-solid fa-heart"></i> {{ preset.partners.length }}</span
-                      >
-                    </div>
+          <!-- 预设列表 -->
+          <div class="list-section">
+            <div class="list-header">
+              <h3 class="section-title"><i class="fa-solid fa-list"></i> 已保存的预设</h3>
+              <button
+                v-if="presetList.length > 0 && showSaveSection"
+                class="action-button export-all-button"
+                @click="handleExportAll"
+              >
+                <i class="fa-solid fa-file-export"></i> 全部导出
+              </button>
+            </div>
+            <div v-if="presetList.length === 0" class="empty-state">
+              <i class="fa-solid fa-inbox empty-icon"></i>
+              <p>暂无保存的预设</p>
+              <p v-if="showSaveSection" class="hint">在上方输入名称保存当前配置</p>
+            </div>
+            <div v-else class="preset-list">
+              <div
+                v-for="preset in presetList"
+                :key="preset.name"
+                class="preset-item"
+                :class="{ 'delete-pending': presetToDelete === preset.name }"
+              >
+                <div class="preset-main">
+                  <div class="preset-info">
+                    <span class="preset-name">{{ preset.name }}</span>
+                    <span class="preset-time">{{ formatPresetTime(preset.updatedAt) }}</span>
                   </div>
-                  <div class="preset-actions">
-                    <button class="action-button load-button" @click="handleLoadPreset(preset)">
-                      <i class="fa-solid fa-download"></i> 加载
-                    </button>
-                    <button
-                      v-if="showSaveSection"
-                      class="action-button export-button"
-                      @click="handleExportPreset(preset)"
+                  <div class="preset-meta">
+                    <span class="meta-item"
+                      ><i class="fa-solid fa-user"></i>
+                      {{ preset.character.name || '未命名' }}</span
                     >
-                      <i class="fa-solid fa-file-export"></i> 导出
-                    </button>
-                    <button
-                      v-if="showSaveSection"
-                      class="action-button delete-button"
-                      @click="requestDeletePreset(preset.name)"
+                    <span class="meta-item"
+                      ><i class="fa-solid fa-star"></i> Lv.{{ preset.character.level }}</span
                     >
-                      <i class="fa-solid fa-trash"></i> 删除
-                    </button>
+                    <span class="meta-item"
+                      ><i class="fa-solid fa-shield"></i> {{ preset.equipments.length }}</span
+                    >
+                    <span class="meta-item"
+                      ><i class="fa-solid fa-wand-magic-sparkles"></i>
+                      {{ preset.skills.length }}</span
+                    >
+                    <span class="meta-item"
+                      ><i class="fa-solid fa-heart"></i> {{ preset.partners.length }}</span
+                    >
                   </div>
+                </div>
+                <div class="preset-actions">
+                  <button class="action-button load-button" @click="requestLoadPreset(preset)">
+                    <i class="fa-solid fa-download"></i> 加载
+                  </button>
+                  <button
+                    v-if="showSaveSection"
+                    class="action-button export-button"
+                    @click="handleExportPreset(preset)"
+                  >
+                    <i class="fa-solid fa-file-export"></i> 导出
+                  </button>
+                  <button
+                    v-if="showSaveSection"
+                    class="action-button delete-button"
+                    @click="requestDeletePreset(preset.name)"
+                  >
+                    <i class="fa-solid fa-trash"></i> 删除
+                  </button>
                 </div>
               </div>
             </div>
           </div>
+          </div>
 
-          <ContentLibraryManager v-else :type="activeLibraryType" />
+          <ContentLibraryManager
+            v-else
+            :type="activeLibraryType"
+          />
         </div>
         <!-- 底部按钮 -->
         <div class="modal-footer">
-          <button class="footer-button" @click="handleClose">关闭</button>
+          <button
+            type="button"
+            class="footer-button"
+            @click.stop.prevent="handleCloseInteraction"
+            @pointerup.stop.prevent="handleCloseInteraction"
+          >
+            关闭
+          </button>
         </div>
       </div>
     </div>
+
+    <ConfirmModal
+      :visible="Boolean(presetToLoad)"
+      title="切换预设前清空变量"
+      :message="`加载预设「${presetToLoad?.name || ''}」前，会清空当前最新楼层里的 stat_data 变量，避免旧装备、技能、道具、伙伴等内容继续叠加。如需保留当前配置，请先取消并保存为预设。`"
+      confirm-text="清空并加载"
+      cancel-text="先去保存"
+      type="warning"
+      @confirm="confirmLoadPreset"
+      @cancel="cancelLoadPreset"
+    />
 
     <ConfirmModal
       :visible="Boolean(presetToDelete)"
@@ -416,10 +484,19 @@ const cancelImport = () => {
       class="modal-overlay conflict-overlay"
       @click.self="cancelImport"
     >
-      <div class="modal-container conflict-container">
+      <div class="modal-container conflict-container" @click.stop @pointerup.stop>
         <div class="modal-header">
           <h2 class="modal-title"><i class="fa-solid fa-triangle-exclamation"></i> 导入冲突</h2>
-          <button class="close-button" title="关闭" @click="cancelImport">✕</button>
+          <button
+            type="button"
+            class="close-button"
+            title="关闭"
+            aria-label="关闭弹窗"
+            @click.stop.prevent="cancelImport"
+            @pointerup.stop.prevent="cancelImport"
+          >
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
         </div>
         <div class="modal-content">
           <p class="conflict-description">
@@ -454,6 +531,8 @@ const cancelImport = () => {
   justify-content: center;
   z-index: 9999;
   backdrop-filter: blur(2px);
+  pointer-events: auto;
+  touch-action: pan-y;
 }
 
 .modal-container {
@@ -467,6 +546,8 @@ const cancelImport = () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  pointer-events: auto;
+  touch-action: auto;
 }
 
 .modal-header {
@@ -486,14 +567,20 @@ const cancelImport = () => {
   }
 
   .close-button {
-    background: none;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    background: transparent;
     border: none;
-    font-size: 1.2rem;
+    font-size: 1.35rem;
     cursor: pointer;
     color: var(--text-light);
-    padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--radius-sm);
     transition: var(--transition-fast);
+    touch-action: manipulation;
 
     &:hover {
       background: var(--border-color-light);
@@ -1031,6 +1118,14 @@ const cancelImport = () => {
   .modal-container {
     width: 95%;
     max-height: min(640px, 168vw);
+  }
+
+  .modal-header {
+    padding: var(--spacing-sm) var(--spacing-md);
+
+    .modal-title {
+      font-size: 1.16rem;
+    }
   }
 
   .modal-content {

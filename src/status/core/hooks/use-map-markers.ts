@@ -202,14 +202,17 @@ export const useMapMarkers = ({
       new OpenSeadragon.MouseTracker({
         element,
         pressHandler: event => {
+          event.stopPropagation = true;
           event.originalEvent.preventDefault();
           event.originalEvent.stopPropagation();
         },
         releaseHandler: event => {
+          event.stopPropagation = true;
           event.originalEvent.preventDefault();
           event.originalEvent.stopPropagation();
         },
         clickHandler: event => {
+          event.stopPropagation = true;
           event.originalEvent.preventDefault();
           event.originalEvent.stopPropagation();
           handleSelect();

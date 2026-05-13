@@ -40,6 +40,28 @@
           这里是阿斯塔利亚。"剑与魔法"、"诗与远方"、"历史与传说"、"生者与死者"、"英雄与史诗"、"神灵与命运"的世界。
         </p>
         <p>请拿起你梦中与儿时最浪漫的笔，亲自书写属于你自己的冒险故事吧。</p>
+
+        <div class="update-section">
+          <h3>获取最新更新</h3>
+          <ul>
+            <li>
+              <a
+                href="https://discord.com/channels/1134557553011998840/1448526819824504882"
+                target="_blank"
+                rel="noopener noreferrer"
+                >更新频道 *脑</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://discord.com/channels/1291925535324110879/1448533751540879452"
+                target="_blank"
+                rel="noopener noreferrer"
+                >更新频道 *程</a
+              >
+            </li>
+          </ul>
+        </div>
       </div>
     </details>
   </div>
@@ -63,7 +85,6 @@ const teamMembers = [
   '@AkabaneSaki',
   '@Aoo',
   '@青砚',
-  '@Elfa',
 ];
 
 const hallOfFame = ['@Kitaikuyo', '@秋天的咸鱼'];

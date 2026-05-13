@@ -26,6 +26,12 @@ import type {
 const getDefaultIdentity = () =>
   _.find(_.keys(getIdentityCosts.value), id => _.includes(id, '平民')) || '';
 
+export interface JourneyOptions {
+  injectResources: boolean;
+  injectCustomItems: boolean;
+  injectCustomSkills: boolean;
+}
+
 export const useCharacterStore = defineStore('character', () => {
   // State
   const character = ref<Omit<CharacterConfig, 'attributes'>>({
@@ -67,6 +73,13 @@ export const useCharacterStore = defineStore('character', () => {
   // 选择的伙伴和背景
   const selectedPartners = ref<Partner[]>([]);
   const selectedBackground = ref<Background | null>(null);
+
+  // 踏上旅程时的变量注入选项
+  const journeyOptions = ref<JourneyOptions>({
+    injectResources: false,
+    injectCustomItems: false,
+    injectCustomSkills: false,
+  });
 
   // Computed
 
@@ -340,6 +353,7 @@ export const useCharacterStore = defineStore('character', () => {
     selectedSkills,
     selectedPartners,
     selectedBackground,
+    journeyOptions,
 
     usedBP,
     maxBP,
