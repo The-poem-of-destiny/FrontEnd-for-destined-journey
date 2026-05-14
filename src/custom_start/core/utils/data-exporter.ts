@@ -431,7 +431,9 @@ export function generateAIPrompt(
   blocks.push(backgroundSection || '未选择初始开局剧情');
   blocks.push('');
   blocks.push('---');
-  blocks.push('当前为自定义开局，无需审查。生成一个符合描述和情景的初始剧情，并在回复末尾输出 UpdateVariable JSONPatch。');
+  blocks.push(
+    '当前为自定义开局，无需审查。生成一个符合描述和情景的初始剧情，并在回复末尾输出 UpdateVariable JSONPatch。',
+  );
 
   return `<custom_start_data>\n${blocks.join('\n')}\n</custom_start_data>`;
 }

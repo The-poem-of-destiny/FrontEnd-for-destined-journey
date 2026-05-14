@@ -425,10 +425,7 @@ const handleEditCustomItem = (
         </button>
       </div>
 
-      <div
-        v-if="isMobileViewport && activeUtilityPanel !== 'none'"
-        class="mobile-utility-sheet"
-      >
+      <div v-if="isMobileViewport && activeUtilityPanel !== 'none'" class="mobile-utility-sheet">
         <div class="sheet-header">
           <h3>{{ mobilePanelTitle }}</h3>
           <button class="sheet-close" aria-label="关闭面板" @click="closeUtilityPanel">
