@@ -1,0 +1,1313 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>命定之诗与黄昏之歌</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Serif+SC:wght@400;500;700&display=swap');
+
+      .recheck-container {
+        text-align: center;
+        margin: 25px 0 10px 0;
+      }
+
+      .recheck-button {
+        font-family: var(--body-font);
+        font-weight: 500;
+        font-size: 1em;
+        color: var(--title-color);
+        background-color: var(--item-bg-color);
+        border: 1px solid var(--border-color);
+        padding: 8px 25px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+      }
+
+      .recheck-button:hover {
+        background-color: var(--item-bg-hover-color);
+        border-color: var(--border-strong-color);
+      }
+
+      .env-check-container {
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background-color: rgba(253, 250, 245, 0.9);
+        padding: 10px 20px;
+        margin: 25px 0;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .env-check-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 5px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .env-check-item:not(:last-child) {
+        border-bottom: 1px dashed var(--border-color);
+      }
+
+      .env-check-label {
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        color: var(--title-color);
+      }
+
+      .env-check-label .icon {
+        font-size: 1.4em;
+        margin-right: 12px;
+        opacity: 0.8;
+        line-height: 1;
+      }
+
+      .env-check-details {
+        display: flex;
+        align-items: center;
+        font-size: 0.9em;
+        gap: 15px;
+        text-align: right;
+      }
+
+      .env-check-details strong {
+        font-weight: 700;
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        min-width: 55px;
+        text-align: center;
+        border: 1px solid transparent;
+      }
+
+      .status-ok {
+        background-color: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
+      }
+
+      .status-warn {
+        background-color: #fff3cd;
+        color: #856404;
+        border-color: #ffeeba;
+      }
+
+      .status-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-color: #f5c6cb;
+      }
+
+      .status-unknown {
+        background-color: #e2e3e5;
+        color: #383d41;
+        border-color: #d6d8db;
+      }
+
+      .locked-module {
+        opacity: 0.5;
+        pointer-events: none;
+        filter: grayscale(100%);
+        user-select: none;
+        transition: all 0.3s ease;
+      }
+
+      :root {
+        --bg-color: #f5efe6;
+        --text-color: #4a3b31;
+        --border-color: #d3c5b3;
+        --border-strong-color: #785a4e;
+        --title-color: #5d4037;
+        --link-color: #8c6d62;
+        --item-bg-color: rgba(253, 250, 245, 0.9);
+        --item-bg-hover-color: #e8ddcb;
+        --item-bg-selected-color: #d7c8b6;
+        --pre-bg-color: rgba(215, 200, 182, 0.3);
+        --container-bg-color: rgba(240, 230, 210, 0.9);
+        --title-font: 'Cinzel', serif;
+        --body-font: 'Noto Serif SC', serif;
+      }
+
+      body {
+        font-family: var(--body-font);
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        background-image: url('data:image/png;base64,iVBORw0KUAhEUgAAADIAAAAyCAMAAAAp4XiGAAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAADdAAAA3QFwU6IHAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAABbUExURQAAAP////f3+Pj4+fX19vb2+PT09Pj4+d/f4O/v8fPz9PX19vf3+Pn5+fb29/Hx8/T09fX19////97e4Ojo6fHx8/Ly8/X19fX19fDw8vX19e/v8fj4+Pf3+AAAADSAx5YAAAAfdFJOUwAAAAAAAAAAAAAAAMA/z/BAgMBAwBCgwFBPT1BQUD9/Py8vRkQoCgAAAQBJREFUSMftlVuSgyAQhUNtZRAScQExPff9H3CBQsEMZDDpOf2EM8P9NZnZzI5KEfEPMGOIsIApFgAAFDtAAmWiIAMAWGDVQDQAAkYMm9RhpJbrBLhZ1Z6yGvWq2xWA92i6ZXRtC50EAADg0n8ErvDY2esxAEBW96Fz0Npq7H0AGBzh6MrAgAAgAEEyNiyL00mDgCsvt9jX6gAEEPg2pS8HAABgB2b0ONnuaR4AQDG9OQCAfQD8XRsBACJmk/+1WwUALg7A8IUBjgh0JGBgAJY2YB+S/VB9aKjpx5EDP5HAPk7Jm4tJgLeJ3I0LANT3/k7K/r5Q/AAAFYxxfYq1LAAAAABJRU5ErkJggg==');
+        background-repeat: repeat;
+      }
+
+      .selector-scroll {
+        border: 2px solid var(--border-strong-color);
+        border-radius: 8px;
+        padding: 25px;
+        background-color: var(--container-bg-color);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        max-width: 900px;
+        width: 100%;
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .step-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        opacity: 1;
+        transform: translateY(0);
+        transition:
+          opacity 0.3s ease,
+          transform 0.3s ease;
+      }
+
+      .step-content.hidden {
+        display: none;
+      }
+
+      .step-content.fade-out {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      .step-content.fade-in-start {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      .step-footer {
+        text-align: center;
+        margin-top: auto;
+        padding-top: 20px;
+      }
+
+      /* --- New Main Page Title --- */
+      .page-super-title {
+        font-family: var(--title-font);
+        font-weight: 700;
+        text-align: center;
+        font-size: 2.8em;
+        color: var(--title-color);
+        margin: 10px 0 0 0;
+        letter-spacing: 2px;
+      }
+
+      .ornamental-divider {
+        border: 0;
+        height: 1px;
+        background-color: var(--border-color);
+        position: relative;
+        margin: 25px auto 30px auto;
+        width: 85%;
+      }
+
+      .ornamental-divider::after {
+        content: '❖';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: var(--container-bg-color);
+        padding: 0 15px;
+        color: var(--title-color);
+        font-size: 1.6em;
+        line-height: 1;
+      }
+
+      /* --- Info Panel Styles --- */
+      .info-panel {
+        margin-bottom: 25px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        overflow: hidden;
+        background-color: var(--item-bg-color);
+      }
+
+      .info-panel > summary {
+        font-family: var(--title-font);
+        font-weight: 700;
+        font-size: 1.1em;
+        color: var(--title-color);
+        background-color: var(--item-bg-selected-color);
+        padding: 12px 20px;
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.2s;
+      }
+
+      .info-panel > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .info-panel > summary:hover {
+        background-color: #c9bba9;
+      }
+
+      .arrow-toggle {
+        font-size: 0.8em;
+        transition: transform 0.3s ease-out;
+        display: inline-block;
+      }
+
+      .info-panel[open] > summary .arrow-toggle {
+        transform: rotate(-90deg);
+      }
+
+      .info-content {
+        padding: 15px 25px 25px 25px;
+        line-height: 1.7;
+      }
+
+      .info-content h3 {
+        font-family: var(--title-font);
+        color: var(--title-color);
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 8px;
+        margin: 25px 0 15px 0;
+        font-size: 1.4em;
+      }
+
+      .info-content h3:first-child {
+        margin-top: 5px;
+      }
+
+      .info-content p,
+      .info-content ul {
+        margin: 0 0 1em 0;
+      }
+
+      .info-content ul {
+        list-style: none;
+        padding-left: 5px;
+      }
+
+      .info-content li {
+        padding-left: 20px;
+        position: relative;
+      }
+
+      .info-content li::before {
+        content: '»';
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: var(--border-strong-color);
+        font-weight: bold;
+      }
+
+      .info-content a {
+        color: var(--link-color);
+        text-decoration: none;
+        font-weight: 500;
+        word-break: break-all;
+      }
+
+      .info-content a:hover {
+        text-decoration: underline;
+        color: var(--title-color);
+      }
+
+      .prerequisites {
+        background-color: var(--pre-bg-color);
+        border: 1px dashed var(--border-color);
+        padding: 15px 20px;
+        border-radius: 4px;
+        margin-top: 10px;
+      }
+
+      .prerequisites h4 {
+        font-family: var(--body-font);
+        font-weight: 700;
+        color: var(--title-color);
+        margin: 0 0 10px 0;
+        font-size: 1.1em;
+      }
+
+      .prerequisites ul {
+        margin-bottom: 0;
+      }
+
+      /* --- Section Title --- */
+      .main-title {
+        font-family: var(--title-font);
+        font-weight: 700;
+        color: var(--title-color);
+        text-align: center;
+        margin: 0 0 10px 0;
+        font-size: 2.2em;
+      }
+
+      .instructions {
+        text-align: center;
+        margin-bottom: 25px;
+        font-size: 0.95em;
+        color: #6a514d;
+      }
+
+      .scenario-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+      }
+
+      .scenario-option {
+        font: inherit;
+        color: inherit;
+        background: var(--item-bg-color);
+        border: 1px solid var(--border-color);
+        text-align: left;
+        width: 100%;
+        padding: 12px 15px 12px 40px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        position: relative;
+        font-size: 1.05em;
+      }
+
+      .scenario-option::before {
+        content: '📜';
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.1em;
+        opacity: 0.7;
+        transition: all 0.2s ease-in-out;
+      }
+
+      .scenario-option:hover {
+        background-color: var(--item-bg-hover-color);
+        border-color: var(--border-strong-color);
+        transform: translateX(5px);
+      }
+
+      .scenario-option:hover::before {
+        opacity: 1;
+        transform: translateY(-50%) rotate(-5deg);
+      }
+
+      .scenario-option.selected {
+        background-color: var(--item-bg-selected-color);
+        border-color: var(--title-color);
+        color: var(--title-color);
+        font-weight: 500;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .scenario-option.selected::after {
+        content: '✓';
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-weight: bold;
+        color: var(--title-color);
+      }
+
+      /* --- NEW STYLES FOR LOREBOOK CONTROLS --- */
+      .control-panel-container {
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background-color: rgba(253, 250, 245, 0.9);
+        padding: 15px 20px;
+        margin: 25px 0;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .control-group {
+        margin-bottom: 20px;
+      }
+
+      .control-group:last-child {
+        margin-bottom: 5px;
+      }
+
+      .control-group-title {
+        font-weight: 500;
+        color: var(--title-color);
+        margin: 0 0 12px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px dashed var(--border-color);
+        font-size: 1.1em;
+      }
+
+      .control-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      /* Wrapper for Button + Description */
+      .control-item-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1 0 140px;
+        /* Grow, Don't shrink, Base width */
+        max-width: 280px;
+      }
+
+      .control-button {
+        font-family: var(--body-font);
+        font-size: 0.95em;
+        padding: 8px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        background-color: var(--item-bg-color);
+        color: var(--text-color);
+        opacity: 0.8;
+        width: 100%;
+        /* Fill the wrapper */
+      }
+
+      .button-desc {
+        font-size: 0.8em;
+        color: #6a514d;
+        margin-top: 6px;
+        text-align: center;
+        opacity: 0.8;
+        line-height: 1.3;
+        min-height: 1em;
+        /* Reserve space */
+      }
+
+      .control-button:hover {
+        background-color: var(--item-bg-hover-color);
+        border-color: var(--border-strong-color);
+        opacity: 1;
+      }
+
+      .control-button.disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        background-color: #e0e0e0;
+      }
+
+      /* Radio button style */
+      .control-button.selected {
+        background-color: var(--item-bg-selected-color);
+        border-color: var(--title-color);
+        color: var(--title-color);
+        font-weight: 500;
+        opacity: 1;
+      }
+
+      /* Toggle button styles */
+      .control-button.toggled-on {
+        background-color: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
+        font-weight: 500;
+        opacity: 1;
+      }
+
+      .control-button.toggled-on:hover {
+        background-color: #c3e6cb;
+      }
+
+      #lorebook-status {
+        font-size: 0.9em;
+        text-align: center;
+        color: #856404;
+        margin-top: -15px;
+        margin-bottom: 20px;
+      }
+
+      /* --- Credits & Info Styles --- */
+      .credits-container {
+        text-align: center;
+        margin-bottom: 25px;
+        padding: 20px;
+        background-color: rgba(253, 250, 245, 0.6);
+        border-radius: 8px;
+        border: 1px dashed var(--border-color);
+      }
+
+      .credits-title {
+        font-family: var(--title-font);
+        font-weight: 700;
+        color: var(--title-color);
+        margin-bottom: 15px;
+        font-size: 1.2em;
+        letter-spacing: 1px;
+      }
+
+      .author-badges {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .author-badge {
+        background-color: var(--item-bg-color);
+        border: 1px solid var(--border-color);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        color: var(--text-color);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+        cursor: default;
+      }
+
+      .author-badge:hover {
+        transform: translateY(-2px);
+        border-color: var(--border-strong-color);
+        background-color: var(--item-bg-hover-color);
+      }
+
+      .credits-special {
+        font-size: 0.95em;
+        color: #6a514d;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dotted var(--border-color);
+        display: inline-block;
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .world-quote {
+        background-color: rgba(245, 239, 230, 0.5);
+        border-left: 3px solid var(--border-strong-color);
+        padding: 12px 18px;
+        margin: 15px 0;
+        font-style: italic;
+        color: #5d4037;
+        font-family: 'KaiTi', 'STKaiti', '楷体', var(--body-font);
+        line-height: 1.6;
+      }
+
+      .update-section {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px dashed var(--border-color);
+      }
+
+      /* --- END OF NEW STYLES --- */
+
+      @media screen and (max-width: 600px) {
+        body {
+          padding: 10px;
+        }
+
+        .selector-scroll {
+          padding: 15px;
+        }
+
+        .page-super-title {
+          font-size: 2em;
+        }
+
+        .main-title {
+          font-size: 1.8em;
+        }
+
+        .scenario-option {
+          padding: 10px 15px 10px 35px;
+          font-size: 1em;
+        }
+
+        .info-panel > summary {
+          padding: 10px 15px;
+        }
+
+        .info-content {
+          padding: 15px;
+        }
+
+        .control-item-wrapper {
+          flex-basis: 100%;
+          /* Stack on mobile if needed */
+          max-width: 100%;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="selector-scroll">
+      <h1 class="page-super-title">命定之诗与黄昏之歌</h1>
+      <hr class="ornamental-divider" />
+
+      <!-- 制作人员展示区 -->
+      <div class="credits-container">
+        <div class="credits-title">❖ 制作团队 ❖</div>
+        <div class="author-badges">
+          <span class="author-badge">@𝕽𝖍𝖞𝖘_𝖟_瑞</span>
+          <span class="author-badge">@Yoyo514</span>
+          <span class="author-badge">@十七</span>
+          <span class="author-badge">@Hilo(404/403)</span>
+          <span class="author-badge">@快乐柠萌茶</span>
+          <span class="author-badge">@三饺初华</span>
+          <span class="author-badge">@银时萝</span>
+          <span class="author-badge">@镜梦幻</span>
+          <span class="author-badge">@风见幽泠</span>
+        </div>
+        <div class="credits-title">❖ 英灵殿 ❖</div>
+        <div class="author-badges">
+          <span class="author-badge">@秋天的咸鱼</span>
+          <span class="author-badge">@Kitaikuyo</span>
+        </div>
+        <div class="credits-special"><strong>特别鸣谢：</strong>@FL已放弃治疗 @tongtny123 @willing @肆祀一一 @大乐</div>
+      </div>
+
+      <!-- 合并后的信息面板 -->
+      <details class="info-panel">
+        <summary>
+          <span>世界背景与相关信息</span>
+          <span class="arrow-toggle">◀</span>
+        </summary>
+        <div class="info-content">
+          <h3>阿斯塔利亚世界</h3>
+          <p>
+            小时候的你读过那样的故事吗？在剑与魔法的异世界中，幻想中的故事。一句澄澈而坚定的誓言，一段英雄的骑行，一页由凡人书写的史诗。
+          </p>
+
+          <div class="world-quote">“家园已在身后，世界尽在眼前。”</div>
+
+          <div class="world-quote">
+            “长夜将至，我从今开始守望，至死方休。我将不娶妻、不封地、不生子。我将不戴宝冠，不争荣宠。我将尽忠职守，生死于斯。我是黑暗中的利剑，长城上的守卫，抵御寒冷的烈焰，破晓时分的光线，唤醒眠者的号角，守护王国的坚盾。我将生命与荣耀献给守夜人，今夜如此，夜夜皆然。”
+          </div>
+
+          <div class="world-quote">
+            “荣耀即吾命！”<br />
+            “愿黑松长青，愿号角长鸣，愿理想闪耀如初，愿长剑锋利如故。”
+          </div>
+
+          <p>
+            这里是阿斯塔利亚。“剑与魔法”、“诗与远方”、“历史与传说”、“生者与死者”、“英雄与史诗”、“神灵与命运”的世界。
+          </p>
+          <p>请拿起你梦中与儿时最浪漫的笔，亲自书写属于你自己的冒险故事吧。</p>
+
+          <div class="update-section">
+            <h3>获取最新更新</h3>
+            <ul>
+              <li>
+                <a
+                  href="https://discord.com/channels/1134557553011998840/1422790367631380490"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >更新频道 *脑</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://discord.com/channels/1291925535324110879/1422794259056033832"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >更新频道 *程</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+      </details>
+      <h2 class="main-title">环境检查</h2>
+      <div class="env-check-container">
+        <div class="env-check-item">
+          <div class="env-check-label">
+            <span class="icon">⚙️</span>
+            <span>酒馆助手</span>
+          </div>
+          <div class="env-check-details">
+            <span>版本: <strong id="TavernHelper-Version">加载中...</strong></span>
+            <span>状态: <strong id="TavernHelper-Status">加载中...</strong></span>
+          </div>
+        </div>
+        <div class="env-check-item">
+          <div class="env-check-label">
+            <span class="icon">📄</span>
+            <span>提示词模板 (EJS)</span>
+          </div>
+          <div class="env-check-details">
+            <span>状态: <strong id="ejsTemplate-Status">加载中...</strong></span>
+            <span>启用?: <strong id="ejsTemplate-Enabled">加载中...</strong></span>
+          </div>
+        </div>
+        <div class="env-check-item">
+          <div class="env-check-label">
+            <span class="icon">🧩</span>
+            <span>MVU 框架</span>
+          </div>
+          <div class="env-check-details">
+            <span>状态: <strong id="MVU-Status">加载中...</strong></span>
+          </div>
+        </div>
+      </div>
+      <div class="recheck-container">
+        <button id="recheck-btn" class="recheck-button">重新检查</button>
+      </div>
+
+      <!-- === NEW LOREBOOK CONTROL PANEL START === -->
+      <div id="step-1" class="step-content">
+        <h2 class="main-title">世界书快捷控制</h2>
+        <p id="lorebook-status">正在加载世界书信息...</p>
+        <div class="control-panel-container">
+          <div class="control-group">
+            <h3 class="control-group-title">命定系统核心选一:</h3>
+            <div class="control-buttons">
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="destiny" data-value="唐吉坷德">唐吉坷德</button>
+                <span class="button-desc">老骑士，冒险</span>
+              </div>
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="destiny" data-value="阿米娅">阿米娅</button>
+                <span class="button-desc">小兔娘，温柔</span>
+              </div>
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="destiny" data-value="莉莉丝">莉莉丝</button>
+                <span class="button-desc">魅魔，开后宫</span>
+              </div>
+              <!-- New Entries -->
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="destiny" data-value="茶茶">茶茶</button>
+                <span class="button-desc">观众，乐子人，吃瓜</span>
+              </div>
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="destiny" data-value="高文塞西尔与琥珀">
+                  高文塞西尔与琥珀
+                </button>
+                <span class="button-desc">你是来自塞西尔帝国于此世界的开拓者</span>
+              </div>
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="destiny" data-value="薇洛">薇洛</button>
+                <span class="button-desc">小妖精，温柔</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h3 class="control-group-title">角色列表:</h3>
+            <div class="control-buttons">
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="char" data-value="龙娘傲雪">龙娘傲雪</button>
+                <span class="button-desc">龙裔，寒潭剑姬, 霜龙之女，诺斯加德可能遇到</span>
+              </div>
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="char" data-value="羡愚">羡愚</button>
+                <span class="button-desc">翼民，伯伦斯法环雾晶港市立图书馆馆长</span>
+              </div>
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="char" data-value="银莳萝·奥雷利亚">银莳萝·奥雷利亚</button>
+                <span class="button-desc">人类，古月精灵血脉，艾尔文海姆可能遇到</span>
+              </div>
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="char" data-value="薇薇拉">薇薇拉</button>
+                <span class="button-desc">半血魔，古代的凡人贵族，哪里都可能遇到</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h3 class="control-group-title">变量输出方式选一:</h3>
+            <div class="control-buttons">
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="output" data-value="主API">主API</button>
+                <span class="button-desc"></span>
+              </div>
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="output" data-value="额外API">额外API</button>
+                <span class="button-desc">切换到开局页面之后再更改MVU插件的额外模型解析设置</span>
+              </div>
+            </div>
+          </div>
+          <div class="control-group">
+            <h3 class="control-group-title">事件链开关:</h3>
+            <div class="control-buttons">
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="event" data-value="血姬">血姬事件链</button>
+                <span class="button-desc">酒馆，公会等处领取相关委托触发</span>
+              </div>
+              <div class="control-item-wrapper">
+                <button class="control-button" data-group="event" data-value="双子星">双子星事件链</button>
+                <span class="button-desc">翻阅特定书籍触发</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="step-footer">
+          <button id="next-step-btn" class="recheck-button">下一步</button>
+        </div>
+      </div>
+      <!-- === NEW LOREBOOK CONTROL PANEL END === -->
+
+      <div id="step-2" class="step-content hidden">
+        <h2 class="main-title">你的故事将从何开始</h2>
+        <div class="control-panel-container">
+          <ul class="scenario-list">
+            <li><button class="scenario-option" data-index="1">我的故事将由我亲手书写(自定义)</button></li>
+            <li><button class="scenario-option" data-index="2">《来自异世界的“勇者”》</button></li>
+            <li><button class="scenario-option" data-index="3">《红月之誓（画饼占坑）》</button></li>
+            <li><button class="scenario-option" data-index="4">《线与天堂与彼岸花》</button></li>
+            <li><button class="scenario-option" data-index="5">《慈悲的“魔王”（画饼占坑）》</button></li>
+          </ul>
+        </div>
+        <div class="step-footer">
+          <button id="prev-step-btn" class="recheck-button">上一步</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const options = document.querySelectorAll('.scenario-option');
+
+        // Function to switch the starting message (swipe) in SillyTavern
+        async function switchSwipe(swipeId) {
+          if (typeof SillyTavern === 'undefined' || !SillyTavern.chat || SillyTavern.chat.length === 0) {
+            console.warn('SillyTavern environment not detected. Action will not be executed.');
+            return;
+          }
+
+          const swipeIndex = swipeId;
+
+          if (typeof SillyTavern.chat[0].swipe_id !== 'undefined' && SillyTavern.chat[0].swipe_id !== swipeIndex) {
+            if (SillyTavern.chat[0].swipes && SillyTavern.chat[0].swipes.length > swipeIndex) {
+              SillyTavern.chat[0].swipe_id = swipeIndex;
+              SillyTavern.chat[0].mes = SillyTavern.chat[0].swipes[swipeIndex];
+              await SillyTavern.saveChat();
+              await SillyTavern.reloadCurrentChat();
+              console.log(`Successfully switched to scenario (swipe_id: ${swipeIndex}).`);
+            } else {
+              console.error(`Swipe index ${swipeIndex} is out of bounds or swipes array is missing.`);
+            }
+          } else {
+            console.log(`Scenario ${swipeIndex} is already selected or swipe data is unavailable.`);
+          }
+        }
+
+        // Attach click event listeners to all scenario option buttons
+        options.forEach(button => {
+          button.addEventListener('click', function () {
+            const index = parseInt(this.dataset.index, 10);
+            options.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            switchSwipe(index);
+          });
+        });
+        envcheck();
+        const recheckButton = document.getElementById('recheck-btn');
+        if (recheckButton) {
+          recheckButton.addEventListener('click', envcheck);
+        }
+
+        function switchStep(currentId, nextId) {
+          const currentStep = document.getElementById(currentId);
+          const nextStep = document.getElementById(nextId);
+          const container = document.querySelector('.selector-scroll');
+
+          if (container && container.style.minHeight === '') {
+            container.style.minHeight = container.offsetHeight + 'px';
+          }
+
+          currentStep.classList.add('fade-out');
+
+          setTimeout(() => {
+            currentStep.classList.add('hidden');
+            currentStep.classList.remove('fade-out');
+
+            nextStep.classList.remove('hidden');
+            nextStep.classList.add('fade-in-start');
+
+            // Force reflow
+            void nextStep.offsetWidth;
+
+            nextStep.classList.remove('fade-in-start');
+          }, 300);
+        }
+
+        const nextStepBtn = document.getElementById('next-step-btn');
+        if (nextStepBtn) {
+          nextStepBtn.addEventListener('click', () => {
+            switchStep('step-1', 'step-2');
+          });
+        }
+
+        const prevStepBtn = document.getElementById('prev-step-btn');
+        if (prevStepBtn) {
+          prevStepBtn.addEventListener('click', () => {
+            switchStep('step-2', 'step-1');
+          });
+        }
+
+        // === NEW LOREBOOK CONTROL SCRIPT START ===
+        initializeLorebookControls();
+        // === NEW LOREBOOK CONTROL SCRIPT END ===
+      });
+      function updateStatusElement(id, text, type) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerText = text;
+        el.className = ''; // Clear existing classes
+        if (type) {
+          el.classList.add('status-' + type);
+        } else {
+          el.classList.add('status-unknown');
+        }
+      }
+
+      function envcheck() {
+        let TavernHelperVersion = getTavernHelperVersion();
+        let thStatusText = '未知';
+        let thStatusType = 'unknown';
+
+        if (TavernHelperVersion) {
+          if (compareVersion(TavernHelperVersion, '3.4.15') != -1) {
+            thStatusText = '正常';
+            thStatusType = 'ok';
+          } else {
+            thStatusText = '版本过低';
+            thStatusType = 'warn';
+          }
+          updateStatusElement('TavernHelper-Version', TavernHelperVersion, 'ok');
+        } else {
+          TavernHelperVersion = '未知';
+          thStatusText = '未找到';
+          thStatusType = 'error';
+          updateStatusElement('TavernHelper-Version', TavernHelperVersion, 'unknown');
+        }
+
+        updateStatusElement('TavernHelper-Status', thStatusText, thStatusType);
+
+        // Check EJS Template
+        let ejsStatusText = '未知';
+        let ejsStatusType = 'unknown';
+        let ejsEnabledText = '---';
+        let ejsEnabledType = 'unknown';
+
+        try {
+          const context = window.top.SillyTavern.getContext();
+          const ejsTemplateSettings = context.extensionSettings.EjsTemplate;
+          if (ejsTemplateSettings) {
+            ejsStatusText = '存在';
+            ejsStatusType = 'ok';
+            if (ejsTemplateSettings.enabled) {
+              ejsEnabledText = '已启用';
+              ejsEnabledType = 'ok';
+            } else {
+              ejsEnabledText = '未启用';
+              ejsEnabledType = 'warn';
+            }
+          } else {
+            ejsStatusText = '未检测到';
+            ejsStatusType = 'error';
+          }
+        } catch (e) {
+          ejsStatusText = '无法访问';
+          ejsStatusType = 'error';
+        }
+
+        updateStatusElement('ejsTemplate-Status', ejsStatusText, ejsStatusType);
+        updateStatusElement('ejsTemplate-Enabled', ejsEnabledText, ejsEnabledType);
+
+        updateLockState();
+        // Check MVU
+        MVUcheck();
+      }
+
+      function updateLockState() {
+        const idsToCheck = ['TavernHelper-Status', 'ejsTemplate-Status', 'ejsTemplate-Enabled', 'MVU-Status'];
+
+        let allOk = true;
+        for (const id of idsToCheck) {
+          const el = document.getElementById(id);
+          if (!el || !el.classList.contains('status-ok')) {
+            allOk = false;
+            break;
+          }
+        }
+
+        const step1 = document.getElementById('step-1');
+        const step2 = document.getElementById('step-2');
+
+        if (step1) {
+          if (allOk) step1.classList.remove('locked-module');
+          else step1.classList.add('locked-module');
+        }
+        if (step2) {
+          if (allOk) step2.classList.remove('locked-module');
+          else step2.classList.add('locked-module');
+        }
+      }
+
+      /**
+       * Check MVU status
+       */
+      async function MVUcheck() {
+        let mvuText;
+        let mvuType;
+        const timeoutDuration = 3000;
+        try {
+          const timeoutPromise = new Promise((_, reject) => {
+            const timeoutId = setTimeout(() => {
+              reject(new Error('timed out'));
+            }, timeoutDuration);
+          });
+          await Promise.race([waitGlobalInitialized('Mvu'), timeoutPromise]);
+
+          mvuText = '正常';
+          mvuType = 'ok';
+        } catch (error) {
+          mvuText = '异常/超时';
+          mvuType = 'error';
+        }
+
+        updateStatusElement('MVU-Status', mvuText, mvuType);
+        updateLockState();
+      }
+      /**
+       * Version comparison utility
+       */
+      function compareVersion(v1, v2) {
+        if (!v1 || !v2) return -1;
+        const s1 = String(v1);
+        const s2 = String(v2);
+        const arr1 = s1.split('.').map(Number);
+        const arr2 = s2.split('.').map(Number);
+        const len = Math.max(arr1.length, arr2.length);
+        for (let i = 0; i < len; i++) {
+          const num1 = arr1[i] || 0;
+          const num2 = arr2[i] || 0;
+          if (num1 > num2) return 1;
+          if (num1 < num2) return -1;
+        }
+        return 0;
+      }
+
+      // === NEW LOREBOOK CONTROL FUNCTIONS START ===
+      async function initializeLorebookControls() {
+        const TH = window.top.TavernHelper;
+        const statusEl = document.getElementById('lorebook-status');
+        const controlButtons = document.querySelectorAll('.control-button');
+
+        if (typeof TH === 'undefined') {
+          statusEl.textContent = '错误: 未找到酒馆助手插件。';
+          controlButtons.forEach(btn => btn.classList.add('disabled'));
+          return;
+        }
+
+        try {
+          const bookInfo = TH.getCharWorldbookNames('current');
+          const primaryBookName = bookInfo ? bookInfo.primary : null;
+
+          if (!primaryBookName) {
+            statusEl.textContent = '警告: 当前角色未绑定主世界书。';
+            controlButtons.forEach(btn => btn.classList.add('disabled'));
+            return;
+          }
+
+          const entries = await TH.getWorldbook(primaryBookName);
+          statusEl.textContent = `已加载主世界书: ${primaryBookName}`;
+
+          updateButtonStates(entries);
+          attachEventListeners(primaryBookName);
+        } catch (error) {
+          console.error('初始化世界书控件时出错:', error);
+          statusEl.textContent = '错误: 加载世界书失败，请检查控制台。';
+          controlButtons.forEach(btn => btn.classList.add('disabled'));
+        }
+      }
+
+      function updateButtonStates(entries) {
+        // Group 1: Destiny Core (Radio)
+        const destinyButtons = document.querySelectorAll('[data-group="destiny"]');
+        const destinyPrefixes = {
+          唐吉坷德: '命定系统-唐吉坷德核心',
+          阿米娅: '命定系统-阿米娅核心',
+          莉莉丝: '命定系统-莉莉丝核心',
+          茶茶: '命定系统-茶茶核心',
+          高文塞西尔与琥珀: '命定系统-高文·塞西尔核心',
+          薇洛: '命定系统-薇洛核心',
+        };
+        let destinySelected = false;
+        destinyButtons.forEach(btn => {
+          const prefix = destinyPrefixes[btn.dataset.value];
+          const isEnabled = entries.some(entry => entry.name.startsWith(prefix) && entry.enabled);
+          if (isEnabled) {
+            btn.classList.add('selected');
+            destinySelected = true;
+          } else {
+            btn.classList.remove('selected');
+          }
+        });
+
+        // Group 2: Character List (Toggle) - NEW
+        const charButtons = document.querySelectorAll('[data-group="char"]');
+        charButtons.forEach(btn => {
+          const value = btn.dataset.value;
+          let targetEntries;
+          // Determine target entry based on value
+          let searchName = '';
+          if (value === '龙娘傲雪') searchName = '龙娘傲雪';
+          else if (value === '羡愚') searchName = '羡愚酱';
+          else if (value === '银莳萝·奥雷利亚') searchName = '银莳萝·奥雷利亚';
+          else if (value === '薇薇拉') searchName = '薇薇拉';
+
+          if (searchName) {
+            targetEntries = entries.filter(e => e.name.startsWith(searchName));
+            if (targetEntries && targetEntries.length > 0) {
+              const allEnabled = targetEntries.every(e => e.enabled);
+              btn.classList.toggle('toggled-on', allEnabled);
+            }
+          }
+        });
+
+        // Group 3: Output Format (Radio)
+        const outputButtons = document.querySelectorAll('[data-group="output"]');
+        const outputNames = {
+          主API: 'output_format (随AI输出开，主API)',
+          额外API: '[mvu_update]output_format (使用额外模型更新变量开)',
+        };
+        let outputSelected = false;
+        outputButtons.forEach(btn => {
+          const fullName = outputNames[btn.dataset.value];
+          const isEnabled = entries.some(entry => entry.name === fullName && entry.enabled);
+          if (isEnabled) {
+            btn.classList.add('selected');
+            outputSelected = true;
+          } else {
+            btn.classList.remove('selected');
+          }
+        });
+
+        // Group 4: Event Chains (Toggle)
+        const eventButtons = document.querySelectorAll('[data-group="event"]');
+        eventButtons.forEach(btn => {
+          const value = btn.dataset.value;
+          let targetEntries;
+          if (value === '血姬') {
+            targetEntries = entries.filter(e => e.name.startsWith('血姬') || e.name === 'Liliyas_info');
+          } else if (value === '双子星') {
+            targetEntries = entries.filter(e => e.name.startsWith('双子星的咏叹调'));
+          }
+
+          if (targetEntries && targetEntries.length > 0) {
+            const allEnabled = targetEntries.every(e => e.enabled);
+            btn.classList.toggle('toggled-on', allEnabled);
+          }
+        });
+      }
+
+      function attachEventListeners(bookName) {
+        const controlButtons = document.querySelectorAll('.control-button');
+        controlButtons.forEach(button => {
+          // Remove old listener to prevent duplicates
+          button.replaceWith(button.cloneNode(true));
+        });
+        // Re-query for the new buttons
+        document.querySelectorAll('.control-button').forEach(button => {
+          if (!button.classList.contains('disabled')) {
+            button.addEventListener('click', () =>
+              handleButtonClick(button.dataset.group, button.dataset.value, bookName),
+            );
+          }
+        });
+      }
+
+      async function handleButtonClick(group, value, bookName) {
+        const TH = window.top.TavernHelper;
+
+        try {
+          await TH.updateWorldbookWith(bookName, entries => {
+            if (group === 'destiny') {
+              const prefixes = {
+                唐吉坷德: '命定系统-唐吉坷德核心',
+                阿米娅: '命定系统-阿米娅核心',
+                莉莉丝: '命定系统-莉莉丝核心',
+                茶茶: '命定系统-茶茶核心',
+                高文塞西尔与琥珀: '命定系统-高文·塞西尔核心',
+                薇洛: '命定系统-薇洛核心',
+              };
+              const targetPrefix = prefixes[value];
+              entries.forEach(entry => {
+                if (entry.name.startsWith(targetPrefix)) {
+                  entry.enabled = true;
+                } else if (Object.values(prefixes).some(p => entry.name.startsWith(p))) {
+                  entry.enabled = false;
+                }
+              });
+            } else if (group === 'char') {
+              let searchName = '';
+              if (value === '龙娘傲雪') searchName = '龙娘傲雪';
+              else if (value === '羡愚') searchName = '羡愚酱';
+              else if (value === '银莳萝·奥雷利亚') searchName = '银莳萝·奥雷利亚';
+              else if (value === '薇薇拉') searchName = '薇薇拉';
+
+              const targetEntries = entries.filter(e => e.name.startsWith(searchName));
+
+              if (targetEntries && targetEntries.length > 0) {
+                const shouldEnable = targetEntries.some(e => !e.enabled);
+                const targetNames = targetEntries.map(e => e.name);
+                entries.forEach(entry => {
+                  if (targetNames.includes(entry.name)) {
+                    entry.enabled = shouldEnable;
+                  }
+                });
+              }
+            } else if (group === 'output') {
+              const names = {
+                主API: 'output_format (随AI输出开，主API)',
+                额外API: '[mvu_update]output_format (使用额外模型更新变量开)',
+              };
+              const targetName = names[value];
+              entries.forEach(entry => {
+                if (entry.name === targetName) {
+                  entry.enabled = true;
+                } else if (Object.values(names).includes(entry.name)) {
+                  entry.enabled = false;
+                }
+              });
+            } else if (group === 'event') {
+              let targetEntries;
+              if (value === '血姬') {
+                targetEntries = entries.filter(e => e.name.startsWith('血姬') || e.name === 'Liliyas_info');
+              } else if (value === '双子星') {
+                targetEntries = entries.filter(e => e.name.startsWith('双子星的咏叹调'));
+              }
+
+              if (targetEntries && targetEntries.length > 0) {
+                // If any are disabled, turn all on. Otherwise, turn all off.
+                const shouldEnable = targetEntries.some(e => !e.enabled);
+                const targetNames = targetEntries.map(e => e.name);
+                entries.forEach(entry => {
+                  if (targetNames.includes(entry.name)) {
+                    entry.enabled = shouldEnable;
+                  }
+                });
+              }
+            }
+            return entries;
+          });
+        } catch (error) {
+          console.error('更新世界书失败:', error);
+          document.getElementById('lorebook-status').textContent = '错误: 更新世界书失败!';
+        } finally {
+          // Re-initialize to reflect changes
+          await initializeLorebookControls();
+        }
+      }
+      // === NEW LOREBOOK CONTROL FUNCTIONS END ===
+    </script>
+  </body>
+</html>

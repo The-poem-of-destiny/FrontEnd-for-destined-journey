@@ -129,14 +129,10 @@ const cancelClearAll = () => {
   showClearConfirm.value = false;
 };
 
-watch(partnerLevels, levels => syncCurrentOption(currentLevel, levels), { immediate: true });
-watch(
-  backgroundCategories,
-  categories => syncCurrentOption(currentBackgroundCategory, categories),
-  {
-    immediate: true,
-  },
-);
+watch(partnerLevels, (levels) => syncCurrentOption(currentLevel, levels), { immediate: true });
+watch(backgroundCategories, (categories) => syncCurrentOption(currentBackgroundCategory, categories), {
+  immediate: true,
+});
 </script>
 
 <template>

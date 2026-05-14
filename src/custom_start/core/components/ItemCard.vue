@@ -144,6 +144,9 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
   transition: all var(--transition-normal);
   position: relative;
   overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
 
   &::before {
     content: '';

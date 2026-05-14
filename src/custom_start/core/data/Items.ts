@@ -1,3 +1,5 @@
+import { shallowRef } from 'vue';
+
 import type { Item } from '../types';
 import { getLibraryDataByType } from '../utils/custom-library';
 import { loadCustomItems, mergeData } from '../utils/loader';
@@ -13,21 +15,21 @@ interface ItemData {
 export const InitialItems: ItemData = {};
 
 // 加载并合并自定义道具数据
-let mergedItemsData: ItemData | null = null;
+const mergedItemsData = shallowRef<ItemData>(InitialItems);
 
 /**
  * 初始化道具数据（加载自定义数据并合并）
  */
 async function initializeItems() {
   const customData = await loadCustomItems();
-  mergedItemsData = mergeData(InitialItems, customData) as ItemData;
+  mergedItemsData.value = mergeData(InitialItems, customData) as ItemData;
 }
 
 /**
  * 获取合并后的道具数据
  */
 export function getInitialItems(): ItemData {
-  return mergeData(mergedItemsData || InitialItems, getLibraryDataByType<Item>('item')) as ItemData;
+  return mergeData(mergedItemsData.value, getLibraryDataByType<Item>('item')) as ItemData;
 }
 
 // 自动初始化

@@ -7,16 +7,12 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
   @include flex-center;
-  z-index: 1200;
+  z-index: 1100;
 }
 
 // 弹窗容器
 .modal {
   width: min(90vw, 360px);
-  max-height: min(82vh, 640px);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
   background: var(--theme-card-bg);
   border: 1px solid var(--theme-card-border);
   border-radius: $border-radius-sm;
@@ -35,14 +31,6 @@
 // 内容区域
 .body {
   @include list-container($spacing-xs);
-}
-
-.body,
-.content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: $spacing-base;
 }
 
 // 信息行

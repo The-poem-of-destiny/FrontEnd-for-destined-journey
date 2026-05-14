@@ -74,7 +74,9 @@ defineProps<Props>();
     box-shadow: none;
     overflow-x: hidden;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    touch-action: pan-y;
   }
 
   :deep(.basic-info),

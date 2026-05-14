@@ -31,6 +31,8 @@ export function createScriptIdIframe(): JQuery<HTMLIFrameElement> {
   return $(`<iframe>`).attr({
     script_id: getScriptId(),
     frameborder: 0,
+    allowfullscreen: 'true',
+    allow: 'fullscreen',
     srcdoc: iframe_srcdoc,
   }) as JQuery<HTMLIFrameElement>;
 }

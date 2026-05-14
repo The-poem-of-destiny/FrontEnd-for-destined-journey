@@ -1,0 +1,3127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>自定义开局数据编辑器</title>
+  <style>
+    :root {
+      --bg: #f6f3ee;
+      --panel: #fffdfa;
+      --panel-2: #f7f1e8;
+      --panel-3: #eee7dc;
+      --input-bg: #fffefa;
+      --line: #d9d0c3;
+      --line-strong: #a78f72;
+      --text: #2f2923;
+      --muted: #756a60;
+      --accent: #8b5e34;
+      --accent-hover: #754d28;
+      --accent-2: #2e6f62;
+      --danger: #9b2f2f;
+      --danger-hover: #842727;
+      --warn: #966a00;
+      --ok: #276749;
+      --focus: #3b6f8f;
+      --focus-ring: rgba(59, 111, 143, 0.14);
+      --button-hover-bg: #f8efe2;
+      --topbar-shadow: 0 2px 10px rgba(52, 40, 28, 0.06);
+      --sidebar-bg: #ede6dc;
+      --dataset-section-bg: #f8f1e8;
+      --dataset-title: #7b4b22;
+      --dataset-title-line: #9a6231;
+      --dataset-active-bg: #fff6e8;
+      --category-section-bg: #eef2ed;
+      --category-title: #2e6f62;
+      --category-active-bg: #e4f2ec;
+      --category-active-text: #235447;
+      --sidebar-actions-bg: rgba(255, 253, 250, 0.65);
+      --table-head-bg: #e8dfd1;
+      --table-head-text: #5a4632;
+      --row-bg: rgba(255, 253, 250, 0.58);
+      --row-alt-bg: rgba(255, 253, 250, 0.86);
+      --row-hover-bg: #fff5e5;
+      --row-selected-bg: #ffe8c5;
+      --row-selected-outline: rgba(139, 94, 52, 0.25);
+      --cell-border: rgba(217, 208, 195, 0.75);
+      --batch-bg: #f8f5ef;
+      --summary-bg: #eee7dc;
+      --editor-head-bg: #fbf7f0;
+      --field-label: #4c3c2d;
+      --tag-editor-bg: #fffefa;
+      --tag-bg: #f8efe2;
+      --tag-border: #d4c2aa;
+      --tag-text: #513c25;
+      --pill-bg: #eadfce;
+      --pill-text: #3f3429;
+      --details-bg: #fffaf3;
+      --details-head-bg: #f4eadb;
+      --splitter-bg: #d8cabb;
+      --splitter-hover-bg: #bda98f;
+      --splitter-line: rgba(120, 96, 72, 0.25);
+      --splitter-grip: rgba(100, 78, 55, 0.45);
+      --modal-backdrop: rgba(31, 24, 18, 0.35);
+      --choice-bg: #fffaf3;
+      --rarity-common-bg: #6f5b45;
+      --rarity-common-text: #fffaf0;
+      --rarity-uncommon-bg: #1f7665;
+      --rarity-uncommon-text: #ffffff;
+      --rarity-rare-bg: #1f5f9f;
+      --rarity-rare-text: #ffffff;
+      --rarity-epic-bg: #7d3f8c;
+      --rarity-epic-text: #ffffff;
+      --rarity-legendary-bg: #9a610e;
+      --rarity-legendary-text: #ffffff;
+      --rarity-mythic-bg: #5d328c;
+      --rarity-mythic-text: #ffffff;
+      --rarity-only-bg: #3b2569;
+      --rarity-only-text: #ffffff;
+      --shadow: 0 10px 25px rgba(52, 40, 28, 0.12);
+      font-family:
+        "Microsoft YaHei", "PingFang SC", "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+
+    [data-theme="dark"] {
+      --bg: #171a1d;
+      --panel: #22262b;
+      --panel-2: #2a2f35;
+      --panel-3: #30353b;
+      --input-bg: #181c20;
+      --line: #3c444c;
+      --line-strong: #637080;
+      --text: #eee7dd;
+      --muted: #b7aa9b;
+      --accent: #d09a5f;
+      --accent-hover: #e0ad72;
+      --accent-2: #65bca5;
+      --danger: #c95d5d;
+      --danger-hover: #df7373;
+      --warn: #e5bd58;
+      --ok: #7bd49c;
+      --focus: #73afd1;
+      --focus-ring: rgba(115, 175, 209, 0.22);
+      --button-hover-bg: #30363d;
+      --topbar-shadow: 0 2px 14px rgba(0, 0, 0, 0.32);
+      --sidebar-bg: #1b2024;
+      --dataset-section-bg: #241f1b;
+      --dataset-title: #e0ad72;
+      --dataset-title-line: #b5753a;
+      --dataset-active-bg: #3a2c1f;
+      --category-section-bg: #1c2524;
+      --category-title: #79ccb6;
+      --category-active-bg: #223b36;
+      --category-active-text: #bff4e5;
+      --sidebar-actions-bg: rgba(34, 38, 43, 0.82);
+      --table-head-bg: #2f3439;
+      --table-head-text: #eadfce;
+      --row-bg: #1d2125;
+      --row-alt-bg: #22272c;
+      --row-hover-bg: #2f363d;
+      --row-selected-bg: #3f321f;
+      --row-selected-outline: rgba(224, 173, 114, 0.38);
+      --cell-border: rgba(68, 76, 84, 0.86);
+      --batch-bg: #252a2f;
+      --summary-bg: #20252a;
+      --editor-head-bg: #24292f;
+      --field-label: #e5d8ca;
+      --tag-editor-bg: #181c20;
+      --tag-bg: #33291e;
+      --tag-border: #7c6046;
+      --tag-text: #f2ddc5;
+      --pill-bg: #34302a;
+      --pill-text: #eee0cc;
+      --details-bg: #1d2227;
+      --details-head-bg: #2c3035;
+      --splitter-bg: #293038;
+      --splitter-hover-bg: #3a4651;
+      --splitter-line: rgba(130, 145, 160, 0.28);
+      --splitter-grip: rgba(190, 203, 214, 0.42);
+      --modal-backdrop: rgba(0, 0, 0, 0.58);
+      --choice-bg: #1f2429;
+      --rarity-common-bg: #8b7864;
+      --rarity-common-text: #101316;
+      --rarity-uncommon-bg: #35c2a4;
+      --rarity-uncommon-text: #071713;
+      --rarity-rare-bg: #62a7f2;
+      --rarity-rare-text: #081523;
+      --rarity-epic-bg: #c084fc;
+      --rarity-epic-text: #1b0e24;
+      --rarity-legendary-bg: #f3b553;
+      --rarity-legendary-text: #241400;
+      --rarity-mythic-bg: #d6a3ff;
+      --rarity-mythic-text: #1d0f2d;
+      --rarity-only-bg: #f4d27a;
+      --rarity-only-text: #211500;
+      --shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 6px;
+      min-height: 34px;
+      padding: 7px 11px;
+      cursor: pointer;
+      transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: var(--line-strong);
+      background: var(--button-hover-bg);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--input-bg);
+      color: var(--text);
+      padding: 8px 10px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 132px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 2px var(--focus-ring);
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100vh;
+      --sidebar-w: 220px;
+      --editor-w: 34vw;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: var(--topbar-shadow);
+      z-index: 3;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      min-width: 210px;
+      margin-right: 6px;
+    }
+
+    .brand strong {
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .brand span {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .file-label {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .file-label input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .danger {
+      color: white;
+      background: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .danger:hover:not(:disabled) {
+      background: var(--danger-hover);
+      border-color: var(--danger-hover);
+    }
+
+    .ghost {
+      background: transparent;
+    }
+
+    .status {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 12px;
+      max-width: 320px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 8px minmax(560px, 1fr) 8px minmax(520px, var(--editor-w));
+      min-height: 0;
+    }
+
+    .splitter {
+      position: relative;
+      min-height: 0;
+      background: var(--splitter-bg);
+      cursor: col-resize;
+      z-index: 4;
+      border-left: 1px solid var(--splitter-line);
+      border-right: 1px solid var(--splitter-line);
+    }
+
+    .splitter::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 2px;
+      height: 44px;
+      border-radius: 4px;
+      background: var(--splitter-grip);
+      transform: translate(-50%, -50%);
+    }
+
+    .splitter:hover,
+    .splitter.dragging {
+      background: var(--splitter-hover-bg);
+    }
+
+    .sidebar,
+    .center,
+    .editor {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      border-right: 1px solid var(--line);
+      background: var(--sidebar-bg);
+    }
+
+    .side-section {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--dataset-section-bg);
+    }
+
+    .side-section .side-title {
+      color: var(--dataset-title);
+      border-left: 4px solid var(--dataset-title-line);
+      padding-left: 8px;
+    }
+
+    .side-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .dataset-list,
+    .category-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .dataset-button,
+    .category-button {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+      text-align: left;
+      background: var(--panel);
+    }
+
+    .dataset-button.active {
+      border-color: var(--accent);
+      background: var(--dataset-active-bg);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .category-button.active {
+      border-color: var(--category-title);
+      background: var(--category-active-bg);
+      color: var(--category-active-text);
+      font-weight: 700;
+    }
+
+    .count {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .category-scroll {
+      overflow: auto;
+      min-height: 0;
+      padding: 12px;
+      background: var(--category-section-bg);
+    }
+
+    .category-scroll .side-title {
+      color: var(--category-title);
+      border-left: 4px solid var(--category-title);
+      padding-left: 8px;
+    }
+
+    .sidebar-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid var(--line);
+      background: var(--sidebar-actions-bg);
+    }
+
+    .center {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      background: var(--bg);
+    }
+
+    .filters,
+    .batchbar {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .filters {
+      grid-template-columns: minmax(180px, 1fr) 140px 140px 150px;
+    }
+
+    .batchbar {
+      grid-template-columns: auto 150px 120px 1fr auto auto auto;
+      align-items: center;
+      background: var(--batch-bg);
+    }
+
+    .batchbar.is-empty {
+      display: none;
+    }
+
+    .batchbar .batch-title {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      min-height: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: var(--table-head-bg);
+      box-shadow: 0 1px 0 var(--line);
+    }
+
+    th,
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--cell-border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--table-head-text);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      background: var(--row-bg);
+      cursor: pointer;
+    }
+
+    tbody tr:nth-child(even) {
+      background: var(--row-alt-bg);
+    }
+
+    tbody tr:hover {
+      background: var(--row-hover-bg);
+    }
+
+    tbody tr.selected {
+      background: var(--row-selected-bg);
+      outline: 2px solid var(--row-selected-outline);
+      outline-offset: -2px;
+    }
+
+    tbody tr.dragging {
+      opacity: 0.48;
+    }
+
+    tbody tr.drop-before {
+      box-shadow: inset 0 3px 0 var(--accent);
+    }
+
+    tbody tr.drop-after {
+      box-shadow: inset 0 -3px 0 var(--accent);
+    }
+
+    .row-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .drag-handle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 24px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      color: var(--muted);
+      background: var(--panel-2);
+      font-size: 12px;
+      user-select: none;
+      cursor: grab;
+    }
+
+    .drag-handle.is-disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .cell-name {
+      font-weight: 700;
+      max-width: 280px;
+      word-break: break-word;
+    }
+
+    .cell-muted {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .pill-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 20px;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: var(--pill-bg);
+      color: var(--pill-text);
+      font-size: 12px;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .rarity-common {
+      background: var(--rarity-common-bg);
+      color: var(--rarity-common-text);
+    }
+
+    .rarity-only {
+      background: var(--rarity-only-bg);
+      color: var(--rarity-only-text);
+    }
+
+    .rarity-mythic {
+      background: var(--rarity-mythic-bg);
+      color: var(--rarity-mythic-text);
+    }
+
+    .rarity-legendary {
+      background: var(--rarity-legendary-bg);
+      color: var(--rarity-legendary-text);
+    }
+
+    .rarity-epic {
+      background: var(--rarity-epic-bg);
+      color: var(--rarity-epic-text);
+    }
+
+    .rarity-rare {
+      background: var(--rarity-rare-bg);
+      color: var(--rarity-rare-text);
+    }
+
+    .rarity-uncommon {
+      background: var(--rarity-uncommon-bg);
+      color: var(--rarity-uncommon-text);
+    }
+
+    .warning-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      color: var(--warn);
+      font-size: 12px;
+      max-width: 230px;
+    }
+
+    .empty-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 28px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-top: 1px solid var(--line);
+      background: var(--summary-bg);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .summary-log {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .editor {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      border-left: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .editor-head {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--editor-head-bg);
+    }
+
+    .editor-head h2 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--accent);
+    }
+
+    .editor-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .editor-scroll {
+      overflow: auto;
+      min-height: 0;
+      padding: 16px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 5px;
+      color: var(--field-label);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .inline-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .tag-editor {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 7px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--tag-editor-bg);
+    }
+
+    .tag-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-height: 24px;
+      padding: 2px 6px;
+      border: 1px solid var(--tag-border);
+      border-radius: 5px;
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      font-size: 12px;
+    }
+
+    .tag-item button {
+      min-height: 0;
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--danger);
+      line-height: 1;
+    }
+
+    .tag-editor input {
+      flex: 1 1 140px;
+      min-width: 110px;
+      border: none;
+      min-height: 24px;
+      padding: 2px;
+      box-shadow: none;
+    }
+
+    .kv-list,
+    .nested-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .kv-row {
+      display: grid;
+      grid-template-columns: minmax(130px, 0.32fr) 1fr auto;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .kv-row textarea {
+      min-height: 84px;
+    }
+
+    .small-btn {
+      min-height: 30px;
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--details-bg);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    details > summary {
+      cursor: pointer;
+      padding: 9px 10px;
+      color: var(--accent);
+      font-weight: 700;
+      background: var(--details-head-bg);
+    }
+
+    .detail-body {
+      padding: 10px;
+    }
+
+    .editor-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid var(--line);
+      background: var(--editor-head-bg);
+    }
+
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 20;
+      min-width: 250px;
+      max-width: 460px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      color: var(--text);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      background: var(--modal-backdrop);
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal {
+      width: min(820px, calc(100vw - 32px));
+      max-height: min(720px, calc(100vh - 32px));
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .modal h3 {
+      margin: 0;
+      padding: 14px 16px;
+      color: var(--accent);
+      border-bottom: 1px solid var(--line);
+      background: var(--editor-head-bg);
+    }
+
+    .modal-content {
+      overflow: auto;
+      padding: 14px 16px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--line);
+      background: var(--editor-head-bg);
+    }
+
+    .category-picker {
+      display: grid;
+      gap: 14px;
+      white-space: normal;
+    }
+
+    .category-picker label {
+      display: grid;
+      gap: 6px;
+      color: var(--field-label);
+      font-weight: 700;
+    }
+
+    .category-picker .hint {
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    .choice-list {
+      display: grid;
+      gap: 10px;
+      white-space: normal;
+    }
+
+    .choice-card {
+      display: grid;
+      gap: 4px;
+      min-height: 52px;
+      text-align: left;
+      background: var(--choice-bg);
+    }
+
+    .choice-card strong {
+      font-size: 14px;
+      color: var(--accent);
+    }
+
+    .choice-card span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 1200px) {
+      .layout {
+        --sidebar-w: 200px;
+        --editor-w: 520px;
+        grid-template-columns: var(--sidebar-w) 8px minmax(480px, 1fr) 8px minmax(460px, var(--editor-w));
+      }
+
+      .filters {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .batchbar {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      body {
+        overflow: auto;
+      }
+
+      .app {
+        height: auto;
+        min-height: 100vh;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .toolbar {
+        width: 100%;
+      }
+
+      .layout {
+        display: block;
+      }
+
+      .splitter {
+        display: none;
+      }
+
+      .sidebar,
+      .center,
+      .editor {
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+        border: none;
+      }
+
+      .category-scroll,
+      .table-wrap,
+      .editor-scroll {
+        max-height: none;
+        overflow: visible;
+      }
+
+      .filters,
+      .batchbar {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <strong>自定义开局数据编辑器</strong>
+      </div>
+      <div class="toolbar">
+        <label class="file-label">
+          导入 JSON 文件
+          <input id="fileInput" type="file" multiple accept=".json,.json5,application/json" />
+        </label>
+        <button id="exportBtn" class="primary">导出</button>
+        <button id="historyBtn">历史</button>
+        <button id="summaryBtn" class="ghost">摘要</button>
+        <button id="themeToggleBtn" class="ghost" type="button">深色</button>
+        <span id="statusText" class="status">等待导入 public/assets/data 中的数据文件</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar">
+        <section class="side-section">
+          <div class="side-title">
+            <span>数据文件</span>
+            <span id="loadedCount" class="count">0/7</span>
+          </div>
+          <div id="datasetList" class="dataset-list"></div>
+        </section>
+
+        <section class="category-scroll">
+          <div class="side-title">
+            <span>分类</span>
+            <span id="categoryCount" class="count">0</span>
+          </div>
+          <div id="categoryList" class="category-list"></div>
+        </section>
+
+        <section class="sidebar-actions">
+          <button id="addCategoryBtn">新增分类</button>
+          <button id="mergeCategoryBtn">合并分类</button>
+          <button id="renameCategoryBtn">重命名</button>
+          <button id="deleteCategoryBtn" class="danger">删除分类</button>
+          <button id="addEntityBtn" class="primary">新增条目</button>
+        </section>
+      </aside>
+
+      <div id="leftSplitter" class="splitter" title="拖动调整左侧宽度"></div>
+
+      <section class="center">
+        <div class="filters">
+          <input id="searchInput" type="search" placeholder="搜索名称、描述、标签、效果..." />
+          <select id="rarityFilter"></select>
+          <select id="typeFilter"></select>
+          <select id="sortSelect">
+            <option value="category">文件位置</option>
+            <option value="name-asc">名称升序</option>
+            <option value="name-desc">名称降序</option>
+            <option value="cost-asc">消耗低到高</option>
+            <option value="cost-desc">消耗高到低</option>
+            <option value="rarity">品质顺序</option>
+          </select>
+        </div>
+
+        <div id="batchbar" class="batchbar is-empty">
+          <span id="batchTitle" class="batch-title">已选 0 项</span>
+          <select id="batchCategory"></select>
+          <select id="batchRarity">
+            <option value="">改品质</option>
+            <option value="only">唯一</option>
+            <option value="mythic">神话</option>
+            <option value="legendary">传说</option>
+            <option value="epic">史诗</option>
+            <option value="rare">稀有</option>
+            <option value="uncommon">优良</option>
+            <option value="common">普通</option>
+          </select>
+          <input id="batchTag" placeholder="批量标签，如 恢复" />
+          <input id="batchCost" type="number" placeholder="消耗增减" />
+          <button id="applyBatchBtn">应用批量</button>
+          <button id="deleteSelectedBtn" class="danger">删除选中</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th><input id="selectAllRows" type="checkbox" /></th>
+                <th>名称</th>
+                <th>分类</th>
+                <th>类型</th>
+                <th>消耗</th>
+                <th>标签</th>
+                <th>提示</th>
+              </tr>
+            </thead>
+            <tbody id="entityTable"></tbody>
+          </table>
+          <div id="emptyState" class="empty-state">请先导入数据文件。</div>
+        </div>
+
+        <div class="summary">
+          <span id="tableSummary" class="summary-log">暂无数据</span>
+          <span id="dirtyState">未修改</span>
+        </div>
+      </section>
+
+      <div id="rightSplitter" class="splitter" title="拖动调整编辑区宽度"></div>
+
+      <aside class="editor">
+        <div class="editor-head">
+          <h2 id="editorTitle">条目详情</h2>
+          <p id="editorSubtitle">选择左侧表格中的条目进行编辑</p>
+        </div>
+        <div id="editorScroll" class="editor-scroll">
+          <div class="empty-state">显示当前条表单</div>
+        </div>
+        <div class="editor-actions">
+          <button id="duplicateEntityBtn">复制</button>
+          <button id="moveEntityBtn">移动分类</button>
+          <button id="deleteEntityBtn" class="danger">删除</button>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <h3 id="modalTitle">信息</h3>
+      <div id="modalContent" class="modal-content"></div>
+      <div id="modalActions" class="modal-actions">
+        <button id="modalClose">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+
+    const JSON5Lite = {
+      parse(text) {
+        const source = String(text || "").replace(/^\uFEFF/, "");
+        try {
+          return JSON.parse(source);
+        } catch (_jsonError) {
+          try {
+            return Function('"use strict"; return (' + source + "\n);")();
+          } catch (error) {
+            error.message = "JSON/JSON5 解析失败: " + error.message;
+            throw error;
+          }
+        }
+      },
+    };
+
+    const RARITIES = ["only", "mythic", "legendary", "epic", "rare", "uncommon", "common"];
+    const RARITY_LABELS = {
+      common: "普通",
+      uncommon: "优良",
+      rare: "稀有",
+      epic: "史诗",
+      legendary: "传说",
+      mythic: "神话",
+      only: "唯一",
+    };
+    const FIELD_LABELS = {
+      name: "名称",
+      cost: "消耗",
+      type: "类型",
+      rarity: "品质",
+      quantity: "数量",
+      tag: "标签",
+      effect: "效果",
+      description: "描述",
+      consume: "消耗说明",
+      lifeLevel: "生命层级",
+      level: "等级",
+      race: "种族",
+      identity: "身份",
+      career: "职业",
+      attributes: "属性",
+      requiredRace: "需要种族",
+      requiredLocation: "需要地点",
+      requiredIdentity: "需要身份",
+    };
+    const ATTRIBUTE_LABELS = {
+      strength: "力量",
+      dexterity: "敏捷",
+      constitution: "体质",
+      intelligence: "智力",
+      mind: "精神",
+    };
+    const RARITY_ORDER = new Map(RARITIES.map((value, index) => [value, index]));
+    const DATASETS = {
+      "equipments.json": {
+        label: "装备",
+        kind: "collection",
+        required: ["name", "cost", "type", "rarity", "tag", "effect", "description"],
+      },
+      "items.json": {
+        label: "道具",
+        kind: "collection",
+        required: ["name", "cost", "type", "rarity", "quantity", "tag", "effect", "description"],
+      },
+      "skills.json": {
+        label: "技能",
+        kind: "collection",
+        required: ["name", "cost", "type", "rarity", "consume", "tag", "effect", "description"],
+      },
+      "partners.json": {
+        label: "伙伴",
+        kind: "collection",
+        required: ["name", "cost", "lifeLevel", "level", "race", "identity", "career", "attributes"],
+      },
+      "backgrounds.json": {
+        label: "初始剧情",
+        kind: "collection",
+        required: ["name", "description"],
+      },
+      "baseInfo.json": {
+        label: "基础信息",
+        kind: "baseInfo",
+        required: [],
+      },
+      "coreClassification.json": {
+        label: "核心分类",
+        kind: "coreClassification",
+        required: [],
+      },
+    };
+
+    const state = {
+      files: {},
+      currentFile: "equipments.json",
+      currentCategory: "__all__",
+      selected: null,
+      selectedRows: new Set(),
+      draggingRowId: null,
+      dragOverRowId: null,
+      dropPosition: "before",
+      search: "",
+      rarity: "",
+      type: "",
+      sort: "category",
+      undo: [],
+      redo: [],
+      changes: [],
+      dirty: new Set(),
+      modalResolver: null,
+    };
+
+    const el = {};
+    const $ = id => document.getElementById(id);
+
+    window.addEventListener("DOMContentLoaded", init);
+    window.addEventListener("beforeunload", event => {
+      if (state.dirty.size > 0) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    });
+
+    function init() {
+      [
+        "fileInput",
+        "exportBtn",
+        "historyBtn",
+        "summaryBtn",
+        "themeToggleBtn",
+        "statusText",
+        "loadedCount",
+        "datasetList",
+        "leftSplitter",
+        "rightSplitter",
+        "categoryCount",
+        "categoryList",
+        "addCategoryBtn",
+        "mergeCategoryBtn",
+        "renameCategoryBtn",
+        "deleteCategoryBtn",
+        "addEntityBtn",
+        "searchInput",
+        "rarityFilter",
+        "typeFilter",
+        "sortSelect",
+        "batchbar",
+        "batchTitle",
+        "batchCategory",
+        "batchRarity",
+        "batchTag",
+        "batchCost",
+        "applyBatchBtn",
+        "deleteSelectedBtn",
+        "selectAllRows",
+        "entityTable",
+        "emptyState",
+        "tableSummary",
+        "dirtyState",
+        "editorTitle",
+        "editorSubtitle",
+        "editorScroll",
+        "duplicateEntityBtn",
+        "moveEntityBtn",
+        "deleteEntityBtn",
+        "toast",
+        "modalBackdrop",
+        "modalTitle",
+        "modalContent",
+        "modalActions",
+        "modalClose",
+      ].forEach(id => (el[id] = $(id)));
+
+      el.fileInput.addEventListener("change", handleFiles);
+      el.exportBtn.addEventListener("click", showExportChoices);
+      el.historyBtn.addEventListener("click", showHistoryChoices);
+      el.summaryBtn.addEventListener("click", showChangeSummary);
+      el.themeToggleBtn.addEventListener("click", toggleTheme);
+      el.addCategoryBtn.addEventListener("click", addCategory);
+      el.mergeCategoryBtn.addEventListener("click", mergeCategory);
+      el.renameCategoryBtn.addEventListener("click", renameCategory);
+      el.deleteCategoryBtn.addEventListener("click", deleteCategory);
+      el.addEntityBtn.addEventListener("click", addEntity);
+      el.searchInput.addEventListener("input", () => {
+        state.search = el.searchInput.value.trim().toLowerCase();
+        renderTable();
+      });
+      el.rarityFilter.addEventListener("change", () => {
+        state.rarity = el.rarityFilter.value;
+        renderTable();
+      });
+      el.typeFilter.addEventListener("change", () => {
+        state.type = el.typeFilter.value;
+        renderTable();
+      });
+      el.sortSelect.addEventListener("change", () => {
+        state.sort = el.sortSelect.value;
+        renderTable();
+      });
+      el.selectAllRows.addEventListener("change", toggleAllVisibleRows);
+      el.applyBatchBtn.addEventListener("click", applyBatch);
+      el.deleteSelectedBtn.addEventListener("click", deleteSelected);
+      el.duplicateEntityBtn.addEventListener("click", duplicateSelected);
+      el.moveEntityBtn.addEventListener("click", moveSelected);
+      el.deleteEntityBtn.addEventListener("click", deleteSelectedEntity);
+      el.modalClose.addEventListener("click", closeModal);
+      el.modalBackdrop.addEventListener("click", event => {
+        if (event.target === el.modalBackdrop) closeModal();
+      });
+      setupSplitters();
+      applyTheme(loadThemePreference());
+
+      render();
+    }
+
+    function loadThemePreference() {
+      try {
+        const saved = localStorage.getItem("databank-editor-theme");
+        if (saved === "light" || saved === "dark") return saved;
+      } catch (_error) {
+        // 本地文件模式下少数浏览器可能禁用 localStorage，退回系统主题即可。
+      }
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+
+    function applyTheme(theme) {
+      const normalized = theme === "dark" ? "dark" : "light";
+      document.documentElement.dataset.theme = normalized;
+      if (el.themeToggleBtn) {
+        el.themeToggleBtn.textContent = normalized === "dark" ? "浅色" : "深色";
+        el.themeToggleBtn.title = normalized === "dark" ? "切换到浅色主题" : "切换到深色主题";
+      }
+      try {
+        localStorage.setItem("databank-editor-theme", normalized);
+      } catch (_error) {
+        // 不影响编辑器使用。
+      }
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+      applyTheme(current === "dark" ? "light" : "dark");
+    }
+
+    async function handleFiles(event) {
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
+      const loaded = [];
+      const skipped = [];
+      for (const file of files) {
+        const name = normalizeFilename(file.name);
+        if (!DATASETS[name]) {
+          skipped.push(file.name);
+          continue;
+        }
+        try {
+          const text = await file.text();
+          const data = JSON5Lite.parse(text);
+          ensureShape(name, data);
+          state.files[name] = {
+            filename: name,
+            label: DATASETS[name].label,
+            kind: DATASETS[name].kind,
+            data,
+            importedAt: new Date().toISOString(),
+          };
+          loaded.push(name);
+        } catch (error) {
+          showToast(file.name + " 导入失败: " + error.message);
+        }
+      }
+      if (loaded.length > 0) {
+        if (!state.files[state.currentFile]) state.currentFile = loaded[0];
+        state.currentCategory = "__all__";
+        state.selected = null;
+        state.selectedRows.clear();
+        state.changes.push("导入 " + loaded.join(", "));
+        setStatus("已导入 " + loaded.length + " 个文件" + (skipped.length ? "，跳过 " + skipped.length + " 个未知文件" : ""));
+      } else if (skipped.length) {
+        showToast("没有识别到目标数据文件。");
+      }
+      event.target.value = "";
+      render();
+    }
+
+    function normalizeFilename(name) {
+      const leaf = String(name).split(/[\\/]/).pop();
+      if (DATASETS[leaf]) return leaf;
+      const lower = leaf.toLowerCase();
+      return Object.keys(DATASETS).find(file => file.toLowerCase() === lower) || leaf;
+    }
+
+    function ensureShape(filename, data) {
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        throw new Error("顶层必须是对象");
+      }
+      const config = DATASETS[filename];
+      if (config.kind === "collection") {
+        for (const [category, value] of Object.entries(data)) {
+          if (!Array.isArray(value)) throw new Error("分类 " + category + " 必须是数组");
+        }
+      }
+    }
+
+    function render() {
+      renderDatasets();
+      renderCategories();
+      renderFilters();
+      renderTable();
+      renderEditor();
+      updateButtons();
+    }
+
+    function renderDatasets() {
+      el.datasetList.innerHTML = "";
+      const loaded = Object.keys(DATASETS).filter(name => state.files[name]).length;
+      el.loadedCount.textContent = loaded + "/7";
+      for (const [filename, config] of Object.entries(DATASETS)) {
+        const button = document.createElement("button");
+        button.className = "dataset-button" + (state.currentFile === filename ? " active" : "");
+        button.innerHTML = "<span>" + escapeHtml(config.label) + "</span><span class=\"count\">" + getFileCount(filename) + "</span>";
+        button.addEventListener("click", () => {
+          state.currentFile = filename;
+          state.currentCategory = "__all__";
+          state.selected = null;
+          state.selectedRows.clear();
+          render();
+        });
+        el.datasetList.appendChild(button);
+      }
+    }
+
+    function renderCategories() {
+      el.categoryList.innerHTML = "";
+      const categories = getCategories();
+      el.categoryCount.textContent = String(categories.length);
+      const allButton = document.createElement("button");
+      allButton.className = "category-button" + (state.currentCategory === "__all__" ? " active" : "");
+      allButton.innerHTML = "<span>全部</span><span class=\"count\">" + getRows().length + "</span>";
+      allButton.addEventListener("click", () => {
+        state.currentCategory = "__all__";
+        state.selected = null;
+        state.selectedRows.clear();
+        render();
+      });
+      el.categoryList.appendChild(allButton);
+
+      for (const category of categories) {
+        const button = document.createElement("button");
+        button.className = "category-button" + (state.currentCategory === category ? " active" : "");
+        button.innerHTML = "<span>" + escapeHtml(category) + "</span><span class=\"count\">" + countInCategory(category) + "</span>";
+        button.addEventListener("click", () => {
+          state.currentCategory = category;
+          state.selected = null;
+          state.selectedRows.clear();
+          render();
+        });
+        el.categoryList.appendChild(button);
+      }
+    }
+
+    function renderFilters() {
+      const rows = getRows();
+      const rarityOptions = sortRarities(unique(rows.map(row => getItem(row)?.rarity).filter(Boolean)));
+      const typeOptions = unique(rows.map(row => getItem(row)?.type).filter(Boolean));
+      setSelect(el.rarityFilter, [["", "全部品质"]].concat(rarityOptions.map(value => [value, rarityLabel(value)])), state.rarity);
+      setSelect(el.typeFilter, [["", "全部类型"]].concat(typeOptions.map(value => [value, value])), state.type);
+      setSelect(
+        el.batchCategory,
+        [["", "移动到分类"]].concat(getCategories().map(category => [category, category]), [["__new__", "新建分类..."]]),
+        "",
+      );
+    }
+
+    function renderTable() {
+      const rows = getVisibleRows();
+      const dragEnabled = canDragRows();
+      el.entityTable.innerHTML = "";
+      el.emptyState.style.display = rows.length ? "none" : "flex";
+      el.selectAllRows.checked = rows.length > 0 && rows.every(row => state.selectedRows.has(row.id));
+
+      const duplicateMap = getDuplicateNameMap();
+      for (const row of rows) {
+        const item = getItem(row);
+        const warnings = validateRow(row, duplicateMap);
+        const tr = document.createElement("tr");
+        tr.dataset.rowId = row.id;
+        tr.draggable = dragEnabled;
+        if (state.selected && state.selected.id === row.id) tr.classList.add("selected");
+        if (state.draggingRowId === row.id) tr.classList.add("dragging");
+        if (state.dragOverRowId === row.id) tr.classList.add(state.dropPosition === "after" ? "drop-after" : "drop-before");
+        tr.addEventListener("click", event => {
+          if (event.target && event.target.matches("input[type='checkbox']")) return;
+          if (event.target && event.target.closest(".drag-handle")) return;
+          state.selected = row;
+          renderTable();
+          renderEditor();
+          updateButtons();
+        });
+        if (dragEnabled) {
+          tr.addEventListener("dragstart", event => startRowDrag(event, row));
+          tr.addEventListener("dragover", event => updateRowDrop(event, row));
+          tr.addEventListener("dragleave", event => clearRowDrop(event, row));
+          tr.addEventListener("drop", event => dropRow(event, row));
+          tr.addEventListener("dragend", clearDragState);
+        }
+
+        const checkboxTd = document.createElement("td");
+        const controls = document.createElement("span");
+        controls.className = "row-controls";
+        if (dragEnabled) {
+          const handle = document.createElement("span");
+          handle.className = "drag-handle";
+          handle.textContent = "拖";
+          handle.title = "按住左键拖动，会直接改变这个物品在 JSON 数组里的位置";
+          controls.appendChild(handle);
+        }
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = state.selectedRows.has(row.id);
+        checkbox.addEventListener("change", event => {
+          event.stopPropagation();
+          if (checkbox.checked) state.selectedRows.add(row.id);
+          else state.selectedRows.delete(row.id);
+          renderTable();
+          updateButtons();
+        });
+        controls.appendChild(checkbox);
+        checkboxTd.appendChild(controls);
+        tr.appendChild(checkboxTd);
+
+        tr.appendChild(cell(renderNameCell(row, item)));
+        tr.appendChild(cell(escapeHtml(row.category)));
+        tr.appendChild(cell(renderTypeOnly(item)));
+        tr.appendChild(cell(formatCost(item)));
+        tr.appendChild(cell(renderTags(item)));
+        tr.appendChild(cell(renderWarnings(warnings)));
+        el.entityTable.appendChild(tr);
+      }
+
+      el.batchTitle.textContent = "已选 " + state.selectedRows.size + " 项";
+      el.batchbar.classList.toggle("is-empty", state.selectedRows.size === 0);
+      el.tableSummary.textContent = buildTableSummary(rows);
+      el.dirtyState.textContent = state.dirty.size ? "有未导出修改: " + Array.from(state.dirty).join(", ") : "未修改";
+    }
+
+    function canDragRows() {
+      const current = getCurrent();
+      return Boolean(
+        current &&
+          current.kind === "collection" &&
+          state.currentCategory !== "__all__" &&
+          state.sort === "category" &&
+          !state.search &&
+          !state.rarity &&
+          !state.type,
+      );
+    }
+
+    function startRowDrag(event, row) {
+      if (!canDragRows()) {
+        event.preventDefault();
+        return;
+      }
+      state.draggingRowId = row.id;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", row.id);
+      event.currentTarget.classList.add("dragging");
+    }
+
+    function updateRowDrop(event, row) {
+      if (!state.draggingRowId || state.draggingRowId === row.id) return;
+      event.preventDefault();
+      const position = getDropPosition(event, event.currentTarget);
+      clearDropMarkers();
+      state.dragOverRowId = row.id;
+      state.dropPosition = position;
+      event.currentTarget.classList.add(position === "after" ? "drop-after" : "drop-before");
+      event.dataTransfer.dropEffect = "move";
+    }
+
+    function clearRowDrop(event) {
+      if (event.currentTarget.contains(event.relatedTarget)) return;
+      event.currentTarget.classList.remove("drop-before", "drop-after");
+    }
+
+    function dropRow(event, targetRow) {
+      event.preventDefault();
+      const sourceId = event.dataTransfer.getData("text/plain") || state.draggingRowId;
+      const position = state.dropPosition;
+      clearDragState();
+      const source = resolveRowById(sourceId);
+      const target = resolveRow(targetRow);
+      if (!source || !target || source.id === target.id) return;
+      reorderCollectionRow(source, target, position);
+    }
+
+    function getDropPosition(event, rowNode) {
+      const rect = rowNode.getBoundingClientRect();
+      return event.clientY > rect.top + rect.height / 2 ? "after" : "before";
+    }
+
+    function clearDropMarkers() {
+      document.querySelectorAll("tbody tr.drop-before, tbody tr.drop-after").forEach(node => {
+        node.classList.remove("drop-before", "drop-after");
+      });
+    }
+
+    function clearDragState() {
+      clearDropMarkers();
+      document.querySelectorAll("tbody tr.dragging").forEach(node => node.classList.remove("dragging"));
+      state.draggingRowId = null;
+      state.dragOverRowId = null;
+      state.dropPosition = "before";
+    }
+
+    function reorderCollectionRow(source, target, position) {
+      const current = getCurrent();
+      if (!current || current.kind !== "collection") return;
+      if (source.category !== target.category) {
+        showToast("拖动排序只调整同一个分类里的真实顺序；跨分类请用移动分类。");
+        renderTable();
+        return;
+      }
+      const list = current.data[source.category];
+      const insertIndex = getReorderInsertIndex(source, target, position, list.length - 1);
+      if (insertIndex === source.index) {
+        renderTable();
+        return;
+      }
+      commit("调整顺序 " + getName(source), () => {
+        const [item] = list.splice(source.index, 1);
+        list.splice(insertIndex, 0, item);
+        state.selected = { id: "row|" + source.category + "|" + insertIndex, category: source.category, index: insertIndex };
+      });
+      render();
+    }
+
+    function getReorderInsertIndex(source, target, position, maxIndexAfterRemove) {
+      let insertIndex = target.index;
+      if (source.index < target.index) insertIndex -= 1;
+      if (position === "after") insertIndex += 1;
+      return Math.max(0, Math.min(insertIndex, maxIndexAfterRemove));
+    }
+
+    function renderEditor() {
+      const current = getCurrent();
+      if (!current) {
+        el.editorTitle.textContent = "条目详情";
+        el.editorSubtitle.textContent = "请先导入当前数据文件";
+        el.editorScroll.innerHTML = "<div class=\"empty-state\">请先导入 public/assets/data 中的数据文件。</div>";
+        return;
+      }
+      if (!state.selected || !resolveRow(state.selected)) {
+        el.editorTitle.textContent = DATASETS[state.currentFile].label + "详情";
+        el.editorSubtitle.textContent = "选择左侧表格中的条目进行编辑";
+        el.editorScroll.innerHTML = "<div class=\"empty-state\">选择一个条目后，这里会显示友好表单。</div>";
+        return;
+      }
+
+      const row = resolveRow(state.selected);
+      const item = getItem(row);
+      el.editorTitle.textContent = getName(row) || "未命名条目";
+      el.editorSubtitle.textContent = DATASETS[state.currentFile].label + " / " + row.category;
+      const wrap = document.createElement("div");
+
+      if (state.currentFile === "baseInfo.json") renderBaseInfoEditor(wrap, row, item);
+      else if (state.currentFile === "coreClassification.json") renderCoreEditor(wrap, row, item);
+      else if (state.currentFile === "partners.json") renderPartnerEditor(wrap, row, item);
+      else renderStandardEditor(wrap, row, item);
+
+      el.editorScroll.innerHTML = "";
+      el.editorScroll.appendChild(wrap);
+    }
+
+    function renderStandardEditor(wrap, row, item) {
+      addTextField(wrap, "名称", item, "name", "必填，用于表格和搜索");
+      addNumberField(wrap, "消耗", item, "cost", "数字");
+      if (state.currentFile === "skills.json") addTextField(wrap, "消耗说明", item, "consume", "例如 攻击: 20MP");
+      if (state.currentFile !== "backgrounds.json") {
+        addDatalistField(wrap, "类型", item, "type", collectFieldValues("type"));
+        addSelectField(wrap, "品质", item, "rarity", rarityOptions());
+        addTagsField(wrap, "标签", item, "tag");
+        addKeyValueField(wrap, "效果", item, "effect");
+      }
+      if (state.currentFile === "items.json") addNumberField(wrap, "数量", item, "quantity", "默认 1");
+      if (state.currentFile === "backgrounds.json") {
+        addTextField(wrap, "需要种族", item, "requiredRace", "可留空");
+        addTextField(wrap, "需要地点", item, "requiredLocation", "可留空");
+        addTextField(wrap, "需要身份", item, "requiredIdentity", "可留空");
+      }
+      addTextareaField(wrap, "描述", item, "description", "叙事描述或说明");
+    }
+
+    function renderPartnerEditor(wrap, row, item) {
+      addTextField(wrap, "名称", item, "name", "必填");
+      const line = document.createElement("div");
+      line.className = "inline-grid";
+      wrap.appendChild(line);
+      addNumberField(line, "消耗", item, "cost", "数字");
+      addNumberField(line, "等级", item, "level", "数字");
+      addTextField(wrap, "生命层级", item, "lifeLevel", "");
+      addTextField(wrap, "种族", item, "race", "");
+      addTagsField(wrap, "身份", item, "identity");
+      addTagsField(wrap, "职业", item, "career");
+      addTextareaField(wrap, "性格", item, "personality", "");
+      addTextareaField(wrap, "喜好", item, "like", "");
+      addTextareaField(wrap, "外貌", item, "app", "");
+      addTextareaField(wrap, "着装", item, "cloth", "");
+      addAttributesField(wrap, item);
+      addStairwayField(wrap, item);
+      addNestedItemArray(wrap, "装备", item, "equip", "equipment");
+      addNestedItemArray(wrap, "技能", item, "skills", "skill");
+      const boolField = fieldShell(wrap, "是否契约", "勾选为是");
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = Boolean(item.isContract);
+      checkbox.addEventListener("change", () => updateSelected("修改契约状态", target => (target.isContract = checkbox.checked)));
+      boolField.appendChild(checkbox);
+      addNumberField(wrap, "好感", item, "affinity", "-100 到 100");
+      addTextareaField(wrap, "评价", item, "comment", "");
+      addTextareaField(wrap, "背景", item, "backgroundInfo", "");
+    }
+
+    function renderBaseInfoEditor(wrap, row, item) {
+      if (row.mode === "array") {
+        addDirectValueField(wrap, "选项内容", item, "value", "导出时会还原为字符串数组");
+      } else {
+        addDirectValueField(wrap, "名称", item, "name", "导出时作为对象键");
+        addDirectNumberField(wrap, "消耗点数", item, "cost", "正数扣点，负数加点");
+      }
+    }
+
+    function renderCoreEditor(wrap, row, item) {
+      addDirectValueField(wrap, "核心名称", item, "name", "不含 命定系统- 前缀和作者括号");
+      addDirectTextareaField(wrap, "备注", item, "note", "会显示在核心按钮下方");
+    }
+
+    function addTextField(parent, label, obj, key, hint) {
+      const shell = fieldShell(parent, label, hint);
+      const input = document.createElement("input");
+      input.value = obj[key] ?? "";
+      input.addEventListener("change", () => commitDirect("修改 " + label, () => setCleanValue(obj, key, input.value)));
+      shell.appendChild(input);
+    }
+
+    function addDirectValueField(parent, label, obj, key, hint) {
+      const shell = fieldShell(parent, label, hint);
+      const input = document.createElement("input");
+      input.value = obj[key] ?? "";
+      input.addEventListener("change", () => updateSelected("修改 " + label, target => setCleanValue(target, key, input.value), { rebuildSpecial: true }));
+      shell.appendChild(input);
+    }
+
+    function addDirectNumberField(parent, label, obj, key, hint) {
+      const shell = fieldShell(parent, label, hint);
+      const input = document.createElement("input");
+      input.type = "number";
+      input.value = obj[key] ?? "";
+      input.addEventListener("change", () => {
+        const value = input.value === "" ? undefined : Number(input.value);
+        updateSelected("修改 " + label, target => {
+          if (value === undefined) delete target[key];
+          else target[key] = value;
+        }, { rebuildSpecial: true });
+      });
+      shell.appendChild(input);
+    }
+
+    function addDirectTextareaField(parent, label, obj, key, hint) {
+      const shell = fieldShell(parent, label, hint);
+      const textarea = document.createElement("textarea");
+      textarea.value = obj[key] ?? "";
+      textarea.addEventListener("change", () => updateSelected("修改 " + label, target => setCleanValue(target, key, textarea.value), { rebuildSpecial: true }));
+      shell.appendChild(textarea);
+    }
+
+    function addDatalistField(parent, label, obj, key, values) {
+      const shell = fieldShell(parent, label, "可输入新值，也可复用已有值");
+      const input = document.createElement("input");
+      const listId = "list-" + key + "-" + Math.random().toString(36).slice(2);
+      input.setAttribute("list", listId);
+      input.value = obj[key] ?? "";
+      const list = document.createElement("datalist");
+      list.id = listId;
+      values.forEach(value => {
+        const option = document.createElement("option");
+        option.value = value;
+        list.appendChild(option);
+      });
+      input.addEventListener("change", () => commitDirect("修改 " + label, () => setCleanValue(obj, key, input.value)));
+      shell.append(input, list);
+    }
+
+    function addNumberField(parent, label, obj, key, hint) {
+      const shell = fieldShell(parent, label, hint);
+      const input = document.createElement("input");
+      input.type = "number";
+      input.value = obj[key] ?? "";
+      input.addEventListener("change", () => {
+        const value = input.value === "" ? undefined : Number(input.value);
+        commitDirect("修改 " + label, () => {
+          if (value === undefined) delete obj[key];
+          else obj[key] = value;
+        });
+      });
+      shell.appendChild(input);
+    }
+
+    function addSelectField(parent, label, obj, key, options) {
+      const shell = fieldShell(parent, label, "");
+      const select = document.createElement("select");
+      setSelect(select, options, obj[key] ?? "");
+      select.addEventListener("change", () => commitDirect("修改 " + label, () => setCleanValue(obj, key, select.value)));
+      shell.appendChild(select);
+    }
+
+    function addTextareaField(parent, label, obj, key, hint) {
+      const shell = fieldShell(parent, label, hint);
+      const textarea = document.createElement("textarea");
+      textarea.value = obj[key] ?? "";
+      textarea.addEventListener("change", () => commitDirect("修改 " + label, () => setCleanValue(obj, key, textarea.value)));
+      shell.appendChild(textarea);
+    }
+
+    function addTagsField(parent, label, obj, key) {
+      if (!Array.isArray(obj[key])) obj[key] = [];
+      const shell = fieldShell(parent, label, "回车添加，点小叉删除");
+      const editor = document.createElement("div");
+      editor.className = "tag-editor";
+      obj[key].forEach((tag, index) => {
+        const node = document.createElement("span");
+        node.className = "tag-item";
+        node.innerHTML = "<span>" + escapeHtml(tag) + "</span>";
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "×";
+        remove.addEventListener("click", () => {
+          commitDirect("删除标签 " + tag, () => {
+            if (!Array.isArray(obj[key])) obj[key] = [];
+            obj[key].splice(index, 1);
+          });
+        });
+        node.appendChild(remove);
+        editor.appendChild(node);
+      });
+      const input = document.createElement("input");
+      input.placeholder = "输入后回车";
+      input.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          const value = input.value.trim();
+          if (!value) return;
+          commitDirect("添加标签 " + value, () => {
+            if (!Array.isArray(obj[key])) obj[key] = [];
+            if (!obj[key].includes(value)) obj[key].push(value);
+          });
+        }
+      });
+      editor.appendChild(input);
+      shell.appendChild(editor);
+    }
+
+    function addKeyValueField(parent, label, obj, key) {
+      if (!obj[key] || typeof obj[key] !== "object" || Array.isArray(obj[key])) obj[key] = {};
+      const details = document.createElement("details");
+      details.open = true;
+      details.innerHTML = "<summary>" + escapeHtml(label) + "</summary>";
+      const body = document.createElement("div");
+      body.className = "detail-body kv-list";
+      const entries = Object.entries(obj[key]);
+      if (entries.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "hint";
+        empty.textContent = "暂无效果，点击下方按钮添加。";
+        body.appendChild(empty);
+      }
+      entries.forEach(([effectName, effectText]) => {
+        body.appendChild(kvRow(effectName, effectText, (nextKey, nextValue) => {
+          commitDirect("修改 " + label, () => {
+            const record = obj[key] || {};
+            if (nextKey !== effectName) delete record[effectName];
+            if (nextKey) record[nextKey] = nextValue;
+            obj[key] = record;
+          });
+        }, () => {
+          commitDirect("删除 " + effectName, () => {
+            if (obj[key]) delete obj[key][effectName];
+          });
+        }));
+      });
+      const add = document.createElement("button");
+      add.className = "small-btn";
+      add.textContent = "添加效果";
+      add.addEventListener("click", () => {
+        const name = prompt("效果名称", "新效果");
+        if (!name) return;
+        commitDirect("添加效果 " + name, () => {
+          if (!obj[key] || typeof obj[key] !== "object" || Array.isArray(obj[key])) obj[key] = {};
+          obj[key][name] = "";
+        });
+      });
+      body.appendChild(add);
+      details.appendChild(body);
+      parent.appendChild(details);
+    }
+
+    function addAttributesField(parent, item) {
+      if (!item.attributes || typeof item.attributes !== "object") {
+        item.attributes = {};
+      }
+      const details = document.createElement("details");
+      details.open = true;
+      details.innerHTML = "<summary>属性</summary>";
+      const body = document.createElement("div");
+      body.className = "detail-body inline-grid";
+      ["strength", "dexterity", "constitution", "intelligence", "mind"].forEach(key => {
+        addNumberField(body, ATTRIBUTE_LABELS[key] || key, item.attributes, key, "数字");
+      });
+      details.appendChild(body);
+      parent.appendChild(details);
+    }
+
+    function addStairwayField(parent, item) {
+      if (!item.stairway || typeof item.stairway !== "object") item.stairway = { isOpen: false };
+      const details = document.createElement("details");
+      details.open = false;
+      details.innerHTML = "<summary>登神长阶</summary>";
+      const body = document.createElement("div");
+      body.className = "detail-body";
+      const openShell = fieldShell(body, "是否开启", "");
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = Boolean(item.stairway.isOpen);
+      checkbox.addEventListener("change", () => updateSelected("修改登神长阶开关", target => {
+        if (!target.stairway || typeof target.stairway !== "object") target.stairway = {};
+        target.stairway.isOpen = checkbox.checked;
+      }));
+      openShell.appendChild(checkbox);
+      addNestedRecord(body, item.stairway, "elements", "要素");
+      addNestedRecord(body, item.stairway, "powers", "权能");
+      addNestedRecord(body, item.stairway, "laws", "法则");
+      addTextField(body, "神位", item.stairway, "godlyRank", "");
+      if (!item.stairway.godKingdom || typeof item.stairway.godKingdom !== "object") item.stairway.godKingdom = {};
+      const kingdom = document.createElement("details");
+      kingdom.open = false;
+      kingdom.innerHTML = "<summary>神国</summary>";
+      const kingdomBody = document.createElement("div");
+      kingdomBody.className = "detail-body";
+      addTextField(kingdomBody, "名称", item.stairway.godKingdom, "name", "");
+      addTextareaField(kingdomBody, "描述", item.stairway.godKingdom, "description", "");
+      kingdom.appendChild(kingdomBody);
+      body.appendChild(kingdom);
+      details.appendChild(body);
+      parent.appendChild(details);
+    }
+
+    function addNestedRecord(parent, owner, key, label) {
+      if (!owner[key] || typeof owner[key] !== "object" || Array.isArray(owner[key])) owner[key] = {};
+      const details = document.createElement("details");
+      details.open = false;
+      details.innerHTML = "<summary>" + escapeHtml(label) + "</summary>";
+      const body = document.createElement("div");
+      body.className = "detail-body nested-list";
+      Object.entries(owner[key]).forEach(([groupName, record]) => {
+        const group = document.createElement("details");
+        group.open = false;
+        group.innerHTML = "<summary>" + escapeHtml(groupName) + "</summary>";
+        const groupBody = document.createElement("div");
+        groupBody.className = "detail-body kv-list";
+        Object.entries(record || {}).forEach(([effectName, effectText]) => {
+          groupBody.appendChild(kvRow(effectName, effectText, (nextKey, nextValue) => {
+            updateSelected("修改 " + label, target => {
+              const stairway = target.stairway || {};
+              const root = stairway[key] || {};
+              const inner = root[groupName] || {};
+              if (nextKey !== effectName) delete inner[effectName];
+              if (nextKey) inner[nextKey] = nextValue;
+              root[groupName] = inner;
+              stairway[key] = root;
+              target.stairway = stairway;
+            });
+          }, () => {
+            updateSelected("删除 " + effectName, target => {
+              target.stairway?.[key]?.[groupName] && delete target.stairway[key][groupName][effectName];
+            });
+          }));
+        });
+        const addEffect = document.createElement("button");
+        addEffect.className = "small-btn";
+        addEffect.textContent = "添加内部效果";
+        addEffect.addEventListener("click", () => {
+          const name = prompt("效果名称", "新效果");
+          if (!name) return;
+          updateSelected("添加 " + name, target => {
+            target.stairway ??= {};
+            target.stairway[key] ??= {};
+            target.stairway[key][groupName] ??= {};
+            target.stairway[key][groupName][name] = "";
+          });
+        });
+        groupBody.appendChild(addEffect);
+        group.appendChild(groupBody);
+        body.appendChild(group);
+      });
+      const addGroup = document.createElement("button");
+      addGroup.className = "small-btn";
+      addGroup.textContent = "添加分组";
+      addGroup.addEventListener("click", () => {
+        const name = prompt("分组名称", "新分组");
+        if (!name) return;
+        updateSelected("添加 " + label + " 分组", target => {
+          target.stairway ??= {};
+          target.stairway[key] ??= {};
+          target.stairway[key][name] = {};
+        });
+      });
+      body.appendChild(addGroup);
+      details.appendChild(body);
+      parent.appendChild(details);
+    }
+
+    function addNestedItemArray(parent, label, owner, key, mode) {
+      if (!Array.isArray(owner[key])) owner[key] = [];
+      const details = document.createElement("details");
+      details.open = false;
+      details.innerHTML = "<summary>" + escapeHtml(label) + " (" + owner[key].length + ")</summary>";
+      const body = document.createElement("div");
+      body.className = "detail-body nested-list";
+      owner[key].forEach((item, index) => {
+        const card = document.createElement("details");
+        card.open = false;
+        card.innerHTML = "<summary>" + escapeHtml(item.name || "未命名") + "</summary>";
+        const cardBody = document.createElement("div");
+        cardBody.className = "detail-body";
+        addTextField(cardBody, "名称", item, "name", "");
+        addTextField(cardBody, "类型", item, "type", "");
+        addSelectField(cardBody, "品质", item, "rarity", rarityOptions());
+        if (mode === "skill") addTextField(cardBody, "消耗", item, "consume", "");
+        addTagsField(cardBody, "标签", item, "tag");
+        addKeyValueField(cardBody, "效果", item, "effect");
+        addTextareaField(cardBody, "描述", item, "description", "");
+        const remove = document.createElement("button");
+        remove.className = "small-btn danger";
+        remove.textContent = "删除此项";
+        remove.addEventListener("click", () => {
+          updateSelected("删除嵌套项", target => {
+            if (Array.isArray(target[key])) target[key].splice(index, 1);
+          });
+        });
+        cardBody.appendChild(remove);
+        card.appendChild(cardBody);
+        body.appendChild(card);
+      });
+      const add = document.createElement("button");
+      add.className = "small-btn";
+      add.textContent = "添加";
+      add.addEventListener("click", () => {
+        updateSelected("添加嵌套项", target => {
+          if (!Array.isArray(target[key])) target[key] = [];
+          target[key].push(defaultNested(mode));
+        });
+      });
+      body.appendChild(add);
+      details.appendChild(body);
+      parent.appendChild(details);
+    }
+
+    function kvRow(effectName, effectText, onSave, onDelete) {
+      const row = document.createElement("div");
+      row.className = "kv-row";
+      const keyInput = document.createElement("input");
+      keyInput.value = effectName;
+      const valueInput = document.createElement("textarea");
+      valueInput.value = typeof effectText === "string" ? effectText : JSON.stringify(effectText, null, 2);
+      const save = () => onSave(keyInput.value.trim(), valueInput.value);
+      keyInput.addEventListener("change", save);
+      valueInput.addEventListener("change", save);
+      const del = document.createElement("button");
+      del.className = "small-btn danger";
+      del.textContent = "删";
+      del.addEventListener("click", onDelete);
+      row.append(keyInput, valueInput, del);
+      return row;
+    }
+
+    function fieldShell(parent, label, hint) {
+      const field = document.createElement("div");
+      field.className = "field";
+      const labelNode = document.createElement("label");
+      labelNode.innerHTML = "<span>" + escapeHtml(label) + "</span>" + (hint ? "<span class=\"hint\">" + escapeHtml(hint) + "</span>" : "");
+      field.appendChild(labelNode);
+      parent.appendChild(field);
+      return field;
+    }
+
+    function updateSelected(label, mutator, options = {}) {
+      const row = resolveRow(state.selected);
+      if (!row) return;
+      commit(label, () => {
+        if (options.rebuildSpecial && state.currentFile === "baseInfo.json") {
+          const target = getItem(row);
+          mutator(target);
+          applyBaseInfoRow(row, target);
+        } else if (options.rebuildSpecial && state.currentFile === "coreClassification.json") {
+          const target = getItem(row);
+          mutator(target);
+          applyCoreRow(row, target);
+        } else {
+          mutator(getItem(row));
+        }
+      });
+      render();
+    }
+
+    function commit(label, fn) {
+      state.undo.push(snapshot());
+      if (state.undo.length > 80) state.undo.shift();
+      state.redo.length = 0;
+      fn();
+      state.dirty.add(state.currentFile);
+      state.changes.push(new Date().toLocaleTimeString() + " " + DATASETS[state.currentFile].label + ": " + label);
+      setStatus(label);
+    }
+
+    function commitDirect(label, fn) {
+      commit(label, fn);
+      render();
+    }
+
+    function snapshot() {
+      return {
+        files: deepClone(state.files),
+        currentFile: state.currentFile,
+        currentCategory: state.currentCategory,
+        selected: deepClone(state.selected),
+        dirty: Array.from(state.dirty),
+        changes: state.changes.slice(),
+      };
+    }
+
+    function restore(snapshot) {
+      state.files = snapshot.files;
+      state.currentFile = snapshot.currentFile;
+      state.currentCategory = snapshot.currentCategory;
+      state.selected = snapshot.selected;
+      state.dirty = new Set(snapshot.dirty);
+      state.changes = snapshot.changes;
+      state.selectedRows.clear();
+    }
+
+    function undo() {
+      if (state.undo.length === 0) return;
+      state.redo.push(snapshot());
+      restore(state.undo.pop());
+      setStatus("已撤销");
+      render();
+    }
+
+    function redo() {
+      if (state.redo.length === 0) return;
+      state.undo.push(snapshot());
+      restore(state.redo.pop());
+      setStatus("已重做");
+      render();
+    }
+
+    function addCategory() {
+      const current = getCurrent();
+      if (!current) return showToast("请先导入当前数据文件。");
+      const name = prompt("新分类名称", "新分类");
+      if (!name) return;
+      if (getCategories().includes(name)) return showToast("分类已存在。");
+      commit("新增分类 " + name, () => {
+        if (current.kind === "baseInfo") {
+          current.data[name] = [];
+        } else {
+          current.data[name] = current.kind === "coreClassification" ? {} : [];
+        }
+        state.currentCategory = name;
+      });
+      render();
+    }
+
+    function renameCategory() {
+      const current = getCurrent();
+      if (!current || state.currentCategory === "__all__") return showToast("请选择一个具体分类。");
+      const oldName = state.currentCategory;
+      const next = prompt("新的分类名称", oldName);
+      if (!next || next === oldName) return;
+      if (getCategories().includes(next)) return showToast("分类已存在。");
+      commit("重命名分类 " + oldName + " -> " + next, () => {
+        const entries = Object.entries(current.data);
+        current.data = Object.fromEntries(entries.map(([key, value]) => (key === oldName ? [next, value] : [key, value])));
+        state.files[state.currentFile].data = current.data;
+        state.currentCategory = next;
+      });
+      render();
+    }
+
+    function deleteCategory() {
+      const current = getCurrent();
+      if (!current || state.currentCategory === "__all__") return showToast("请选择一个具体分类。");
+      const count = countInCategory(state.currentCategory);
+      if (!confirm("确认删除分类「" + state.currentCategory + "」？其中有 " + count + " 个条目。")) return;
+      commit("删除分类 " + state.currentCategory, () => {
+        delete current.data[state.currentCategory];
+        state.currentCategory = "__all__";
+        state.selected = null;
+      });
+      render();
+    }
+
+    async function mergeCategory() {
+      const current = getCurrent();
+      if (!current || state.currentCategory === "__all__") return showToast("请选择要合并的分类。");
+      const source = state.currentCategory;
+      const count = countInCategory(source);
+      const target = await chooseCategory("把分类「" + source + "」合并到哪个分类？", "", { exclude: source, allowNew: false });
+      if (!target || target === source) return;
+      if (!canMergeCategoryData(current, source, target)) return showToast("这两个分类的数据形态不同，不能合并。");
+      if (!confirm("确认把「" + source + "」中的 " + count + " 个条目合并到「" + target + "」？原分类会被删除。")) return;
+      commit("合并分类 " + source + " -> " + target, () => {
+        mergeCategoryData(current, source, target);
+        state.currentCategory = target;
+        state.selected = null;
+        state.selectedRows.clear();
+      });
+      render();
+    }
+
+    function canMergeCategoryData(current, source, target) {
+      const sourceValue = current.data[source];
+      const targetValue = current.data[target];
+      return Array.isArray(sourceValue) === Array.isArray(targetValue);
+    }
+
+    function mergeCategoryData(current, source, target) {
+      current.data[target] ??= current.kind === "coreClassification" ? {} : [];
+      const sourceValue = current.data[source];
+      const targetValue = current.data[target];
+      if (Array.isArray(sourceValue) && Array.isArray(targetValue)) {
+        targetValue.push(...sourceValue);
+        delete current.data[source];
+        return;
+      }
+      if (sourceValue && targetValue && typeof sourceValue === "object" && typeof targetValue === "object" && !Array.isArray(sourceValue) && !Array.isArray(targetValue)) {
+        Object.entries(sourceValue).forEach(([key, value]) => {
+          const nextKey = targetValue[key] === undefined ? key : uniqueRecordKey(targetValue, key);
+          targetValue[nextKey] = value;
+        });
+        delete current.data[source];
+        return;
+      }
+      showToast("这两个分类的数据形态不同，不能合并。");
+    }
+
+    function uniqueRecordKey(record, baseKey) {
+      let index = 2;
+      let next = baseKey + " 合并";
+      while (record[next] !== undefined) {
+        next = baseKey + " 合并" + index;
+        index += 1;
+      }
+      return next;
+    }
+
+    function addEntity() {
+      const current = getCurrent();
+      if (!current) return showToast("请先导入当前数据文件。");
+      let category = state.currentCategory === "__all__" ? getCategories()[0] : state.currentCategory;
+      if (!category) {
+        category = prompt("先创建一个分类", "新分类");
+        if (!category) return;
+      }
+      commit("新增条目", () => {
+        if (current.kind === "baseInfo") {
+          ensureBaseInfoCategory(current.data, category);
+          if (Array.isArray(current.data[category])) {
+            current.data[category].push("新选项");
+            state.selected = { id: "base|" + category + "|" + (current.data[category].length - 1), category, mode: "array", index: current.data[category].length - 1 };
+          } else {
+            current.data[category]["新条目"] = 0;
+            state.selected = { id: "base|" + category + "|新条目", category, mode: "record", key: "新条目" };
+          }
+        } else if (current.kind === "coreClassification") {
+          current.data[category] ??= {};
+          current.data[category]["新核心"] = { note: "" };
+          state.selected = { id: "core|" + category + "|新核心", category, key: "新核心" };
+        } else {
+          current.data[category] ??= [];
+          current.data[category].push(defaultEntity(state.currentFile, category));
+          state.selected = { id: "row|" + category + "|" + (current.data[category].length - 1), category, index: current.data[category].length - 1 };
+        }
+        state.currentCategory = category;
+      });
+      render();
+    }
+
+    function duplicateSelected() {
+      const row = resolveRow(state.selected);
+      if (!row) return;
+      commit("复制 " + getName(row), () => {
+        const current = getCurrent();
+        if (current.kind === "collection") {
+          const copy = deepClone(getItem(row));
+          if (copy.name) copy.name += " 副本";
+          current.data[row.category].splice(row.index + 1, 0, copy);
+          state.selected = { id: "row|" + row.category + "|" + (row.index + 1), category: row.category, index: row.index + 1 };
+        } else if (current.kind === "baseInfo") {
+          duplicateBaseRow(row);
+        } else {
+          const copy = deepClone(getItem(row));
+          const nextName = (copy.name || row.key) + " 副本";
+          current.data[row.category][nextName] = { note: copy.note || "" };
+          state.selected = { id: "core|" + row.category + "|" + nextName, category: row.category, key: nextName };
+        }
+      });
+      render();
+    }
+
+    async function moveSelected() {
+      const row = resolveRow(state.selected);
+      if (!row) return;
+      const target = await chooseCategory("移动「" + getName(row) + "」到哪个分类？", row.category);
+      if (!target || target === row.category) return;
+      commit("移动 " + getName(row) + " 到 " + target, () => moveRow(row, target));
+      state.currentCategory = target;
+      render();
+    }
+
+    function deleteSelectedEntity() {
+      const row = resolveRow(state.selected);
+      if (!row) return;
+      if (!confirm("确认删除「" + getName(row) + "」？")) return;
+      commit("删除 " + getName(row), () => removeRow(row));
+      state.selected = null;
+      render();
+    }
+
+    function toggleAllVisibleRows() {
+      const rows = getVisibleRows();
+      if (el.selectAllRows.checked) rows.forEach(row => state.selectedRows.add(row.id));
+      else rows.forEach(row => state.selectedRows.delete(row.id));
+      renderTable();
+      updateButtons();
+    }
+
+    async function applyBatch() {
+      const ids = Array.from(state.selectedRows);
+      if (ids.length === 0) return showToast("请先勾选条目。");
+      let targetCategory = el.batchCategory.value;
+      if (targetCategory === "__new__") {
+        targetCategory = await chooseCategory("批量移动到哪个分类？", "");
+        if (!targetCategory) return;
+      }
+      const rarity = el.batchRarity.value;
+      const tag = el.batchTag.value.trim();
+      const costDelta = el.batchCost.value === "" ? null : Number(el.batchCost.value);
+      if (!targetCategory && !rarity && !tag && costDelta === null) return showToast("没有填写批量操作。");
+      commit("批量修改 " + ids.length + " 项", () => {
+        const rows = ids.map(id => resolveRowById(id)).filter(Boolean).sort((a, b) => {
+          if (a.category === b.category) return (b.index ?? 0) - (a.index ?? 0);
+          return a.category.localeCompare(b.category, "zh-Hans");
+        });
+        rows.forEach(row => {
+          if (targetCategory) {
+            row = moveRow(row, targetCategory);
+          }
+          const item = getItem(row);
+          if (rarity && "rarity" in item) item.rarity = rarity;
+          if (tag && Array.isArray(item.tag) && !item.tag.includes(tag)) item.tag.push(tag);
+          if (costDelta !== null && typeof item.cost === "number") item.cost += costDelta;
+        });
+      });
+      state.selectedRows.clear();
+      el.batchTag.value = "";
+      el.batchCost.value = "";
+      el.batchRarity.value = "";
+      render();
+    }
+
+    function deleteSelected() {
+      const ids = Array.from(state.selectedRows);
+      if (ids.length === 0) return showToast("请先勾选条目。");
+      if (!confirm("确认删除选中的 " + ids.length + " 项？")) return;
+      commit("批量删除 " + ids.length + " 项", () => {
+        ids.map(id => resolveRowById(id)).filter(Boolean).sort((a, b) => b.index - a.index).forEach(removeRow);
+      });
+      state.selectedRows.clear();
+      state.selected = null;
+      render();
+    }
+
+    function showExportChoices() {
+      const current = getCurrent();
+      const fileCount = Object.keys(state.files).length;
+      openChoiceModal("导出数据", [
+        {
+          title: "导出当前文件",
+          desc: current ? "下载当前正在编辑的 " + current.filename : "当前数据文件还没有导入",
+          disabled: !current,
+          action: exportCurrent,
+        },
+        {
+          title: "导出全部文件",
+          desc: fileCount ? "逐个下载已导入的 " + fileCount + " 个文件" : "还没有导入任何文件",
+          disabled: fileCount === 0,
+          action: exportAll,
+        },
+      ]);
+    }
+
+    function showHistoryChoices() {
+      openChoiceModal("历史操作", [
+        {
+          title: "撤销",
+          desc: state.undo.length ? "回到上一步修改前" : "暂无可撤销操作",
+          disabled: state.undo.length === 0,
+          action: undo,
+        },
+        {
+          title: "重做",
+          desc: state.redo.length ? "恢复刚才撤销的修改" : "暂无可重做操作",
+          disabled: state.redo.length === 0,
+          action: redo,
+        },
+      ]);
+    }
+
+    function exportCurrent() {
+      const current = getCurrent();
+      if (!current) return showToast("当前文件还没有导入。");
+      downloadJson(current.filename, current.data);
+      state.dirty.delete(current.filename);
+      state.changes.push(new Date().toLocaleTimeString() + " 导出 " + current.filename);
+      setStatus("已导出 " + current.filename);
+      renderTable();
+    }
+
+    function exportAll() {
+      const files = Object.values(state.files);
+      if (files.length === 0) return showToast("还没有导入任何文件。");
+      files.forEach((file, index) => {
+        setTimeout(() => downloadJson(file.filename, file.data), index * 180);
+        state.dirty.delete(file.filename);
+      });
+      state.changes.push(new Date().toLocaleTimeString() + " 导出全部文件");
+      setStatus("已开始导出 " + files.length + " 个文件");
+      renderTable();
+    }
+
+    function downloadJson(filename, data) {
+      const text = JSON.stringify(data, null, 2) + "\n";
+      const blob = new Blob([text], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function showChangeSummary() {
+      const rows = getRows();
+      const duplicateMap = getDuplicateNameMap();
+      const warnings = rows.flatMap(row => validateRow(row, duplicateMap).map(text => DATASETS[state.currentFile].label + " / " + row.category + " / " + getName(row) + ": " + text));
+      const content = [
+        "已导入文件: " + Object.keys(state.files).join(", "),
+        "未导出修改: " + (state.dirty.size ? Array.from(state.dirty).join(", ") : "无"),
+        "",
+        "最近改动:",
+        state.changes.length ? state.changes.slice(-80).join("\n") : "暂无",
+        "",
+        "当前文件提示:",
+        warnings.length ? warnings.slice(0, 120).join("\n") : "未发现明显问题",
+      ].join("\n");
+      openModal("改动摘要", content);
+    }
+
+    function getCurrent() {
+      return state.files[state.currentFile] || null;
+    }
+
+    function getCategories() {
+      const current = getCurrent();
+      if (!current) return [];
+      return Object.keys(current.data || {});
+    }
+
+    function getRows() {
+      const current = getCurrent();
+      if (!current) return [];
+      if (current.kind === "baseInfo") return getBaseRows(current.data);
+      if (current.kind === "coreClassification") return getCoreRows(current.data);
+      const rows = [];
+      for (const [category, items] of Object.entries(current.data || {})) {
+        if (!Array.isArray(items)) continue;
+        items.forEach((item, index) => {
+          rows.push({ id: "row|" + category + "|" + index, category, index, item });
+        });
+      }
+      return rows;
+    }
+
+    function getBaseRows(data) {
+      const rows = [];
+      for (const [category, value] of Object.entries(data || {})) {
+        if (Array.isArray(value)) {
+          value.forEach((entry, index) => rows.push({
+            id: "base|" + category + "|" + index,
+            category,
+            mode: "array",
+            index,
+            item: { value: entry },
+          }));
+        } else if (value && typeof value === "object") {
+          Object.entries(value).forEach(([key, cost]) => rows.push({
+            id: "base|" + category + "|" + key,
+            category,
+            mode: "record",
+            key,
+            item: { name: key, cost },
+          }));
+        }
+      }
+      return rows;
+    }
+
+    function getCoreRows(data) {
+      const rows = [];
+      for (const [category, cores] of Object.entries(data || {})) {
+        if (!cores || typeof cores !== "object") continue;
+        Object.entries(cores).forEach(([key, value]) => rows.push({
+          id: "core|" + category + "|" + key,
+          category,
+          key,
+          item: { name: key, note: value?.note || "" },
+        }));
+      }
+      return rows;
+    }
+
+    function getVisibleRows() {
+      const rows = getRows().filter(row => {
+        if (state.currentCategory !== "__all__" && row.category !== state.currentCategory) return false;
+        const item = getItem(row);
+        if (state.rarity && item.rarity !== state.rarity) return false;
+        if (state.type && item.type !== state.type) return false;
+        if (state.search) {
+          const text = (getName(row) + " " + JSON.stringify(item)).toLowerCase();
+          if (!text.includes(state.search)) return false;
+        }
+        return true;
+      });
+      return sortRows(rows);
+    }
+
+    function sortRows(rows) {
+      const result = rows.slice();
+      result.sort((a, b) => {
+        const ai = getItem(a);
+        const bi = getItem(b);
+        if (state.sort === "name-asc") return getName(a).localeCompare(getName(b), "zh-Hans");
+        if (state.sort === "name-desc") return getName(b).localeCompare(getName(a), "zh-Hans");
+        if (state.sort === "cost-asc") return numberOrMax(ai.cost) - numberOrMax(bi.cost);
+        if (state.sort === "cost-desc") return numberOrMax(bi.cost) - numberOrMax(ai.cost);
+        if (state.sort === "rarity") return (RARITY_ORDER.get(ai.rarity) ?? 99) - (RARITY_ORDER.get(bi.rarity) ?? 99);
+        return getCategories().indexOf(a.category) - getCategories().indexOf(b.category) || (a.index ?? 0) - (b.index ?? 0);
+      });
+      return result;
+    }
+
+    function resolveRow(row) {
+      if (!row) return null;
+      return resolveRowById(row.id);
+    }
+
+    function resolveRowById(id) {
+      return getRows().find(row => row.id === id) || null;
+    }
+
+    function getItem(row) {
+      return row?.item || {};
+    }
+
+    function getName(row) {
+      const item = getItem(row);
+      if (state.currentFile === "baseInfo.json" && row.mode === "array") return String(item.value ?? "");
+      return String(item.name ?? row.key ?? "");
+    }
+
+    function applyBaseInfoRow(row, item) {
+      const current = getCurrent();
+      if (row.mode === "array") {
+        current.data[row.category][row.index] = item.value || "";
+        state.selected = { ...row, item: { value: item.value || "" }, id: "base|" + row.category + "|" + row.index };
+      } else {
+        const record = current.data[row.category];
+        const oldKey = row.key;
+        const newKey = item.name || oldKey;
+        if (newKey !== oldKey) {
+          delete record[oldKey];
+          record[newKey] = Number(item.cost || 0);
+          state.selected = { id: "base|" + row.category + "|" + newKey, category: row.category, mode: "record", key: newKey };
+        } else {
+          record[oldKey] = Number(item.cost || 0);
+        }
+      }
+    }
+
+    function applyCoreRow(row, item) {
+      const current = getCurrent();
+      const oldKey = row.key;
+      const newKey = item.name || oldKey;
+      const record = current.data[row.category];
+      if (newKey !== oldKey) {
+        delete record[oldKey];
+        record[newKey] = { note: item.note || "" };
+        state.selected = { id: "core|" + row.category + "|" + newKey, category: row.category, key: newKey };
+      } else {
+        record[oldKey] = { note: item.note || "" };
+      }
+    }
+
+    function duplicateBaseRow(row) {
+      const current = getCurrent();
+      if (row.mode === "array") {
+        current.data[row.category].splice(row.index + 1, 0, String(getItem(row).value || "") + " 副本");
+        state.selected = { id: "base|" + row.category + "|" + (row.index + 1), category: row.category, mode: "array", index: row.index + 1 };
+      } else {
+        const next = String(row.key) + " 副本";
+        current.data[row.category][next] = getItem(row).cost || 0;
+        state.selected = { id: "base|" + row.category + "|" + next, category: row.category, mode: "record", key: next };
+      }
+    }
+
+    function moveRow(row, targetCategory) {
+      const current = getCurrent();
+      if (current.kind === "collection") {
+        current.data[targetCategory] ??= [];
+        const [item] = current.data[row.category].splice(row.index, 1);
+        current.data[targetCategory].push(item);
+        return { id: "row|" + targetCategory + "|" + (current.data[targetCategory].length - 1), category: targetCategory, index: current.data[targetCategory].length - 1 };
+      }
+      if (current.kind === "coreClassification") {
+        current.data[targetCategory] ??= {};
+        current.data[targetCategory][row.key] = current.data[row.category][row.key];
+        delete current.data[row.category][row.key];
+        return { id: "core|" + targetCategory + "|" + row.key, category: targetCategory, key: row.key };
+      }
+      ensureBaseInfoCategory(current.data, targetCategory);
+      if (row.mode === "array" && Array.isArray(current.data[targetCategory])) {
+        current.data[targetCategory].push(getItem(row).value || "");
+        current.data[row.category].splice(row.index, 1);
+        return { id: "base|" + targetCategory + "|" + (current.data[targetCategory].length - 1), category: targetCategory, mode: "array", index: current.data[targetCategory].length - 1 };
+      }
+      if (row.mode === "record" && !Array.isArray(current.data[targetCategory])) {
+        current.data[targetCategory][row.key] = getItem(row).cost || 0;
+        delete current.data[row.category][row.key];
+        return { id: "base|" + targetCategory + "|" + row.key, category: targetCategory, mode: "record", key: row.key };
+      }
+      showToast("基础信息的数组分类和点数分类不能互相移动。");
+      return row;
+    }
+
+    function removeRow(row) {
+      const current = getCurrent();
+      if (current.kind === "collection") {
+        current.data[row.category].splice(row.index, 1);
+      } else if (current.kind === "coreClassification") {
+        delete current.data[row.category][row.key];
+      } else if (row.mode === "array") {
+        current.data[row.category].splice(row.index, 1);
+      } else {
+        delete current.data[row.category][row.key];
+      }
+    }
+
+    function countInCategory(category) {
+      const current = getCurrent();
+      if (!current) return 0;
+      if (current.kind === "collection") return Array.isArray(current.data[category]) ? current.data[category].length : 0;
+      if (current.kind === "coreClassification") return current.data[category] ? Object.keys(current.data[category]).length : 0;
+      const value = current.data[category];
+      return Array.isArray(value) ? value.length : value && typeof value === "object" ? Object.keys(value).length : 0;
+    }
+
+    function getFileCount(filename) {
+      const file = state.files[filename];
+      if (!file) return "未导入";
+      if (file.kind === "collection") return getRowsForFile(filename).length + " 项";
+      if (file.kind === "coreClassification") return getRowsForFile(filename).length + " 核心";
+      return getRowsForFile(filename).length + " 项";
+    }
+
+    function getRowsForFile(filename) {
+      const old = state.currentFile;
+      state.currentFile = filename;
+      const rows = getRows();
+      state.currentFile = old;
+      return rows;
+    }
+
+    function validateRow(row, duplicateMap) {
+      const item = getItem(row);
+      const warnings = [];
+      const name = getName(row);
+      if (!name.trim()) warnings.push("名称为空");
+      if (duplicateMap.get(name)?.length > 1) warnings.push("名称重复");
+      const config = DATASETS[state.currentFile];
+      for (const key of config.required || []) {
+        if (item[key] === undefined || item[key] === "" || item[key] === null) warnings.push("缺少" + fieldLabel(key));
+      }
+      if ("cost" in item && typeof item.cost !== "number") warnings.push("消耗不是数字");
+      if ("level" in item && typeof item.level !== "number") warnings.push("等级不是数字");
+      if ("rarity" in item && item.rarity && !RARITIES.includes(item.rarity)) warnings.push("未知品质");
+      if ("tag" in item && !Array.isArray(item.tag)) warnings.push("标签格式错误");
+      if ("effect" in item && (!item.effect || typeof item.effect !== "object" || Array.isArray(item.effect))) warnings.push("效果格式错误");
+      if (state.currentFile === "skills.json" && !item.consume) warnings.push("技能缺少消耗说明");
+      if (state.currentFile === "partners.json") {
+        const attr = item.attributes || {};
+        ["strength", "dexterity", "constitution", "intelligence", "mind"].forEach(key => {
+          if (typeof attr[key] !== "number") warnings.push("缺少" + fieldLabel(key));
+        });
+      }
+      return warnings;
+    }
+
+    function getDuplicateNameMap() {
+      const map = new Map();
+      for (const row of getRows()) {
+        const name = getName(row);
+        if (!name) continue;
+        if (!map.has(name)) map.set(name, []);
+        map.get(name).push(row.id);
+      }
+      return map;
+    }
+
+    function collectFieldValues(key) {
+      return unique(getRows().map(row => getItem(row)[key]).filter(Boolean));
+    }
+
+    function defaultEntity(filename, category) {
+      if (filename === "equipments.json") {
+        return { name: "新装备", cost: 0, type: inferTypeFromCategory(category, "装备"), rarity: "common", tag: [], effect: {}, description: "" };
+      }
+      if (filename === "items.json") {
+        return { name: "新道具", cost: 0, type: category || "其它", rarity: "common", quantity: 1, tag: [], effect: {}, description: "" };
+      }
+      if (filename === "skills.json") {
+        return { name: "新技能", cost: 0, consume: "", type: "主动", rarity: "common", tag: [], effect: {}, description: "" };
+      }
+      if (filename === "backgrounds.json") {
+        return { name: "新开局", description: "" };
+      }
+      if (filename === "partners.json") {
+        return {
+          name: "新伙伴",
+          cost: 0,
+          lifeLevel: "",
+          level: 1,
+          race: "",
+          identity: [],
+          career: [],
+          personality: "",
+          like: "",
+          app: "",
+          cloth: "",
+          equip: [],
+          attributes: { strength: 0, dexterity: 0, constitution: 0, intelligence: 0, mind: 0 },
+          stairway: { isOpen: false },
+          isContract: false,
+          affinity: 0,
+          comment: "",
+          backgroundInfo: "",
+          skills: [],
+        };
+      }
+      return { name: "新条目" };
+    }
+
+    function defaultNested(mode) {
+      return mode === "skill"
+        ? { name: "新技能", type: "主动", rarity: "common", consume: "", tag: [], effect: {}, description: "" }
+        : { name: "新装备", type: "装备", rarity: "common", tag: [], effect: {}, description: "" };
+    }
+
+    function inferTypeFromCategory(category, fallback) {
+      if (!category) return fallback;
+      if (category.includes("武器")) return "武器";
+      if (category.includes("防具") || category.includes("盾")) return "防具";
+      if (category.includes("饰") || category.includes("戒") || category.includes("项链") || category.includes("护符")) return "饰品";
+      return fallback;
+    }
+
+    function ensureBaseInfoCategory(data, category) {
+      if (data[category] !== undefined) return;
+      if (category.includes("Costs")) data[category] = {};
+      else data[category] = [];
+    }
+
+    function updateButtons() {
+      const hasCurrent = Boolean(getCurrent());
+      const hasSelected = Boolean(resolveRow(state.selected));
+      el.exportBtn.disabled = !hasCurrent && Object.keys(state.files).length === 0;
+      el.historyBtn.disabled = state.undo.length === 0 && state.redo.length === 0;
+      el.addCategoryBtn.disabled = !hasCurrent;
+      el.mergeCategoryBtn.disabled = !hasCurrent || state.currentCategory === "__all__" || getCategories().length < 2;
+      el.renameCategoryBtn.disabled = !hasCurrent || state.currentCategory === "__all__";
+      el.deleteCategoryBtn.disabled = !hasCurrent || state.currentCategory === "__all__";
+      el.addEntityBtn.disabled = !hasCurrent;
+      el.duplicateEntityBtn.disabled = !hasSelected;
+      el.moveEntityBtn.disabled = !hasSelected;
+      el.deleteEntityBtn.disabled = !hasSelected;
+      el.applyBatchBtn.disabled = state.selectedRows.size === 0;
+      el.deleteSelectedBtn.disabled = state.selectedRows.size === 0;
+    }
+
+    function setSelect(select, options, value) {
+      const current = value ?? select.value;
+      select.innerHTML = "";
+      options.forEach(([optionValue, label]) => {
+        const option = document.createElement("option");
+        option.value = optionValue;
+        option.textContent = label;
+        select.appendChild(option);
+      });
+      select.value = options.some(([optionValue]) => optionValue === current) ? current : "";
+    }
+
+    function sortRarities(values) {
+      return values.slice().sort((a, b) => (RARITY_ORDER.get(a) ?? 99) - (RARITY_ORDER.get(b) ?? 99));
+    }
+
+    function rarityOptions() {
+      return [["", "未设置"]].concat(RARITIES.map(value => [value, rarityLabel(value)]));
+    }
+
+    function rarityLabel(value) {
+      return RARITY_LABELS[value] || value || "";
+    }
+
+    function fieldLabel(key) {
+      return FIELD_LABELS[key] || ATTRIBUTE_LABELS[key] || key;
+    }
+
+    function setCleanValue(target, key, value) {
+      if (value === "" || value === undefined || value === null) delete target[key];
+      else target[key] = value;
+    }
+
+    function cell(html) {
+      const td = document.createElement("td");
+      td.innerHTML = html;
+      return td;
+    }
+
+    function renderNameCell(row, item) {
+      const rarity = item.rarity
+        ? "<span class=\"pill rarity-" + escapeAttr(item.rarity) + "\">" + escapeHtml(rarityLabel(item.rarity)) + "</span>"
+        : "";
+      return [
+        "<div class=\"cell-name\"><span class=\"pill-line\">" + rarity + "<strong>" + escapeHtml(getName(row)) + "</strong></span></div>",
+        "<div class=\"cell-muted\">" + escapeHtml(getDescriptionPreview(item)) + "</div>",
+      ].join("");
+    }
+
+    function renderTypeOnly(item) {
+      if (item.type) return "<span class=\"pill\">" + escapeHtml(item.type) + "</span>";
+      return "<span class=\"cell-muted\">无</span>";
+    }
+
+    function renderTags(item) {
+      const tags = Array.isArray(item.tag) ? item.tag : Array.isArray(item.identity) ? item.identity : [];
+      if (!tags.length) return "<span class=\"cell-muted\">无</span>";
+      return "<div class=\"pill-line\">" + tags.slice(0, 5).map(tag => "<span class=\"pill\">" + escapeHtml(tag) + "</span>").join("") + (tags.length > 5 ? "<span class=\"pill\">+" + (tags.length - 5) + "</span>" : "") + "</div>";
+    }
+
+    function renderWarnings(warnings) {
+      if (!warnings.length) return "<span class=\"cell-muted\">通过</span>";
+      return "<div class=\"warning-list\">" + warnings.slice(0, 3).map(escapeHtml).join("<br>") + (warnings.length > 3 ? "<br>+" + (warnings.length - 3) : "") + "</div>";
+    }
+
+    function formatCost(item) {
+      if (item.cost === undefined) return "<span class=\"cell-muted\">无</span>";
+      return escapeHtml(String(item.cost));
+    }
+
+    function getDescriptionPreview(item) {
+      return String(item.description || item.backgroundInfo || item.note || item.value || "").slice(0, 80);
+    }
+
+    function buildTableSummary(rows) {
+      const total = getRows().length;
+      const visible = rows.length;
+      const currentLabel = DATASETS[state.currentFile]?.label || "数据";
+      const dragHint = canDragRows() ? "。按住“拖”移动条目，会直接改变 JSON 里的物品位置" : "";
+      return currentLabel + ": 显示 " + visible + " / 总计 " + total + "，分类 " + getCategories().length + " 个" + dragHint;
+    }
+
+    function numberOrMax(value) {
+      return typeof value === "number" ? value : Number.MAX_SAFE_INTEGER;
+    }
+
+    function unique(values) {
+      return Array.from(new Set(values.map(value => String(value)))).sort((a, b) => a.localeCompare(b, "zh-Hans"));
+    }
+
+    function deepClone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function escapeAttr(value) {
+      return String(value ?? "").replace(/[^a-z0-9_-]/gi, "");
+    }
+
+    function setStatus(text) {
+      el.statusText.textContent = text;
+    }
+
+    function showToast(text) {
+      el.toast.textContent = text;
+      el.toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => el.toast.classList.remove("show"), 3200);
+    }
+
+    function setupSplitters() {
+      const root = document.querySelector(".app");
+      const startDrag = (splitter, side, event) => {
+        event.preventDefault();
+        splitter.classList.add("dragging");
+        const onMove = moveEvent => {
+          const rect = root.getBoundingClientRect();
+          if (side === "left") {
+            const width = Math.min(Math.max(moveEvent.clientX - rect.left, 160), 380);
+            root.style.setProperty("--sidebar-w", width + "px");
+          } else {
+            const width = Math.min(Math.max(rect.right - moveEvent.clientX, 420), Math.max(520, rect.width - 560));
+            root.style.setProperty("--editor-w", width + "px");
+          }
+        };
+        const onUp = () => {
+          splitter.classList.remove("dragging");
+          window.removeEventListener("mousemove", onMove);
+          window.removeEventListener("mouseup", onUp);
+        };
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+      };
+      el.leftSplitter.addEventListener("mousedown", event => startDrag(el.leftSplitter, "left", event));
+      el.rightSplitter.addEventListener("mousedown", event => startDrag(el.rightSplitter, "right", event));
+    }
+
+    function openChoiceModal(title, choices) {
+      el.modalTitle.textContent = title;
+      el.modalContent.innerHTML = "";
+      const list = document.createElement("div");
+      list.className = "choice-list";
+      choices.forEach(choice => {
+        const button = document.createElement("button");
+        button.className = "choice-card";
+        button.disabled = Boolean(choice.disabled);
+        button.innerHTML = "<strong>" + escapeHtml(choice.title) + "</strong><span>" + escapeHtml(choice.desc || "") + "</span>";
+        button.addEventListener("click", () => {
+          closeModal({ silent: true });
+          choice.action();
+        });
+        list.appendChild(button);
+      });
+      el.modalContent.appendChild(list);
+      el.modalActions.innerHTML = "";
+      const close = document.createElement("button");
+      close.textContent = "关闭";
+      close.addEventListener("click", closeModal);
+      el.modalActions.appendChild(close);
+      el.modalBackdrop.classList.add("show");
+    }
+
+    function openModal(title, content) {
+      el.modalTitle.textContent = title;
+      el.modalContent.textContent = content;
+      el.modalActions.innerHTML = "";
+      const close = document.createElement("button");
+      close.textContent = "关闭";
+      close.addEventListener("click", closeModal);
+      el.modalActions.appendChild(close);
+      el.modalBackdrop.classList.add("show");
+    }
+
+    function closeModal(options = {}) {
+      el.modalBackdrop.classList.remove("show");
+      if (!options.silent && state.modalResolver) {
+        state.modalResolver(null);
+        state.modalResolver = null;
+      }
+    }
+
+    function chooseCategory(title, currentCategory, options = {}) {
+      const allowNew = options.allowNew !== false;
+      const categories = getCategories().filter(category => category !== options.exclude);
+      return new Promise(resolve => {
+        state.modalResolver = resolve;
+        el.modalTitle.textContent = title;
+        el.modalContent.innerHTML = "";
+        const form = document.createElement("div");
+        form.className = "category-picker";
+        form.innerHTML = allowNew
+          ? [
+              "<label><span>选择现有分类</span><select id=\"categoryPickSelect\"></select></label>",
+              "<label><span>或新建分类</span><input id=\"categoryPickNew\" placeholder=\"只在需要新分类时填写\" /></label>",
+              "<div class=\"hint\">优先使用新建分类；如果留空，就使用上面的现有分类。</div>",
+            ].join("")
+          : [
+              "<label><span>选择目标分类</span><select id=\"categoryPickSelect\"></select></label>",
+              "<div class=\"hint\">会把当前分类的条目追加到目标分类末尾，并删除当前分类。</div>",
+            ].join("");
+        el.modalContent.appendChild(form);
+
+        const select = form.querySelector("#categoryPickSelect");
+        setSelect(select, categories.map(category => [category, category]), currentCategory || categories[0] || "");
+        const input = form.querySelector("#categoryPickNew");
+
+        el.modalActions.innerHTML = "";
+        const confirm = document.createElement("button");
+        confirm.className = "primary";
+        confirm.textContent = "确定";
+        confirm.addEventListener("click", () => {
+          const value = (allowNew && input ? input.value.trim() : "") || select.value;
+          el.modalBackdrop.classList.remove("show");
+          state.modalResolver = null;
+          resolve(value || null);
+        });
+        const cancel = document.createElement("button");
+        cancel.textContent = "取消";
+        cancel.addEventListener("click", () => {
+          el.modalBackdrop.classList.remove("show");
+          state.modalResolver = null;
+          resolve(null);
+        });
+        el.modalActions.append(confirm, cancel);
+        el.modalBackdrop.classList.add("show");
+        if (input) input.focus();
+        else select.focus();
+      });
+    }
+  </script>
+</body>
+</html>

@@ -15,6 +15,68 @@
     <script src="https://testingcf.jsdelivr.net/npm/jquery-ui-touch-punch"></script>
     <script src="https://testingcf.jsdelivr.net/npm/lodash"></script>
     <script src="https://testingcf.jsdelivr.net/gh/n0vi028/JS-Slash-Runner/src/iframe/adjust_iframe_height.js"></script>
+    <script>
+      (function () {
+        var scrollableY = /(auto|scroll|overlay)/;
+
+        function findScrollableParent(start) {
+          var element = start instanceof Element ? start : start && start.parentElement;
+
+          while (element && element !== document.body && element !== document.documentElement) {
+            var style = window.getComputedStyle(element);
+            var canOverflow = scrollableY.test(style.overflowY);
+            var hasScrollableSpace = element.scrollHeight > element.clientHeight + 1;
+
+            if (canOverflow && hasScrollableSpace) {
+              return element;
+            }
+
+            element = element.parentElement;
+          }
+
+          return null;
+        }
+
+        function canScrollInDirection(element, deltaY) {
+          if (!element || deltaY === 0) {
+            return false;
+          }
+
+          if (deltaY < 0) {
+            return element.scrollTop > 0;
+          }
+
+          return element.scrollTop + element.clientHeight < element.scrollHeight - 1;
+        }
+
+        window.addEventListener(
+          'wheel',
+          function (event) {
+            var scrollable = findScrollableParent(event.target);
+
+            if (canScrollInDirection(scrollable, event.deltaY)) {
+              return;
+            }
+
+            try {
+              if (!window.parent || !window.parent.scrollBy) {
+                return;
+              }
+
+              window.parent.scrollBy({
+                top: event.deltaY,
+                left: event.deltaX,
+                behavior: 'auto',
+              });
+              event.preventDefault();
+            } catch {
+              // If parent scrolling is blocked, keep the browser default behavior.
+            }
+          },
+          { passive: false },
+        );
+      })();
+    </script>
     <style>
       *,
       *::before,
@@ -25,8 +87,12 @@
       body {
         margin: 0 !important;
         padding: 0;
-        overflow: hidden !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
         max-width: 100% !important;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
       }
     </style>
   </head>

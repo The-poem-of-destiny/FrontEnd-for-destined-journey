@@ -48,7 +48,10 @@ const handleEditCustom = (item: Equipment | Item | Skill, type: 'equipment' | 'i
   emit('edit-custom', item, type);
 };
 
-const createBatchEntry = (item: Equipment | Item | Skill, type: SelectionType): BatchEntry => ({
+const createBatchEntry = (
+  item: Equipment | Item | Skill,
+  type: SelectionType,
+): BatchEntry => ({
   key: createBatchKey(item, type),
   item,
   type,
@@ -389,27 +392,15 @@ const totalCost = computed(() =>
           <strong>{{ selectedBatchCount }}</strong>
         </div>
         <div class="batch-actions">
-          <button
-            class="batch-action danger"
-            :disabled="selectedBatchCount === 0"
-            @click="requestBatchDelete"
-          >
+          <button class="batch-action danger" :disabled="selectedBatchCount === 0" @click="requestBatchDelete">
             <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
             删除
           </button>
-          <button
-            class="batch-action"
-            :disabled="selectedBatchCount === 0"
-            @click="exportSelectedJson"
-          >
+          <button class="batch-action" :disabled="selectedBatchCount === 0" @click="exportSelectedJson">
             <i class="fa-solid fa-file-export" aria-hidden="true"></i>
             JSON
           </button>
-          <button
-            class="batch-action"
-            :disabled="selectedBatchCount === 0"
-            @click="saveSelectedToLibrary"
-          >
+          <button class="batch-action" :disabled="selectedBatchCount === 0" @click="saveSelectedToLibrary">
             <i class="fa-solid fa-box-archive" aria-hidden="true"></i>
             素材库
           </button>
@@ -733,6 +724,7 @@ const totalCost = computed(() =>
             box-shadow: 0 0 0 1px rgba(67, 160, 71, 0.2);
           }
         }
+
       }
     }
 
@@ -980,6 +972,7 @@ const totalCost = computed(() =>
               font-size: 0.8rem;
             }
           }
+
         }
       }
 

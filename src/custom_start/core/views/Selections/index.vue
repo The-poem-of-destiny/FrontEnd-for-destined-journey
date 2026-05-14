@@ -166,6 +166,16 @@ onMounted(() => {
   window.addEventListener(getLibraryUpdateEventName(), refreshLibraryData);
 });
 
+watch(
+  subCategories,
+  categories => {
+    if (!categories.includes(currentSubCategory.value)) {
+      currentSubCategory.value = categories[0] || '';
+    }
+  },
+  { immediate: true },
+);
+
 onUnmounted(() => {
   mobileMediaQuery?.removeEventListener('change', updateMobileViewport);
   window.removeEventListener(getLibraryUpdateEventName(), refreshLibraryData);
@@ -415,7 +425,10 @@ const handleEditCustomItem = (
         </button>
       </div>
 
-      <div v-if="isMobileViewport && activeUtilityPanel !== 'none'" class="mobile-utility-sheet">
+      <div
+        v-if="isMobileViewport && activeUtilityPanel !== 'none'"
+        class="mobile-utility-sheet"
+      >
         <div class="sheet-header">
           <h3>{{ mobilePanelTitle }}</h3>
           <button class="sheet-close" aria-label="关闭面板" @click="closeUtilityPanel">
@@ -497,9 +510,12 @@ const handleEditCustomItem = (
 
   .selection-area {
     flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
     min-height: 0;
     min-width: 0;
     max-width: 100%;
+    overflow: hidden;
 
     :deep(.category-tabs) {
       flex: none;
@@ -511,8 +527,26 @@ const handleEditCustomItem = (
       flex: 1 1 0;
       height: auto;
       max-height: none;
+      min-height: 0;
       min-width: 0;
       max-width: 100%;
+      overflow: hidden;
+    }
+
+    :deep(.category-selection-layout .content-area) {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    :deep(.category-selection-layout .content-main) {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
     }
   }
 
@@ -541,6 +575,9 @@ const handleEditCustomItem = (
     font-size: 0.78rem;
     font-weight: 700;
     cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
 
     i {
       color: var(--accent-color);
@@ -622,6 +659,9 @@ const handleEditCustomItem = (
   .sheet-body {
     min-height: 0;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
     padding: var(--spacing-xs);
   }
 }

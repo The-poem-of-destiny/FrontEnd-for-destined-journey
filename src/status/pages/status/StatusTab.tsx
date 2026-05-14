@@ -7,6 +7,7 @@ import {
   getAvatarRecord,
   getAvatarScopeKey,
   isAvatarRemovedRecord,
+  markAvatarAsRemoved,
   readAvatarFileAsDataUrl,
   removeAvatarRecord,
   saveAvatarRecord,
@@ -173,7 +174,13 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   };
 
   const handlePlayerAvatarRemove = async () => {
-    await handlePlayerAvatarReset();
+    try {
+      await markAvatarAsRemoved(avatarScopeKey, 'player', '主角');
+      setPlayerAvatarUrl('');
+      setIsPlayerAvatarRemoved(true);
+    } catch (error) {
+      console.warn('[StatusTab] 移除主角头像失败:', error);
+    }
   };
 
   const handlePlayerAvatarImageError = () => {
@@ -320,6 +327,8 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 src={playerAvatarDisplayUrl}
                 alt="主角头像"
                 size="lg"
+                placeholderText="主"
+                showEditHint
                 className={styles.overviewAvatarInline}
                 onClick={() => setIsPlayerAvatarModalOpen(true)}
                 onImageError={handlePlayerAvatarImageError}
@@ -523,7 +532,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
         }
         linkPlaceholder="请输入主角头像图片链接"
         canExport={playerAvatarActionState.canExport}
-        canDelete={false}
+        canDelete={playerAvatarActionState.canDelete}
         canReset={playerAvatarActionState.canReset}
         deleteLabel="删除头像"
         resetLabel="恢复默认"

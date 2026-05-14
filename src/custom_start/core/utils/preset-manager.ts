@@ -186,6 +186,23 @@ export function setLastUsedPresetName(name: string): void {
 }
 
 /**
+ * 清空最新消息楼层里由开局脚本写入的 MVU 数据。
+ * 只删除 stat_data，避免影响同楼层的其他变量。
+ */
+export function clearLatestMessageStatData(): boolean {
+  const variableOption: VariableOption = { type: 'message', message_id: 'latest' };
+
+  try {
+    deleteVariable('stat_data', variableOption);
+    console.log('✅ 已清空最新消息楼层的 stat_data 变量');
+    return true;
+  } catch (error) {
+    console.warn('清空最新消息楼层 stat_data 失败:', error);
+    return false;
+  }
+}
+
+/**
  * 从 store 中创建预设数据
  * @param name 预设名称
  * @param characterStore 角色 store 实例

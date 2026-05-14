@@ -30,6 +30,7 @@ type QuestFieldKey = (typeof QuestFields)[number]['key'];
 
 type InspectQuestState = {
   name: string;
+  quest: Task;
 } | null;
 
 const PriorityRankMap: Record<string, number> = {
@@ -195,7 +196,6 @@ const QuestsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   );
 
   const quests = data.任务列表 ?? {};
-  const inspectedQuest = inspectQuest ? quests[inspectQuest.name] : undefined;
   const questEntries = useMemo(() => _.entries(quests) as [string, Task][], [quests]);
 
   const statusOptions = useMemo(() => {
@@ -284,8 +284,8 @@ const QuestsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     setDeleteTarget({ type: '任务', path, name });
   };
 
-  const handleInspectQuest = (name: string) => {
-    setInspectQuest({ name });
+  const handleInspectQuest = (name: string, quest: Task) => {
+    setInspectQuest({ name, quest });
   };
 
   const handleCloseInspect = () => {
@@ -413,7 +413,7 @@ const QuestsTabContent: FC<WithMvuDataProps> = ({ data }) => {
               name={name}
               quest={quest}
               editEnabled={editEnabled}
-              onInspect={() => handleInspectQuest(name)}
+              onInspect={() => handleInspectQuest(name, quest)}
               onDelete={handleDeleteRequest}
             />
           ))}
@@ -424,16 +424,16 @@ const QuestsTabContent: FC<WithMvuDataProps> = ({ data }) => {
         open={!!inspectQuest}
         title={inspectQuest?.name ?? ''}
         subtitle={
-          inspectQuest && inspectedQuest ? (
+          inspectQuest ? (
             <div className={styles.inspectSubtitle}>
-              {inspectedQuest.状态 ? (
-                <span className={styles.questStatusBadge}>{inspectedQuest.状态}</span>
+              {inspectQuest.quest.状态 ? (
+                <span className={styles.questStatusBadge}>{inspectQuest.quest.状态}</span>
               ) : null}
-              {inspectedQuest.关注度 ? (
+              {inspectQuest.quest.关注度 ? (
                 <span
-                  className={`${styles.questPriorityBadge} ${styles[`priority${inspectedQuest.关注度}`] ?? ''}`.trim()}
+                  className={`${styles.questPriorityBadge} ${styles[`priority${inspectQuest.quest.关注度}`] ?? ''}`.trim()}
                 >
-                  {inspectedQuest.关注度}
+                  {inspectQuest.quest.关注度}
                 </span>
               ) : null}
             </div>
@@ -441,10 +441,10 @@ const QuestsTabContent: FC<WithMvuDataProps> = ({ data }) => {
         }
         onClose={handleCloseInspect}
       >
-        {inspectQuest && inspectedQuest ? (
+        {inspectQuest ? (
           <QuestDetailContent
             name={inspectQuest.name}
-            quest={inspectedQuest}
+            quest={inspectQuest.quest}
             editEnabled={editEnabled}
           />
         ) : null}
