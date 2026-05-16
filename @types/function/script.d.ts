@@ -9,7 +9,7 @@ type ScriptButton = {
 };
 
 type Script = {
-  type: 'script',
+  type: 'script';
   enabled: boolean;
   name: string;
   id: string;
@@ -18,8 +18,12 @@ type Script = {
   button: {
     enabled: boolean;
     buttons: Array<ScriptButton>;
-  }
+  };
   data: Record<string, any>;
+  export_with: {
+    data: boolean;
+    button: boolean;
+  };
 };
 type ScriptFolder = {
   type: 'folder';
@@ -29,7 +33,7 @@ type ScriptFolder = {
   icon: string;
   color: string;
   scripts: Script[];
-}
+};
 type ScriptTree = Script | ScriptFolder;
 
 type ScriptTreesOptions = {
