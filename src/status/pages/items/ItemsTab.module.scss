@@ -101,9 +101,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: $spacing-xs;
-  padding: 5px 4px 4px;
-  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
-  border-radius: $border-radius-md;
+  padding: 0px 4px;
   background: transparent;
 }
 
@@ -270,7 +268,14 @@
   min-height: 42px;
   padding: 7px 10px;
   border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border) 60%, transparent);
+  border-bottom: 1px solid transparent;
+  border-image: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--theme-card-border) 60%, transparent) 0%,
+      color-mix(in srgb, var(--theme-card-border) 44%, transparent) 64%,
+      transparent 100%
+    )
+    1;
   border-radius: 0;
   background: transparent;
   color: var(--theme-text-primary);
