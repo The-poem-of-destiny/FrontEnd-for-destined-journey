@@ -248,17 +248,9 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     return item.消耗 ? <span className={styles.itemCost}>{item.消耗}</span> : null;
   };
 
-  const getItemMeta = (item: ItemData) => {
-    if (activeCategoryConfig.itemCategory === 'item') {
-      return item.类型 || '未分类';
-    }
+  const getItemTypeLabel = (item: ItemData) => item.类型 || '未分类';
 
-    if (activeCategoryConfig.itemCategory === 'equipment') {
-      return item.位置 || '无位置';
-    }
-
-    return item.类型 || '未分类';
-  };
+  const getItemTags = (item: ItemData) => item.标签?.filter(Boolean) ?? [];
 
   const renderDetail = (
     itemState: InspectItemState,
@@ -318,6 +310,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
           const isSelected =
             selectedItem?.categoryId === activeCategory && selectedItem.name === name;
           const qualityClass = getQualityClass(item.品质, styles);
+          const itemTags = getItemTags(item);
 
           return (
             <div
@@ -330,8 +323,19 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
             >
               <span className={`${styles.itemQualityMark} ${qualityClass}`.trim()} />
               <span className={styles.itemRowMain}>
-                <span className={`${styles.itemRowName} ${qualityClass}`.trim()}>{name}</span>
-                <span className={styles.itemRowMeta}>{getItemMeta(item)}</span>
+                <span className={styles.itemRowTitle}>
+                  <span className={`${styles.itemRowName} ${qualityClass}`.trim()}>{name}</span>
+                  <span className={styles.itemRowType}>{getItemTypeLabel(item)}</span>
+                </span>
+                {itemTags.length > 0 ? (
+                  <span className={styles.itemRowTags}>
+                    {itemTags.map((tag, idx) => (
+                      <span key={`${tag}-${idx}`} className={styles.itemRowTag}>
+                        {tag}
+                      </span>
+                    ))}
+                  </span>
+                ) : null}
               </span>
               <span className={styles.itemRowActions}>
                 <span className={styles.itemRowSuffix}>
