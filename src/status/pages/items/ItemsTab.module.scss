@@ -49,7 +49,7 @@
 .itemsIndex {
   border: 1px solid color-mix(in srgb, var(--theme-card-border) 74%, transparent);
   border-radius: $border-radius-md;
-  background: color-mix(in srgb, var(--theme-card-bg) 70%, transparent);
+  background: color-mix(in srgb, var(--theme-card-bg) 20%, transparent);
   padding: 0 10px 0 0;
 }
 
