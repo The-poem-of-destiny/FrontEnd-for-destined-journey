@@ -53,7 +53,7 @@ const ParchmentTheme: Theme = {
     qualityUnique: '#d6a057',
     qualityMythic: '#c24b63',
     qualityLegendary: '#e1c067',
-    qualityEpic: '#7e55b6',
+    qualityEpic: '#8a63c4',
     qualityRare: '#3f7bc4',
     qualityUncommon: '#4b8b5f',
 
@@ -132,9 +132,9 @@ const CrimsonTheme: Theme = {
     // 品质颜色
     qualityCommon: '#e6c0c4',
     qualityUnique: '#d79a55',
-    qualityMythic: '#b33b5d',
+    qualityMythic: '#c04466',
     qualityLegendary: '#e0b35e',
-    qualityEpic: '#7a4fb6',
+    qualityEpic: '#8760c6',
     qualityRare: '#3a75c1',
     qualityUncommon: '#49835d',
 
@@ -294,9 +294,9 @@ const BronzeTheme: Theme = {
     // 品质颜色
     qualityCommon: '#e3d5b2',
     qualityUnique: '#d39b42',
-    qualityMythic: '#b3455c',
+    qualityMythic: '#c34866',
     qualityLegendary: '#e2b858',
-    qualityEpic: '#6d56b6',
+    qualityEpic: '#8068c8',
     qualityRare: '#3c74bf',
     qualityUncommon: '#4a8460',
 
@@ -536,9 +536,9 @@ const IvoryTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#6b6258',
-    qualityUnique: '#c8872b',
+    qualityUnique: '#ad701d',
     qualityMythic: '#b23d5a',
-    qualityLegendary: '#c49a32',
+    qualityLegendary: '#a07916',
     qualityEpic: '#6e4ab4',
     qualityRare: '#2e69b2',
     qualityUncommon: '#2f7a4a',
@@ -565,7 +565,7 @@ const IvoryTheme: Theme = {
     ascensionLaw: 'rgba(118, 70, 178, 0.14)',
 
     // 货币
-    currencyGold: '#c7a531',
+    currencyGold: '#9a7514',
     currencySilver: '#8a8a8a',
     currencyCopper: '#a46a34',
   },
@@ -617,9 +617,9 @@ const MistyLilacTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#5b5468',
-    qualityUnique: '#B8873A',
+    qualityUnique: '#A66F1F',
     qualityMythic: '#C22B80',
-    qualityLegendary: '#CFA43B',
+    qualityLegendary: '#9A7416',
     qualityEpic: '#9072C7',
     qualityRare: '#3173D9',
     qualityUncommon: '#2E9957',
@@ -646,7 +646,7 @@ const MistyLilacTheme: Theme = {
     ascensionLaw: 'rgba(117, 88, 171, 0.14)',
 
     // 货币
-    currencyGold: '#B9892D',
+    currencyGold: '#9D741B',
     currencySilver: '#6F667A',
     currencyCopper: '#8C7BAB',
   },
