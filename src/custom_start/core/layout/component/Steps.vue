@@ -123,22 +123,25 @@ defineExpose({
 // 移动设备适配
 @media (max-width: 640px) {
   .steps {
-    gap: 1px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-xs);
 
     .step {
       font-size: 12px;
       padding: 8px 10px;
-      margin-left: -4px;
-      clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 12px 100%, 0 50%);
+      margin-left: 0;
+      clip-path: none;
+      border-radius: var(--radius-sm);
 
       &:first-child {
-        clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 0 100%, 0 50%);
+        clip-path: none;
         padding-left: 10px;
         margin-left: 0;
       }
 
       &:last-child {
-        clip-path: polygon(12px 0, 100% 0, 100% 50%, 100% 100%, 12px 100%, 0 50%);
+        clip-path: none;
         padding-right: 10px;
       }
 
@@ -152,22 +155,22 @@ defineExpose({
 // 小屏幕设备适配
 @media (max-width: 480px) {
   .steps {
-    gap: 0;
+    gap: var(--spacing-xs);
 
     .step {
       font-size: 10px;
       padding: 6px 8px;
-      margin-left: -3px;
-      clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 10px 100%, 0 50%);
+      margin-left: 0;
+      clip-path: none;
 
       &:first-child {
-        clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%, 0 50%);
+        clip-path: none;
         padding-left: 8px;
         margin-left: 0;
       }
 
       &:last-child {
-        clip-path: polygon(10px 0, 100% 0, 100% 50%, 100% 100%, 10px 100%, 0 50%);
+        clip-path: none;
         padding-right: 8px;
       }
 

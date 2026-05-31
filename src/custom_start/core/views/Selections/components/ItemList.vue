@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ItemCard from '../../../components/ItemCard.vue';
-import { useSelectableList } from '../../../composables';
+import { useActiveCard, useSelectableList } from '../../../composables';
 import { useStorePoints } from '../../../composables/use-store-points';
 import type { Equipment, Item, Skill } from '../../../types';
 
@@ -18,6 +18,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const { availablePoints } = useStorePoints();
+const { toggleActive, isActive: isDetailsOpen, clearIfMissing } = useActiveCard();
 
 // 使用通用可选列表逻辑
 const { isSelected, isDisabled } = useSelectableList(
@@ -32,6 +33,17 @@ const handleSelect = (item: Equipment | Item | Skill) => {
 const handleDeselect = (item: Equipment | Item | Skill) => {
   emit('deselect', item);
 };
+
+const handleToggleDetails = (item: Equipment | Item | Skill) => {
+  toggleActive(item.name);
+};
+
+watch(
+  () => props.items.map(item => item.name).join('|'),
+  () => {
+    clearIfMissing(props.items.map(item => item.name));
+  },
+);
 </script>
 
 <template>
@@ -47,8 +59,10 @@ const handleDeselect = (item: Equipment | Item | Skill) => {
         :item="item"
         :selected="isSelected(item)"
         :disabled="isDisabled(item)"
+        :details-open="isDetailsOpen(item.name)"
         @select="handleSelect"
         @deselect="handleDeselect"
+        @toggle-details="handleToggleDetails"
       />
     </div>
   </div>
@@ -56,7 +70,7 @@ const handleDeselect = (item: Equipment | Item | Skill) => {
 
 <style lang="scss" scoped>
 .item-list {
-  min-height: 400px;
+  min-height: 360px;
 }
 
 .empty-state {
@@ -82,7 +96,7 @@ const handleDeselect = (item: Equipment | Item | Skill) => {
 
 .item-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--spacing-lg);
   padding: var(--spacing-md);
 }
@@ -96,15 +110,20 @@ const handleDeselect = (item: Equipment | Item | Skill) => {
 }
 
 @media (max-width: 768px) {
+  .item-list {
+    min-height: 0;
+  }
+
   .item-grid {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-md);
-    padding: var(--spacing-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: var(--spacing-xs);
   }
 
   .empty-state {
     padding: var(--spacing-xl);
-    min-height: 300px;
+    min-height: 240px;
 
     .empty-icon {
       font-size: 3rem;

@@ -82,6 +82,10 @@ const handleSelectBackground = (background: Background) => {
   characterStore.setBackground(background);
 };
 
+const handleDeselectBackground = () => {
+  characterStore.setBackground(null);
+};
+
 // 更新自定义开局描述
 const handleUpdateCustomDescription = (value: string) => {
   customContentStore.updateCustomBackgroundDescription(value);
@@ -125,7 +129,7 @@ onMounted(() => {
       <LevelTabs v-model="currentLevel" :levels="partnerLevels" />
 
       <!-- 伙伴列表 -->
-      <div class="destined-ones-content">
+      <div class="destined-ones-content themed-scrollbar">
         <PartnerList
           :items="currentPartners"
           @select="handleSelectPartner"
@@ -156,6 +160,7 @@ onMounted(() => {
             :character-location="characterStore.character.startLocation"
             :character-identity="characterStore.character.identity"
             @select="handleSelectBackground"
+            @deselect="handleDeselectBackground"
             @update:custom-description="handleUpdateCustomDescription"
           />
         </template>
@@ -265,29 +270,11 @@ onMounted(() => {
 }
 
 .destined-ones-content {
-  max-height: 600px;
+  max-height: min(600px, 70vh);
   overflow-y: auto;
   border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
   background: var(--input-bg);
-
-  &::-webkit-scrollbar {
-    width: 10px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: var(--input-bg);
-    border-radius: var(--radius-md);
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: var(--radius-md);
-
-    &:hover {
-      background: var(--border-color-strong);
-    }
-  }
 }
 
 // 初始剧情区域
@@ -422,8 +409,8 @@ onMounted(() => {
     border-style: dashed;
 
     &:hover {
-      border-color: #43a047;
-      box-shadow: 0 0 0 1px rgba(67, 160, 71, 0.2);
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.22);
     }
   }
 
@@ -446,8 +433,8 @@ onMounted(() => {
       gap: 4px;
       padding: 2px 6px;
       border-radius: var(--radius-sm);
-      background: rgba(76, 175, 80, 0.15);
-      color: #43a047;
+      background: rgba(212, 175, 55, 0.16);
+      color: var(--accent-color);
       font-size: 0.75rem;
       font-weight: 600;
 
@@ -501,11 +488,24 @@ onMounted(() => {
   }
 
   .destined-ones-content {
-    max-height: 500px;
+    height: min(40vh, 340px);
+    min-height: 240px;
+    max-height: min(40vh, 340px);
   }
 
   .summary-section {
     position: static;
+  }
+
+  .summary-card {
+    display: flex;
+    flex-direction: column;
+    max-height: min(38vh, 320px);
+  }
+
+  .summary-content {
+    overflow-y: auto;
+    padding-right: 2px;
   }
 
   .summary-items {
@@ -522,9 +522,16 @@ onMounted(() => {
     font-size: 1.1rem;
   }
 
+  .destined-ones-content {
+    height: min(36vh, 300px);
+    min-height: 220px;
+    max-height: min(36vh, 300px);
+  }
+
   .summary-header {
     flex-wrap: wrap;
     gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
   }
 
   .summary-title-row {
@@ -536,6 +543,11 @@ onMounted(() => {
 
   .clear-btn {
     width: 100%;
+  }
+
+  .summary-card {
+    max-height: min(34vh, 280px);
+    padding: var(--spacing-sm);
   }
 }
 </style>

@@ -1,6 +1,135 @@
-import { getLevelTierName, getTierAttributeBonus } from '../data/base-info';
+import {
+  ATTRIBUTES,
+  calculateAPByLevel,
+  getLevelTierName,
+  getTierAttributeBonus,
+} from '../data/base-info';
 import { RARITY_MAP } from '../data/constants';
-import type { Background, CharacterConfig, Equipment, Item, Partner, Skill } from '../types';
+import type {
+  Attributes,
+  Background,
+  CharacterConfig,
+  Equipment,
+  Item,
+  Partner,
+  Skill,
+} from '../types';
+
+type MvuItemSource = {
+  name?: string;
+  rarity?: string;
+  type?: string;
+  tag?: string[];
+  effect?: Record<string, string>;
+  description?: string;
+};
+
+type MvuEquipmentSource = MvuItemSource & {
+  position?: string;
+};
+
+type MvuSkillSource = MvuItemSource & {
+  consume?: string;
+};
+
+const getRarityName = (rarity?: string) => _.get(RARITY_MAP, rarity || '', rarity || '普通');
+
+const cleanRecord = (record?: Record<string, string>) => _.pickBy(record || {}, value => !!value);
+
+const toBaseItemVariable = (item: MvuItemSource) => ({
+  品质: getRarityName(item.rarity),
+  类型: item.type || '',
+  标签: _.uniq(item.tag || []),
+  效果: cleanRecord(item.effect),
+  描述: item.description || '',
+});
+
+const toEquipmentVariable = (item: MvuEquipmentSource) => ({
+  ...toBaseItemVariable(item),
+  位置: item.position || '',
+});
+
+const toInventoryVariable = (item: Item) => ({
+  ...toBaseItemVariable(item),
+  数量: Math.max(1, Math.round(item.quantity || 1)),
+});
+
+const toSkillVariable = (skill: MvuSkillSource) => ({
+  ...toBaseItemVariable(skill),
+  消耗: skill.consume || '',
+});
+
+const toNamedRecord = <T extends { name?: string }, V>(
+  list: T[],
+  mapper: (item: T) => V,
+): Record<string, V> =>
+  _.fromPairs(
+    _.chain(list)
+      .filter(item => !!item.name)
+      .map(item => [item.name as string, mapper(item)])
+      .value(),
+  );
+
+const getCharacterDisplayValues = (character: CharacterConfig) => ({
+  race: character.race === '自定义' ? character.customRace : character.race,
+  identity: character.identity === '自定义' ? character.customIdentity : character.identity,
+});
+
+const calculateFinalAttributes = (character: CharacterConfig): Attributes => {
+  const tierBonus = getTierAttributeBonus(character.level);
+  return _.fromPairs(
+    _.map(ATTRIBUTES, attr => [
+      attr,
+      character.basePoints[attr] + tierBonus + character.attributePoints[attr],
+    ]),
+  ) as Attributes;
+};
+
+const toAscensionVariable = (stairway?: Partner['stairway']) => ({
+  是否开启: Boolean(stairway?.isOpen),
+  要素: stairway?.elements ?? {},
+  权能: stairway?.powers ?? {},
+  法则: stairway?.laws ?? {},
+  神位: stairway?.godlyRank ?? '',
+  神国: stairway?.godKingdom
+    ? {
+        名称: stairway.godKingdom.name || '',
+        描述: stairway.godKingdom.description || '',
+      }
+    : {
+        名称: '',
+        描述: '',
+      },
+});
+
+const toPartnerVariable = (partner: Partner) => ({
+  在场: true,
+  生命层级: partner.lifeLevel,
+  等级: partner.level,
+  种族: partner.race,
+  身份: [...partner.identity],
+  职业: [...partner.career],
+  性格: partner.personality,
+  喜爱: partner.like,
+  外貌: partner.app,
+  着装: partner.cloth,
+  属性: {
+    力量: partner.attributes.strength,
+    敏捷: partner.attributes.dexterity,
+    体质: partner.attributes.constitution,
+    智力: partner.attributes.intelligence,
+    精神: partner.attributes.mind,
+  },
+  状态效果: {},
+  背包: {},
+  装备: toNamedRecord(partner.equip, toEquipmentVariable),
+  技能: toNamedRecord(partner.skills, toSkillVariable),
+  登神长阶: toAscensionVariable(partner.stairway),
+  命定契约: partner.isContract,
+  好感度: partner.affinity,
+  心里话: partner.comment || '',
+  背景故事: partner.backgroundInfo || '',
+});
 
 /**
  * 将角色数据写入到 MVU 变量中
@@ -8,140 +137,49 @@ import type { Background, CharacterConfig, Equipment, Item, Partner, Skill } fro
  */
 export async function writeCharacterToMvu(
   character: CharacterConfig,
+  equipments: Equipment[],
   items: Item[],
   skills: Skill[],
   partners: Partner[],
 ): Promise<void> {
   await waitGlobalInitialized('Mvu');
 
-  const presetSkills = _.filter(skills, skill => !skill.isCustom);
-  const presetItems = _.filter(items, item => !item.isCustom);
-  const presetPartners = _.filter(partners, partner => !partner.isCustom);
-
   const mvuData = Mvu.getMvuData({ type: 'message', message_id: 'latest' });
+  const displayValues = getCharacterDisplayValues(character);
+  const maxAp = calculateAPByLevel(character.level);
+  const usedAp = _.sum(_.values(character.attributePoints));
 
   // 命运点数
   _.set(mvuData, 'stat_data.命运点数', character.destinyPoints);
-
-  // 新 schema: 主角.技能
-  const skillsData = _.fromPairs(
-    _.map(presetSkills, skill => [
-      skill.name,
-      {
-        品质: _.get(RARITY_MAP, skill.rarity, '普通'),
-        类型: skill.type,
-        消耗: skill.consume || '',
-        标签: skill.tag || [],
-        效果: skill.effect || {},
-        描述: skill.description,
-      },
-    ]),
-  );
-  _.set(mvuData, 'stat_data.主角.技能', skillsData);
-
-  // 新 schema: 主角.背包 / 主角.金钱
-  const bagData = _.fromPairs(
-    _.map(presetItems, item => [
-      item.name,
-      {
-        品质: _.get(RARITY_MAP, item.rarity, '普通'),
-        数量: item.quantity || 1,
-        类型: item.type,
-        标签: item.tag || [],
-        效果: item.effect || {},
-        描述: item.description,
-      },
-    ]),
-  );
-  _.set(mvuData, 'stat_data.主角.背包', bagData);
-  _.set(mvuData, 'stat_data.主角.金钱', Math.max(0, Math.round(character.money)));
-  _.set(mvuData, 'stat_data.主角.等级', character.level);
-
-  // 关系列表
-  const relationData = _.fromPairs(
-    _.map(presetPartners, partner => {
-      // 装备数据：过滤有 name 的装备，转为以 name 为键的对象
-      const equipData = _.fromPairs(
-        _.chain(partner.equip)
-          .filter(eq => !!eq.name)
-          .map(eq => [
-            eq.name,
-            {
-              品质: _.get(RARITY_MAP, eq.rarity || '', '普通'),
-              类型: eq.type || '',
-              标签: eq.tag || [],
-              效果: eq.effect || {},
-              描述: eq.description || '',
-              位置: eq.position || '',
-            },
-          ])
-          .value(),
-      );
-
-      // 技能数据
-      const skillData = _.fromPairs(
-        _.map(partner.skills, skill => [
-          skill.name,
-          {
-            品质: _.get(RARITY_MAP, skill.rarity, '普通'),
-            类型: skill.type,
-            消耗: skill.consume || '',
-            标签: skill.tag || [],
-            效果: skill.effect || {},
-            描述: skill.description,
-          },
-        ]),
-      );
-
-      return [
-        partner.name,
-        {
-          // 新 schema: 关系列表字段
-          在场: true,
-          生命层级: partner.lifeLevel,
-          等级: partner.level,
-          种族: partner.race,
-          身份: [...partner.identity],
-          职业: [...partner.career],
-          性格: partner.personality,
-          喜爱: partner.like,
-          外貌: partner.app,
-          着装: partner.cloth,
-          属性: {
-            力量: partner.attributes.strength,
-            敏捷: partner.attributes.dexterity,
-            体质: partner.attributes.constitution,
-            智力: partner.attributes.intelligence,
-            精神: partner.attributes.mind,
-          },
-          登神长阶: {
-            是否开启: partner.stairway.isOpen,
-            要素: partner.stairway.elements ?? {},
-            权能: partner.stairway.powers ?? {},
-            法则: partner.stairway.laws ?? {},
-            神位: partner.stairway.godlyRank ?? '',
-            神国: partner.stairway.godKingdom
-              ? {
-                  名称: partner.stairway.godKingdom.name,
-                  描述: partner.stairway.godKingdom.description,
-                }
-              : { 名称: '', 描述: '' },
-          },
-          命定契约: partner.isContract,
-          好感度: partner.affinity,
-          心里话: partner.comment || '',
-          背景故事: partner.backgroundInfo || '',
-          装备: equipData,
-          技能: skillData,
-        },
-      ];
-    }),
-  );
-  _.set(mvuData, 'stat_data.关系列表', relationData);
+  _.set(mvuData, 'stat_data.主角', {
+    种族: displayValues.race || '',
+    身份: displayValues.identity ? [displayValues.identity] : [],
+    职业: [],
+    生命层级: getLevelTierName(character.level),
+    等级: character.level,
+    累计经验值: 0,
+    升级所需经验: character.level >= 25 ? 'MAX' : 120,
+    冒险者等级: '未评级',
+    属性点: Math.max(0, maxAp - usedAp),
+    属性: calculateFinalAttributes(character),
+    生命值上限: 0,
+    生命值: 0,
+    法力值上限: 0,
+    法力值: 0,
+    体力值上限: 0,
+    体力值: 0,
+    状态效果: {},
+    金钱: Math.max(0, Math.round(character.money)),
+    背包: toNamedRecord(items, toInventoryVariable),
+    装备: toNamedRecord(equipments, toEquipmentVariable),
+    技能: toNamedRecord(skills, toSkillVariable),
+    登神长阶: toAscensionVariable(),
+  });
+  _.set(mvuData, 'stat_data.关系列表', toNamedRecord(partners, toPartnerVariable));
 
   // 将更新后的数据写回
   await Mvu.replaceMvuData(mvuData, { type: 'message', message_id: 'latest' });
-  console.log('✅ 预设数据已成功写入消息楼层变量');
+  console.log('✅ 角色结构化数据已成功写入消息楼层变量');
 }
 
 /**
@@ -149,193 +187,35 @@ export async function writeCharacterToMvu(
  */
 export function generateAIPrompt(
   character: CharacterConfig,
-  equipments: Equipment[],
-  partners: Partner[],
   background: Background | null,
-  items: Item[],
-  skills: Skill[],
   customBackgroundDescription?: string,
 ): string {
   const lines: string[] = [];
   const displayGender = character.gender === '自定义' ? character.customGender : character.gender;
-  const displayRace = character.race === '自定义' ? character.customRace : character.race;
-  const displayIdentity =
-    character.identity === '自定义' ? character.customIdentity : character.identity;
   const displayLocation =
     character.startLocation === '自定义' ? character.customStartLocation : character.startLocation;
 
-  const tierBonus = getTierAttributeBonus(character.level);
-  const formatAttr = (attr: keyof typeof character.basePoints) => {
-    const base = character.basePoints[attr];
-    const extra = character.attributePoints[attr];
-    const total = base + tierBonus + extra;
-    return `${base}(基础) + ${tierBonus}(层级) + ${extra}(额外) = ${total}`;
-  };
-
-  // 基本信息
-  lines.push('【角色信息】');
-  lines.push(`姓名: ${character.name}`);
-  lines.push(`性别: ${displayGender}`);
-  lines.push(`年龄: ${character.age}岁`);
-  lines.push(`种族: ${displayRace}`);
-  lines.push(`身份: ${displayIdentity}`);
-  lines.push(`起始地点: ${displayLocation}`);
-  lines.push(`生命层级: ${getLevelTierName(character.level)}`);
-  lines.push(`等级: Lv.${character.level}`);
+  lines.push('【剧情生成上下文】');
+  lines.push(
+    '角色、属性、金钱、装备、背包、技能、伙伴等结构化数据已写入 <status_current_variables>。',
+  );
+  lines.push('以下只提供 schema 外字段和需要创作的开局上下文。');
   lines.push('');
-  lines.push('【角色属性】');
-  lines.push(`力量: ${formatAttr('力量')}`);
-  lines.push(`敏捷: ${formatAttr('敏捷')}`);
-  lines.push(`体质: ${formatAttr('体质')}`);
-  lines.push(`智力: ${formatAttr('智力')}`);
-  lines.push(`精神: ${formatAttr('精神')}`);
-
-  // 装备列表
-  if (equipments.length > 0) {
-    lines.push('');
-    lines.push('【装备列表】');
-    equipments.forEach((eq, index) => {
-      lines.push(`- 名称: ${eq.name}`);
-      lines.push(`  类型: ${eq.type}`);
-      lines.push(`  品质: ${RARITY_MAP[eq.rarity] || eq.rarity}`);
-      if (eq.tag && eq.tag.length > 0) lines.push(`  标签: ${eq.tag.join('、')}`);
-      if (!_.isEmpty(eq.effect)) {
-        lines.push('  效果:');
-        _.forEach(eq.effect, (value, key) => {
-          lines.push(`    - ${key}: ${value}`);
-        });
-      }
-      if (eq.description) lines.push(`  描述: ${eq.description}`);
-      // 在项目之间添加空行（末尾不加）
-      if (index < equipments.length - 1) lines.push('');
-    });
-  }
-
-  // 自定义道具
-  const customItems = _.filter(items, 'isCustom');
-  if (customItems.length > 0) {
-    lines.push('');
-    lines.push('【自定义道具】');
-    customItems.forEach((item, index) => {
-      lines.push(`- 名称: ${item.name || '未命名'}`);
-      if (item.type) lines.push(`  类型: ${item.type}`);
-      if (item.rarity) lines.push(`  品质: ${RARITY_MAP[item.rarity] || item.rarity}`);
-      if (item.quantity) lines.push(`  数量: ${item.quantity}`);
-      if (item.tag && item.tag.length > 0) lines.push(`  标签: ${item.tag.join('、')}`);
-      if (!_.isEmpty(item.effect)) {
-        lines.push('  效果:');
-        _.forEach(item.effect, (value, key) => {
-          lines.push(`    - ${key}: ${value}`);
-        });
-      }
-      if (item.description) lines.push(`  描述: ${item.description}`);
-      // 在项目之间添加空行（末尾不加）
-      if (index < customItems.length - 1) lines.push('');
-    });
-  }
-
-  // 自定义技能
-  const customSkills = _.filter(skills, 'isCustom');
-  if (customSkills.length > 0) {
-    lines.push('');
-    lines.push('【自定义技能】');
-    customSkills.forEach((skill, index) => {
-      lines.push(`- 名称: ${skill.name || '未命名'}`);
-      if (skill.type) lines.push(`  类型: ${skill.type}`);
-      if (skill.rarity) lines.push(`  品质: ${RARITY_MAP[skill.rarity] || skill.rarity}`);
-      if (skill.tag && skill.tag.length > 0) lines.push(`  标签: ${skill.tag.join('、')}`);
-      if (skill.consume) lines.push(`  消耗: ${skill.consume}`);
-      if (!_.isEmpty(skill.effect)) {
-        lines.push('  效果:');
-        _.forEach(skill.effect, (value, key) => {
-          lines.push(`    - ${key}: ${value}`);
-        });
-      }
-      if (skill.description) lines.push(`  描述: ${skill.description}`);
-      // 在项目之间添加空行（末尾不加）
-      if (index < customSkills.length - 1) lines.push('');
-    });
-  }
-
-  // 关系列表
-  const customPartners = _.filter(partners, 'isCustom');
-  if (customPartners.length > 0) {
-    lines.push('');
-    lines.push('【关系列表】');
-    customPartners.forEach(partner => {
-      lines.push(`◆ 名称: ${partner.name}`);
-      lines.push(`  种族: ${partner.race}`);
-      lines.push(`  身份: ${partner.identity.join('、')}`);
-      if (partner.career.length > 0) lines.push(`  职业: ${partner.career.join('、')}`);
-      lines.push(`  生命层级: ${partner.lifeLevel}`);
-      lines.push(`  等级: ${partner.level}`);
-      lines.push(`  性格: ${partner.personality}`);
-      lines.push(`  喜爱: ${partner.like}`);
-      lines.push(`  外貌: ${partner.app}`);
-      lines.push(`  着装: ${partner.cloth}`);
-      lines.push(`  属性:`);
-      lines.push(`    力量: ${partner.attributes.strength}`);
-      lines.push(`    敏捷: ${partner.attributes.dexterity}`);
-      lines.push(`    体质: ${partner.attributes.constitution}`);
-      lines.push(`    智力: ${partner.attributes.intelligence}`);
-      lines.push(`    精神: ${partner.attributes.mind}`);
-      lines.push(`  命定契约: ${partner.isContract}`);
-      lines.push(`  好感度: ${partner.affinity}`);
-      if (!_.isEmpty(partner.equip)) {
-        const validEquips = _.filter(partner.equip, 'name');
-        if (validEquips.length > 0) {
-          lines.push(`  装备:`);
-          validEquips.forEach((eq, eqIndex) => {
-            lines.push(`    - 名称: ${eq.name}`);
-            if (eq.type) lines.push(`      类型: ${eq.type}`);
-            if (eq.rarity) lines.push(`      品质: ${RARITY_MAP[eq.rarity] || eq.rarity}`);
-            if (eq.tag && eq.tag.length > 0) lines.push(`      标签: ${eq.tag.join('、')}`);
-            if (!_.isEmpty(eq.effect)) {
-              lines.push('      效果:');
-              _.forEach(eq.effect, (value, key) => {
-                lines.push(`        - ${key}: ${value}`);
-              });
-            }
-            if (eq.description) lines.push(`      描述: ${eq.description}`);
-            // 在装备之间添加空行（末尾不加）
-            if (eqIndex < validEquips.length - 1) lines.push('');
-          });
-        }
-      }
-      if (partner.stairway.isOpen) {
-        lines.push(`  登神长阶: 已开启`);
-        const stairwayDesc =
-          _.get(partner.stairway, 'elements.custom.desc') ||
-          _.chain(partner.stairway.elements)
-            .values()
-            .map(value => value?.desc || '')
-            .find(Boolean)
-            .value();
-        if (stairwayDesc) lines.push(`    描述: ${stairwayDesc}`);
-      }
-      if (partner.comment) lines.push(`  心里话: ${partner.comment}`);
-      if (partner.backgroundInfo) lines.push(`  背景: ${partner.backgroundInfo}`);
-      if (partner.skills.length > 0) {
-        lines.push(`  技能:`);
-        partner.skills.forEach((sk, skIndex) => {
-          lines.push(`    - 名称: ${sk.name}`);
-          if (sk.type) lines.push(`      类型: ${sk.type}`);
-          if (sk.rarity) lines.push(`      品质: ${RARITY_MAP[sk.rarity] || sk.rarity}`);
-          if (sk.tag && sk.tag.length > 0) lines.push(`      标签: ${sk.tag.join('、')}`);
-          if (sk.consume) lines.push(`      消耗: ${sk.consume}`);
-          if (!_.isEmpty(sk.effect)) {
-            lines.push('      效果:');
-            _.forEach(sk.effect, (value, key) => {
-              lines.push(`        - ${key}: ${value}`);
-            });
-          }
-          if (sk.description) lines.push(`      描述: ${sk.description}`);
-          // 在技能之间添加空行（末尾不加）
-          if (skIndex < partner.skills.length - 1) lines.push('');
-        });
-      }
-    });
-  }
+  lines.push(`姓名: ${character.name || '未命名'}`);
+  lines.push(`性别: ${displayGender || '未设置'}`);
+  lines.push(`年龄: ${character.age}岁`);
+  lines.push(`起始地点: ${displayLocation || '未设置'}`);
+  lines.push('');
+  lines.push('【第一轮变量更新要求】');
+  lines.push(
+    '第一轮 AI 回复必须同步更新 <status_current_variables> 中的以下字段，不要保留空值或 0 占位：',
+  );
+  lines.push('- 世界.时间');
+  lines.push('- 世界.地点');
+  lines.push('- 主角.生命值上限 / 主角.生命值');
+  lines.push('- 主角.法力值上限 / 主角.法力值');
+  lines.push('- 主角.体力值上限 / 主角.体力值');
+  lines.push('- 主角.装备.*.位置');
 
   // 初始开局剧情
   if (background) {

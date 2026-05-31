@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useDragScroll } from '../composables';
+
 /**
  * 通用分类选择布局组件
  * 抽象了 Selections 和 Background 页面中相似的布局结构
@@ -17,6 +19,8 @@ interface Props {
   contentMaxHeight?: string;
   /** 左侧导航宽度 */
   sidebarWidth?: string;
+  /** 移动端分类控件形态 */
+  mobileMode?: 'tabs' | 'select';
 }
 
 interface Emits {
@@ -26,18 +30,32 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   categoryNameFormatter: (name: string) => name,
   disabledCategories: () => [],
-  contentMaxHeight: '500px',
+  contentMaxHeight: '560px',
   sidebarWidth: '200px',
+  mobileMode: 'tabs',
 });
 
 const emit = defineEmits<Emits>();
+const {
+  scrollRef: categoryListRef,
+  isDragging: isDraggingCategories,
+  shouldSuppressClick,
+  dragScrollHandlers,
+} = useDragScroll();
 
 // 分类选择处理
-const handleCategorySelect = (category: string) => {
+const handleCategorySelect = (category: string, suppressDragClick = true) => {
+  if (suppressDragClick && shouldSuppressClick()) return;
+
   if (props.disabledCategories.includes(category)) {
     return;
   }
   emit('update:modelValue', category);
+};
+
+const handleCategoryChange = (event: Event) => {
+  const target = event.target as HTMLSelectElement;
+  handleCategorySelect(target.value, false);
 };
 
 const isCategoryDisabled = (category: string) => props.disabledCategories.includes(category);
@@ -50,10 +68,34 @@ const isCategoryDisabled = (category: string) => props.disabledCategories.includ
       '--sidebar-width': sidebarWidth,
       '--content-max-height': contentMaxHeight,
     }"
+    :class="{ 'use-mobile-select': mobileMode === 'select' }"
   >
     <!-- 左侧：分类导航 -->
     <nav class="category-sidebar">
-      <div class="category-list">
+      <div class="category-select-wrap">
+        <select
+          class="category-select"
+          :value="modelValue"
+          aria-label="选择分类"
+          @change="handleCategoryChange"
+        >
+          <option
+            v-for="category in categories"
+            :key="category"
+            :value="category"
+            :disabled="isCategoryDisabled(category)"
+          >
+            {{ categoryNameFormatter(category) }}
+          </option>
+        </select>
+      </div>
+
+      <div
+        ref="categoryListRef"
+        class="category-list drag-scroll-x themed-scrollbar"
+        :class="{ dragging: isDraggingCategories }"
+        v-on="dragScrollHandlers"
+      >
         <button
           v-for="category in categories"
           :key="category"
@@ -73,14 +115,14 @@ const isCategoryDisabled = (category: string) => props.disabledCategories.includ
     </nav>
 
     <!-- 右侧：内容区域 -->
-    <div class="content-area">
+    <div class="content-area themed-scrollbar">
       <!-- 顶部筛选区域插槽 -->
       <div v-if="$slots.filter" class="filter-area">
         <slot name="filter" />
       </div>
 
       <!-- 主内容插槽 -->
-      <div class="content-main">
+      <div class="content-main themed-scrollbar">
         <slot name="content" />
       </div>
     </div>
@@ -115,24 +157,14 @@ const isCategoryDisabled = (category: string) => props.disabledCategories.includ
     padding: var(--spacing-md);
     overflow-y: auto;
     flex: 1;
+    cursor: default;
+    overscroll-behavior-x: auto;
+    touch-action: pan-y;
+    user-select: auto;
+  }
 
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: var(--input-bg);
-      border-radius: var(--radius-sm);
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-      border-radius: var(--radius-sm);
-
-      &:hover {
-        background: var(--border-color-strong);
-      }
-    }
+  .category-select-wrap {
+    display: none;
   }
 
   .category-item {
@@ -185,28 +217,11 @@ const isCategoryDisabled = (category: string) => props.disabledCategories.includ
 // 右侧内容区域
 .content-area {
   background: var(--card-bg);
-  overflow-y: auto;
+  overflow: hidden;
   height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: var(--input-bg);
-    border-radius: var(--radius-md);
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: var(--radius-md);
-
-    &:hover {
-      background: var(--border-color-strong);
-    }
-  }
 }
 
 .filter-area {
@@ -221,46 +236,121 @@ const isCategoryDisabled = (category: string) => props.disabledCategories.includ
 
 .content-main {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
 }
 
 // 响应式设计
 @media (max-width: 768px) {
   .category-selection-layout {
-    grid-template-columns: 120px 1fr;
-    height: 450px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: auto;
+    max-height: none;
   }
 
   .category-sidebar {
+    border-right: none;
+    border-bottom: 2px solid var(--border-color-strong);
+    height: auto;
+
     .category-list {
-      padding: var(--spacing-xs) 4px;
+      flex-direction: row;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-sm);
+      overflow-x: auto;
+      overflow-y: hidden;
+      cursor: grab;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity;
+      touch-action: pan-x;
+      user-select: none;
+
+      &.dragging {
+        cursor: grabbing;
+      }
+    }
+
+    .category-select-wrap {
+      display: none;
     }
 
     .category-item {
+      flex: 0 0 auto;
       font-size: 0.8rem;
       padding: var(--spacing-xs) var(--spacing-sm);
       min-height: 28px;
       line-height: 1.3;
+      scroll-snap-align: start;
+      white-space: nowrap;
+      word-break: keep-all;
+      overflow-wrap: normal;
+    }
+  }
+
+  .content-area {
+    height: min(48vh, 380px);
+    min-height: 260px;
+    max-height: min(48vh, 380px);
+  }
+
+  .category-selection-layout.use-mobile-select {
+    .category-list {
+      display: none;
+    }
+
+    .category-select-wrap {
+      display: block;
+      padding: var(--spacing-sm);
+    }
+
+    .category-select {
+      width: 100%;
+      min-height: 36px;
+      padding: 0 var(--spacing-md);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: var(--input-bg);
+      color: var(--title-color);
+      font-size: 0.9rem;
+      font-weight: 600;
+      outline: none;
+
+      &:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.16);
+      }
     }
   }
 }
 
 @media (max-width: 480px) {
   .category-selection-layout {
-    grid-template-columns: 100px 1fr;
-    height: 400px;
+    border-radius: var(--radius-md);
   }
 
   .category-sidebar {
     .category-list {
-      padding: var(--spacing-xs) 3px;
+      padding: var(--spacing-xs);
+    }
+
+    .category-select-wrap {
+      padding: var(--spacing-xs);
     }
 
     .category-item {
       font-size: 0.75rem;
-      padding: 3px 5px;
-      min-height: 24px;
+      min-height: 30px;
+      padding: var(--spacing-xs) var(--spacing-sm);
     }
+  }
+
+  .content-area {
+    height: min(42vh, 320px);
+    min-height: 240px;
+    max-height: min(42vh, 320px);
   }
 }
 </style>

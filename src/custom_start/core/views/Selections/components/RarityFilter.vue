@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDragScroll } from '../../../composables';
 import type { Rarity } from '../../../types';
 import { RARITY_OPTIONS } from '../../../utils/form-options';
 
@@ -12,6 +13,12 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+const {
+  scrollRef: filterButtonsRef,
+  isDragging,
+  shouldSuppressClick,
+  dragScrollHandlers,
+} = useDragScroll();
 
 // 基于 RARITY_OPTIONS 构建筛选选项（添加 "all" 选项，并按从高到低排序）
 const rarityOptions: { value: Rarity | 'all'; label: string; color: string }[] = [
@@ -21,14 +28,20 @@ const rarityOptions: { value: Rarity | 'all'; label: string; color: string }[] =
 ];
 
 const handleSelect = (value: Rarity | 'all') => {
+  if (shouldSuppressClick()) return;
   emit('update:modelValue', value);
 };
 </script>
 
 <template>
   <div class="rarity-filter">
-    <div class="filter-label">品质筛选：</div>
-    <div class="filter-buttons">
+    <div
+      ref="filterButtonsRef"
+      class="filter-buttons drag-scroll-x"
+      :class="{ dragging: isDragging }"
+      aria-label="品质筛选"
+      v-on="dragScrollHandlers"
+    >
       <button
         v-for="option in rarityOptions"
         :key="option.value"
@@ -52,18 +65,12 @@ const handleSelect = (value: Rarity | 'all') => {
   background: var(--card-bg);
   flex-wrap: wrap;
 
-  .filter-label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-color);
-    white-space: nowrap;
-  }
-
   .filter-buttons {
     display: flex;
     gap: var(--spacing-xs);
     flex-wrap: wrap;
     flex: 1;
+    min-width: 0;
   }
 
   .filter-btn {
@@ -89,7 +96,9 @@ const handleSelect = (value: Rarity | 'all') => {
       border-color: var(--rarity-color);
       color: white;
       font-weight: 600;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--rarity-color) 28%, transparent),
+        0 2px 4px rgba(0, 0, 0, 0.2);
     }
   }
 }
@@ -99,16 +108,17 @@ const handleSelect = (value: Rarity | 'all') => {
   .rarity-filter {
     padding: var(--spacing-xs) var(--spacing-sm);
     gap: var(--spacing-sm);
-
-    .filter-label {
-      font-size: 0.85rem;
-    }
+    flex-wrap: nowrap;
 
     .filter-buttons {
       gap: 4px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
     }
 
     .filter-btn {
+      flex: 0 0 auto;
       font-size: 0.8rem;
       padding: 3px var(--spacing-xs);
     }
@@ -117,16 +127,10 @@ const handleSelect = (value: Rarity | 'all') => {
 
 @media (max-width: 480px) {
   .rarity-filter {
-    flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--spacing-xs);
 
-    .filter-label {
-      font-size: 0.8rem;
-    }
-
     .filter-buttons {
-      width: 100%;
       justify-content: flex-start;
     }
 

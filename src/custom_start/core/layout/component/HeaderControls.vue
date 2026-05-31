@@ -134,11 +134,11 @@ const emit = defineEmits<{
 }
 
 .preset-button {
-  background: linear-gradient(135deg, #6b8e9f 0%, #5a7a8a 100%);
+  background: linear-gradient(135deg, #8b7355 0%, #6f5840 100%);
   color: white;
 
   &:hover {
-    background: linear-gradient(135deg, #7a9fb0 0%, #6b8e9f 100%);
+    background: linear-gradient(135deg, #9a8060 0%, #8b7355 100%);
   }
 }
 
@@ -167,6 +167,23 @@ const emit = defineEmits<{
     .points-value {
       font-size: 1.3rem;
     }
+  }
+
+  .control-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .control-button {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .points-display {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
 </style>

@@ -1,5 +1,6 @@
-level-tabs
 <script setup lang="ts">
+import { useDragScroll } from '../../../composables';
+
 interface Props {
   modelValue: string;
   levels: string[];
@@ -11,14 +12,22 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+const { scrollRef: tabsRef, isDragging, shouldSuppressClick, dragScrollHandlers } = useDragScroll();
 
 const handleSelect = (level: string) => {
+  if (shouldSuppressClick()) return;
+
   emit('update:modelValue', level);
 };
 </script>
 
 <template>
-  <div class="level-tabs">
+  <div
+    ref="tabsRef"
+    class="level-tabs drag-scroll-x"
+    :class="{ dragging: isDragging }"
+    v-on="dragScrollHandlers"
+  >
     <button
       v-for="level in props.levels"
       :key="level"
@@ -68,9 +77,13 @@ const handleSelect = (level: string) => {
 @media (max-width: 768px) {
   .level-tabs {
     gap: var(--spacing-sm);
+    overflow-x: auto;
+    padding: var(--spacing-sm) 0;
   }
 
   .level-tab {
+    flex: 0 0 auto;
+    min-width: 112px;
     padding: var(--spacing-sm) var(--spacing-md);
     font-size: 0.95rem;
   }

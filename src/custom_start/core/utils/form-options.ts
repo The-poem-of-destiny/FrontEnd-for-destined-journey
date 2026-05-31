@@ -6,7 +6,7 @@ import type { Rarity } from '../types';
  */
 export const RARITY_OPTIONS: { value: Rarity; label: string; color: string }[] = [
   { value: 'common', label: '普通', color: '#9e9e9e' },
-  { value: 'uncommon', label: '优秀', color: '#4caf50' },
+  { value: 'uncommon', label: '优秀', color: '#b88a2c' },
   { value: 'rare', label: '稀有', color: '#2196f3' },
   { value: 'epic', label: '史诗', color: '#9c27b0' },
   { value: 'legendary', label: '传说', color: '#ff9800' },

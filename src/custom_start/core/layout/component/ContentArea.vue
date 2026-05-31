@@ -60,4 +60,21 @@ defineProps<Props>();
   opacity: 0;
   transform: translateX(30px);
 }
+
+@media (max-width: 768px) {
+  .content-area {
+    margin: var(--spacing-sm) 0;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-area {
+    padding: var(--spacing-xs);
+    border-left: none;
+    border-right: none;
+  }
+}
 </style>

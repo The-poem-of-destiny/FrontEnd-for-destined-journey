@@ -263,6 +263,7 @@ const handleEditCustomItem = (
           :categories="subCategories"
           :disabled-categories="getDisabledSkillCategories()"
           :category-name-formatter="getCategoryDisplayName"
+          mobile-mode="select"
         >
           <!-- 品质筛选 -->
           <template #filter>
@@ -325,7 +326,7 @@ const handleEditCustomItem = (
 
 // 下半部分：已选面板
 .summary-area {
-  height: 600px;
+  height: min(600px, 72vh);
   min-height: 300px;
 }
 
@@ -336,8 +337,17 @@ const handleEditCustomItem = (
   }
 
   .summary-area {
-    height: auto;
-    max-height: none;
+    height: min(42vh, 360px);
+    min-height: 220px;
+    max-height: min(42vh, 360px);
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-area {
+    height: min(38vh, 320px);
+    min-height: 200px;
+    max-height: min(38vh, 320px);
   }
 }
 </style>

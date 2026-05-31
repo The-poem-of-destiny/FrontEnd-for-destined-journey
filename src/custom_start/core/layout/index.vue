@@ -154,17 +154,31 @@ const nextButtonText = computed(() => {
   flex-direction: column;
   min-height: 500px;
   padding: var(--spacing-xl);
+  width: 100%;
+  max-width: 1720px;
+  margin: 0 auto;
 }
 
 .main-title {
   text-align: center;
   margin-bottom: var(--spacing-lg);
   color: var(--title-color);
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 768px) {
   .layout {
     padding: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .layout {
+    padding: var(--spacing-sm);
+  }
+
+  .main-title {
+    margin-bottom: var(--spacing-md);
   }
 }
 </style>

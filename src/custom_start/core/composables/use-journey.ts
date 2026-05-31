@@ -25,6 +25,7 @@ export function useJourney(): UseJourneyReturn {
       // 1. 写入 MVU 变量
       await writeCharacterToMvu(
         character.value,
+        characterStore.selectedEquipments,
         characterStore.selectedItems,
         characterStore.selectedSkills,
         characterStore.selectedPartners,
@@ -34,11 +35,7 @@ export function useJourney(): UseJourneyReturn {
       // 2. 生成 AI 提示词
       const aiPrompt = generateAIPrompt(
         character.value,
-        characterStore.selectedEquipments,
-        characterStore.selectedPartners,
         characterStore.selectedBackground,
-        characterStore.selectedItems,
-        characterStore.selectedSkills,
         customContentStore.customBackgroundDescription,
       );
       console.log('✅ AI 提示词已生成：\n', aiPrompt);

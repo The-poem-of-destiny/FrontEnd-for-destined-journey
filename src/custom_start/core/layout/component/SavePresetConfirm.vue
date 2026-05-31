@@ -146,7 +146,7 @@ const emit = defineEmits<{
   }
 
   &.skip {
-    background: linear-gradient(135deg, var(--success-color) 0%, #2e7d32 100%);
+    background: linear-gradient(135deg, var(--success-color) 0%, #1b5e20 100%);
     color: white;
     border-color: var(--success-color);
 
