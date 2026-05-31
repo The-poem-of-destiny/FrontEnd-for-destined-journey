@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core';
 import ItemCard from '../../../components/ItemCard.vue';
 import { useActiveCard, useSelectableList } from '../../../composables';
 import { useStorePoints } from '../../../composables/use-store-points';
@@ -18,7 +19,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const { availablePoints } = useStorePoints();
-const { toggleActive, isActive: isDetailsOpen, clearIfMissing } = useActiveCard();
+const { toggleActive, isActive, clearIfMissing } = useActiveCard();
+const detailsAlwaysOpen = useMediaQuery('(min-width: 769px)');
 
 // 使用通用可选列表逻辑
 const { isSelected, isDisabled } = useSelectableList(
@@ -35,8 +37,11 @@ const handleDeselect = (item: Equipment | Item | Skill) => {
 };
 
 const handleToggleDetails = (item: Equipment | Item | Skill) => {
+  if (detailsAlwaysOpen.value) return;
   toggleActive(item.name);
 };
+
+const isDetailsOpen = (name: string) => detailsAlwaysOpen.value || isActive(name);
 
 watch(
   () => props.items.map(item => item.name).join('|'),
@@ -60,6 +65,7 @@ watch(
         :selected="isSelected(item)"
         :disabled="isDisabled(item)"
         :details-open="isDetailsOpen(item.name)"
+        :details-toggleable="!detailsAlwaysOpen"
         @select="handleSelect"
         @deselect="handleDeselect"
         @toggle-details="handleToggleDetails"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core';
 import CardActionFooter from '../../../components/CardActionFooter.vue';
 import { parseMacroDeep, useActiveCard, useSelectableList } from '../../../composables';
 import { useCharacterStore } from '../../../store/character';
@@ -17,7 +18,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const characterStore = useCharacterStore();
-const { toggleActive, isActive: isDetailsOpen, clearIfMissing } = useActiveCard();
+const { toggleActive, isActive, clearIfMissing } = useActiveCard();
+const detailsAlwaysOpen = useMediaQuery('(min-width: 769px)');
 
 const availablePoints = computed(() => {
   return characterStore.character.reincarnationPoints - characterStore.consumedPoints;
@@ -39,8 +41,11 @@ const handleToggleSelect = (item: Partner) => {
 };
 
 const handleToggleDetails = (item: Partner) => {
+  if (detailsAlwaysOpen.value) return;
   toggleActive(item.name);
 };
+
+const isDetailsOpen = (name: string) => detailsAlwaysOpen.value || isActive(name);
 
 const getSelectButtonText = (item: Partner) => {
   if (isSelected(item)) return '取消选择';
@@ -73,9 +78,10 @@ watch(
         'is-selected': isSelected(item),
         'is-disabled': !isSelected(item) && !canSelect(item),
         'is-details-open': isDetailsOpen(item.name),
+        'is-details-static': detailsAlwaysOpen,
       }"
-      tabindex="0"
-      :aria-expanded="isDetailsOpen(item.name)"
+      :tabindex="detailsAlwaysOpen ? undefined : 0"
+      :aria-expanded="detailsAlwaysOpen ? undefined : isDetailsOpen(item.name)"
       @click="handleToggleDetails(item)"
       @keydown.enter.prevent="handleToggleDetails(item)"
       @keydown.space.prevent="handleToggleDetails(item)"
@@ -105,7 +111,7 @@ watch(
       </div>
 
       <!-- 详细信息（可折叠） -->
-      <div v-if="isDetailsOpen(item.name)" class="card-body">
+      <div v-if="isDetailsOpen(item.name)" class="card-body themed-scrollbar">
         <div class="info-section">
           <div class="info-row">
             <span class="label">身份：</span>
@@ -274,6 +280,7 @@ watch(
         :selected="isSelected(item)"
         :disabled="!isSelected(item) && !canSelect(item)"
         :details-open="isDetailsOpen(item.name)"
+        :show-detail-state="!detailsAlwaysOpen"
         :select-label="getSelectButtonText(item)"
         :cost-text="`${item.cost} 点`"
         @toggle-select="handleToggleSelect(item)"
@@ -306,10 +313,14 @@ watch(
   cursor: pointer;
   transition: all var(--transition-fast);
 
-  &:hover:not(.is-disabled) {
+  &:hover:not(.is-disabled):not(.is-details-static) {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
     border-color: var(--accent-color);
+  }
+
+  &.is-details-static {
+    cursor: default;
   }
 
   &.is-disabled {
@@ -362,6 +373,9 @@ watch(
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .info-section {

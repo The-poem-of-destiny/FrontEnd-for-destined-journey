@@ -7,6 +7,7 @@ interface Props {
   selected?: boolean;
   disabled?: boolean;
   detailsOpen?: boolean;
+  detailsToggleable?: boolean;
 }
 
 interface Emits {
@@ -18,6 +19,7 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   selected: false,
   disabled: false,
+  detailsToggleable: true,
 });
 
 const emit = defineEmits<Emits>();
@@ -60,6 +62,8 @@ const handleToggleSelect = () => {
 };
 
 const handleToggleDetails = () => {
+  if (!props.detailsToggleable) return;
+
   if (props.detailsOpen === undefined) {
     internalDetailsOpen.value = !internalDetailsOpen.value;
   }
@@ -87,10 +91,11 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
       'is-selected': selected,
       'is-disabled': disabled,
       'is-details-open': isDetailsOpen,
+      'is-details-static': !detailsToggleable,
     }"
     :style="{ '--rarity-color': rarityColors[item.rarity] }"
-    tabindex="0"
-    :aria-expanded="isDetailsOpen"
+    :tabindex="detailsToggleable ? 0 : undefined"
+    :aria-expanded="detailsToggleable ? isDetailsOpen : undefined"
     @click="handleToggleDetails"
     @keydown.enter.prevent="handleToggleDetails"
     @keydown.space.prevent="handleToggleDetails"
@@ -104,7 +109,7 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
     </div>
 
     <!-- 卡片内容 -->
-    <div class="card-body">
+    <div class="card-body themed-scrollbar">
       <div class="item-info">
         <span class="info-label">类型:</span>
         <span class="info-value">{{ item.type }}</span>
@@ -150,6 +155,7 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
       :selected="selected"
       :disabled="disabled && !selected"
       :details-open="isDetailsOpen"
+      :show-detail-state="detailsToggleable"
       :select-label="selectButtonText"
       :cost-text="`${item.cost} 点`"
       @toggle-select="handleToggleSelect"
@@ -178,10 +184,14 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
     opacity: 0.6;
   }
 
-  &:hover:not(.is-disabled) {
+  &:hover:not(.is-disabled):not(.is-details-static) {
     border-color: var(--accent-color);
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
+  }
+
+  &.is-details-static {
+    cursor: default;
   }
 
   &.is-disabled {
@@ -215,9 +225,11 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
 
 .card-body {
   display: none;
+  max-height: 260px;
   margin-bottom: var(--spacing-md);
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--border-color-light);
+  overflow-y: auto;
 
   .item-info {
     display: flex;

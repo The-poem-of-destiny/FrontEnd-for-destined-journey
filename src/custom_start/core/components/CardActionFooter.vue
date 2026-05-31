@@ -3,6 +3,7 @@ interface Props {
   selected?: boolean;
   disabled?: boolean;
   detailsOpen?: boolean;
+  showDetailState?: boolean;
   selectLabel: string;
   costText?: string;
 }
@@ -11,6 +12,7 @@ withDefaults(defineProps<Props>(), {
   selected: false,
   disabled: false,
   detailsOpen: false,
+  showDetailState: true,
   costText: '',
 });
 
@@ -27,7 +29,7 @@ const emit = defineEmits<{
     </div>
 
     <div class="card-actions">
-      <span class="detail-state" aria-hidden="true">
+      <span v-if="showDetailState" class="detail-state" aria-hidden="true">
         <i class="fa-solid" :class="detailsOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
         {{ detailsOpen ? '收起详情' : '展开详情' }}
       </span>
