@@ -3,18 +3,25 @@
 
 .resourceBar {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-columns: 44px minmax(0, 1fr);
   align-items: center;
-  gap: $spacing-sm;
+  gap: 10px;
   min-width: 0;
 }
 
 .resourceBarLabelGroup {
-  display: grid;
-  grid-template-columns: 4px minmax(0, 1fr);
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 7px;
   min-width: 0;
+}
+
+.resourceBarIcon {
+  width: 15px;
+  height: 15px;
+  background: var(--bar-color);
+  mask: var(--resource-icon) center / contain no-repeat;
+  -webkit-mask: var(--resource-icon) center / contain no-repeat;
 }
 
 .resourceBarAccent {
@@ -28,15 +35,15 @@
   flex-shrink: 0;
   font-size: 11px;
   color: var(--theme-text-secondary);
-  text-align: right;
+  text-align: left;
   letter-spacing: 0.4px;
 }
 
 @media (max-width: 540px) {
   .resourceBar {
-    grid-template-columns: 24px minmax(0, 1fr);
+    grid-template-columns: 44px minmax(0, 1fr);
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
 }
 

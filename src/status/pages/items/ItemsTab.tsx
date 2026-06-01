@@ -427,35 +427,37 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
         {renderCurrency()}
       </div>
 
-      {/* 子分类筛选器 */}
-      {filterOptions.length > 1 && (
-        <div className={styles.filterBar}>
-          {filterOptions.map(option => (
-            <button
-              key={option}
-              type="button"
-              className={`${styles.filterBtn} ${activeFilter === option ? styles.isActive : ''}`}
-              onClick={() => setActiveFilter(option)}
-            >
-              {option}
-              <span className={styles.filterCount}>{activeFilterCountMap[option] ?? 0}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      <div className={styles.itemsWorkspace}>
+        {/* 子分类筛选器 */}
+        {filterOptions.length > 1 && (
+          <div className={styles.filterBar}>
+            {filterOptions.map(option => (
+              <button
+                key={option}
+                type="button"
+                className={`${styles.filterBtn} ${activeFilter === option ? styles.isActive : ''}`}
+                onClick={() => setActiveFilter(option)}
+              >
+                {option}
+                <span className={styles.filterCount}>{activeFilterCountMap[option] ?? 0}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
-      {/* 内容区域 */}
-      <div className={styles.itemsTabContent}>
-        <div className={styles.itemsIndex}>{renderCategoryContent()}</div>
-        <aside className={styles.itemsDetailPanel}>
-          <div className={styles.itemsDetailHeader}>
-            <span>{selectedItem?.name ?? '持有物详情'}</span>
-            <span>{activeCategoryConfig.label}</span>
-          </div>
-          <div className={styles.itemsDetailBody}>
-            {renderDetail(selectedItem, selectedCategoryConfig, selectedItemData)}
-          </div>
-        </aside>
+        {/* 内容区域 */}
+        <div className={styles.itemsTabContent}>
+          <div className={styles.itemsIndex}>{renderCategoryContent()}</div>
+          <aside className={styles.itemsDetailPanel}>
+            <div className={styles.itemsDetailHeader}>
+              <span>{selectedItem?.name ?? '持有物详情'}</span>
+              <span>{activeCategoryConfig.label}</span>
+            </div>
+            <div className={styles.itemsDetailBody}>
+              {renderDetail(selectedItem, selectedCategoryConfig, selectedItemData)}
+            </div>
+          </aside>
+        </div>
       </div>
 
       {/* 资产详情中央面板 */}

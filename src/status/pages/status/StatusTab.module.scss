@@ -21,16 +21,29 @@
 }
 
 .dashboardGrid {
-  display: grid;
-  grid-template-columns: minmax(280px, 0.9fr) minmax(360px, 1.35fr);
-  grid-template-areas:
-    'core info'
-    'core attributes';
+  display: flex;
   gap: $spacing-md;
   align-items: stretch;
 }
 
+.leftColumn,
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  min-width: 0;
+}
+
+.leftColumn {
+  flex: 0.9 1 280px;
+}
+
+.rightColumn {
+  flex: 1.35 1 360px;
+}
+
 .corePanel,
+.resourcePanel,
 .infoPanel,
 .attributePanel {
   min-width: 0;
@@ -42,18 +55,22 @@
 }
 
 .corePanel {
-  grid-area: core;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: $spacing-sm;
 }
 
 .infoPanel {
-  grid-area: info;
+  flex: 1 1 auto;
+}
+
+.resourcePanel,
+.attributePanel {
+  flex: 0 0 auto;
 }
 
 .attributePanel {
-  grid-area: attributes;
   display: flex;
   flex-direction: column;
   gap: $spacing-sm;
@@ -68,6 +85,16 @@
 
 .heroAvatar {
   flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 128px;
+  height: 128px;
+  padding: 3px;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 76%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme-window-bg) 62%, transparent) inset;
 }
 
 .heroIdentity {
@@ -120,6 +147,7 @@
 .sectionTitle {
   display: inline-flex;
   align-items: center;
+  gap: 7px;
   min-height: 18px;
   color: var(--theme-text-primary);
   font-size: 12px;
@@ -127,11 +155,18 @@
   line-height: 1.2;
 }
 
+.sectionIcon {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  background: color-mix(in srgb, var(--theme-text-muted) 86%, var(--theme-tab-indicator) 14%);
+  mask: var(--status-icon) center / contain no-repeat;
+  -webkit-mask: var(--status-icon) center / contain no-repeat;
+  opacity: 0.78;
+}
+
 .resources {
   @include list-container(8px);
-  margin-top: auto;
-  padding-top: $spacing-sm;
-  border-top: 1px dashed color-mix(in srgb, var(--theme-card-border) 72%, transparent);
 }
 
 .ascensionPreview {
@@ -157,6 +192,9 @@
 }
 
 .ascensionPreviewTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   color: var(--theme-text-primary);
   font-size: 12px;
   font-weight: 700;
@@ -261,7 +299,7 @@
 
 .attributeItem {
   display: grid;
-  grid-template-columns: minmax(34px, auto) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
   align-items: center;
   gap: $spacing-xs;
   min-width: 0;
@@ -270,6 +308,23 @@
   border: 1px solid color-mix(in srgb, var(--theme-card-border) 64%, transparent);
   border-radius: $border-radius-sm;
   background: color-mix(in srgb, var(--theme-window-bg) 14%, transparent);
+}
+
+.attributeLabelGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.attributeIcon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  background: color-mix(in srgb, var(--theme-tab-indicator) 78%, var(--theme-text-secondary) 22%);
+  mask: var(--status-icon) center / contain no-repeat;
+  -webkit-mask: var(--status-icon) center / contain no-repeat;
+  opacity: 0.82;
 }
 
 .attributeLabel {
@@ -384,6 +439,9 @@
 }
 
 .detailEntryTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   color: var(--theme-text-primary);
   font-size: 12px;
   font-weight: 700;
@@ -453,11 +511,12 @@
 
 @media (max-width: 860px) {
   .dashboardGrid {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      'core'
-      'info'
-      'attributes';
+    flex-direction: column;
+  }
+
+  .leftColumn,
+  .rightColumn {
+    flex: 1 1 auto;
   }
 
   .attributeGrid {
@@ -467,6 +526,7 @@
 
 @media (max-width: 540px) {
   .corePanel,
+  .resourcePanel,
   .infoPanel,
   .attributePanel,
   .detailEntryCard {

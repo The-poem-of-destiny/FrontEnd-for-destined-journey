@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import type { CSSProperties, FC } from 'react';
 import styles from './ResourceBar.module.scss';
 
 export interface ResourceBarProps {
@@ -6,6 +6,7 @@ export interface ResourceBarProps {
   current: number;
   max: number;
   type: 'hp' | 'mp' | 'sp' | 'exp';
+  icon?: string;
   showValues?: boolean;
 }
 
@@ -17,6 +18,8 @@ const typeStyleMap: Record<string, string> = {
   exp: 'resourceBarExp',
 };
 
+const getIconMask = (icon: string) => `url("https://api.iconify.design/${icon.replace(':', '/')}.svg")`;
+
 /**
  * 资源条组件（HP/MP/SP/EXP）
  */
@@ -25,15 +28,23 @@ export const ResourceBar: FC<ResourceBarProps> = ({
   current,
   max,
   type,
+  icon,
   showValues = true,
 }) => {
   const percentage = max > 0 ? Math.min((current / max) * 100, 100) : 0;
   const typeClass = styles[typeStyleMap[type]] || '';
+  const iconStyle = icon
+    ? ({ '--resource-icon': getIconMask(icon) } as CSSProperties)
+    : undefined;
 
   return (
-    <div className={`${styles.resourceBar} ${typeClass}`}>
+    <div className={`${styles.resourceBar} ${typeClass}`} style={iconStyle}>
       <div className={styles.resourceBarLabelGroup}>
-        <span className={styles.resourceBarAccent} />
+        {icon ? (
+          <span className={styles.resourceBarIcon} aria-hidden="true" />
+        ) : (
+          <span className={styles.resourceBarAccent} />
+        )}
         <div className={styles.resourceBarLabel}>{label}</div>
       </div>
       <div className={styles.resourceBarTrack}>
