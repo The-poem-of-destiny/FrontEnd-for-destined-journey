@@ -1,4 +1,5 @@
 import type { CSSProperties, FC } from 'react';
+import { getIconifyMask } from '../../../core/utils';
 import styles from './ResourceBar.module.scss';
 
 export interface ResourceBarProps {
@@ -18,8 +19,6 @@ const typeStyleMap: Record<string, string> = {
   exp: 'resourceBarExp',
 };
 
-const getIconMask = (icon: string) => `url("https://api.iconify.design/${icon.replace(':', '/')}.svg")`;
-
 /**
  * 资源条组件（HP/MP/SP/EXP）
  */
@@ -34,7 +33,7 @@ export const ResourceBar: FC<ResourceBarProps> = ({
   const percentage = max > 0 ? Math.min((current / max) * 100, 100) : 0;
   const typeClass = styles[typeStyleMap[type]] || '';
   const iconStyle = icon
-    ? ({ '--resource-icon': getIconMask(icon) } as CSSProperties)
+    ? ({ '--resource-icon': getIconifyMask(icon) } as CSSProperties)
     : undefined;
 
   return (

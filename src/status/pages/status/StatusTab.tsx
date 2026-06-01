@@ -7,6 +7,7 @@ import {
   getAvatarActionState,
   getAvatarRecord,
   getAvatarScopeKey,
+  getIconifyMask,
   isAvatarRemovedRecord,
   readAvatarFileAsDataUrl,
   removeAvatarRecord,
@@ -69,9 +70,7 @@ const AttributeIconMap: Record<string, string> = {
   精神: 'game-icons:semi-closed-eye',
 };
 
-const getIconMask = (icon: string) => `url("https://api.iconify.design/${icon.replace(':', '/')}.svg")`;
-
-const getIconStyle = (icon: string) => ({ '--status-icon': getIconMask(icon) }) as CSSProperties;
+const getIconStyle = (icon: string) => ({ '--status-icon': getIconifyMask(icon) }) as CSSProperties;
 
 // 登神标签显示限制
 const AscensionPreviewLimit = 5;
