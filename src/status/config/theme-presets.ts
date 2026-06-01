@@ -51,11 +51,11 @@ const ParchmentTheme: Theme = {
     // 品质颜色
     qualityCommon: '#e4d6bb',
     qualityUnique: '#d6a057',
-    qualityMythic: '#c24b63',
+    qualityMythic: '#CD6B7E',
     qualityLegendary: '#e1c067',
-    qualityEpic: '#8a63c4',
-    qualityRare: '#3f7bc4',
-    qualityUncommon: '#4b8b5f',
+    qualityEpic: '#9A79CC',
+    qualityRare: '#578CCB',
+    qualityUncommon: '#519767',
 
     // 交互状态
     primaryBg: '#91602c',
@@ -132,11 +132,11 @@ const CrimsonTheme: Theme = {
     // 品质颜色
     qualityCommon: '#e6c0c4',
     qualityUnique: '#d79a55',
-    qualityMythic: '#c04466',
+    qualityMythic: '#CA637F',
     qualityLegendary: '#e0b35e',
-    qualityEpic: '#8760c6',
-    qualityRare: '#3a75c1',
-    qualityUncommon: '#49835d',
+    qualityEpic: '#9572CD',
+    qualityRare: '#5086CA',
+    qualityUncommon: '#519167',
 
     // 交互状态
     primaryBg: '#94323b',
@@ -213,11 +213,11 @@ const IndigoTheme: Theme = {
     // 品质颜色
     qualityCommon: '#d5e0f2',
     qualityUnique: '#d7a35b',
-    qualityMythic: '#b44874',
+    qualityMythic: '#C56D91',
     qualityLegendary: '#e1c36d',
-    qualityEpic: '#7a5bc8',
-    qualityRare: '#4b7dcf',
-    qualityUncommon: '#4f8a69',
+    qualityEpic: '#937AD2',
+    qualityRare: '#5B89D3',
+    qualityUncommon: '#569672',
 
     // 交互状态
     primaryBg: '#3c5fb8',
@@ -294,11 +294,11 @@ const BronzeTheme: Theme = {
     // 品质颜色
     qualityCommon: '#e3d5b2',
     qualityUnique: '#d39b42',
-    qualityMythic: '#c34866',
+    qualityMythic: '#CE6B83',
     qualityLegendary: '#e2b858',
-    qualityEpic: '#8068c8',
-    qualityRare: '#3c74bf',
-    qualityUncommon: '#4a8460',
+    qualityEpic: '#917DD0',
+    qualityRare: '#5C8CCC',
+    qualityUncommon: '#55986E',
 
     // 交互状态
     primaryBg: '#8d6a1f',
@@ -375,10 +375,10 @@ const SakuraTheme: Theme = {
     // 品质颜色
     qualityCommon: '#e6cddc',
     qualityUnique: '#d99a69',
-    qualityMythic: '#c24d7b',
+    qualityMythic: '#CA658C',
     qualityLegendary: '#e0b56a',
-    qualityEpic: '#8e57c6',
-    qualityRare: '#5a80d0',
+    qualityEpic: '#9F71CF',
+    qualityRare: '#5F84D2',
     qualityUncommon: '#5a9a74',
 
     // 交互状态
@@ -536,9 +536,9 @@ const IvoryTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#6b6258',
-    qualityUnique: '#ad701d',
+    qualityUnique: '#976219',
     qualityMythic: '#b23d5a',
-    qualityLegendary: '#a07916',
+    qualityLegendary: '#8A6813',
     qualityEpic: '#6e4ab4',
     qualityRare: '#2e69b2',
     qualityUncommon: '#2f7a4a',
@@ -617,12 +617,12 @@ const MistyLilacTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#5b5468',
-    qualityUnique: '#A66F1F',
+    qualityUnique: '#98651C',
     qualityMythic: '#C22B80',
-    qualityLegendary: '#9A7416',
-    qualityEpic: '#9072C7',
-    qualityRare: '#3173D9',
-    qualityUncommon: '#2E9957',
+    qualityLegendary: '#8D6A14',
+    qualityEpic: '#7F5DBF',
+    qualityRare: '#286CD7',
+    qualityUncommon: '#267F49',
 
     // 交互状态
     primaryBg: '#7A5CB3',
