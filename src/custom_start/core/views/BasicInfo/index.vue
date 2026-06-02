@@ -38,6 +38,7 @@ const identityOptions = computed(() => Object.keys(identityCosts.value));
 
 // 计算当前等级的层级属性加成
 const tierAttributeBonus = computed(() => getTierAttributeBonus(character.value.level));
+const hasAttributePoints = computed(() => characterStore.maxAP > 0);
 
 // 计算剩余可用转生点数
 const availableReincarnationPoints = computed(() => {
@@ -161,7 +162,7 @@ const levelTierName = computed(() => {
       </div>
 
       <!-- 属性分配面板 -->
-      <div class="attributes-panel">
+      <div class="attributes-panel" :class="{ 'has-extra-points': hasAttributePoints }">
         <div class="panel-header">
           <h3>属性分配</h3>
           <div class="points-summary">
@@ -177,7 +178,7 @@ const levelTierName = computed(() => {
               / {{ characterStore.maxBP }}
               <span class="points-hint">（单项≤{{ MAX_BASE_POINTS_PER_ATTR }}）</span>
             </span>
-            <span v-if="characterStore.maxAP > 0" class="points-badge">
+            <span v-if="hasAttributePoints" class="points-badge">
               额外点:
               <strong
                 :class="{
@@ -197,7 +198,7 @@ const levelTierName = computed(() => {
             <span class="col-name">属性</span>
             <span class="col-base">基础点</span>
             <span class="col-tier">层级</span>
-            <span v-if="characterStore.maxAP > 0" class="col-extra">额外点</span>
+            <span v-if="hasAttributePoints" class="col-extra">额外点</span>
             <span class="col-result">总属性</span>
           </div>
 
@@ -228,7 +229,7 @@ const levelTierName = computed(() => {
             </div>
 
             <!-- 额外点 stepper -->
-            <div v-if="characterStore.maxAP > 0" class="col-extra">
+            <div v-if="hasAttributePoints" class="col-extra">
               <span class="mobile-label">额外点</span>
               <FormStepper
                 :model-value="character.attributePoints[attr]"
@@ -336,7 +337,17 @@ const levelTierName = computed(() => {
 }
 
 .attributes-panel {
-  margin: var(--spacing-2xl) 0 0;
+  --attr-grid-columns: 50px auto 40px 50px;
+
+  margin: var(--spacing-lg) 0 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  overflow: hidden;
+
+  &.has-extra-points {
+    --attr-grid-columns: 50px auto 40px auto 50px;
+  }
 
   .panel-header {
     padding: var(--spacing-md) var(--spacing-lg);
@@ -400,7 +411,7 @@ const levelTierName = computed(() => {
 
   .attr-table-header {
     display: grid;
-    grid-template-columns: 50px auto 40px auto 50px;
+    grid-template-columns: var(--attr-grid-columns);
     gap: var(--spacing-md);
     align-items: center;
     padding: var(--spacing-xs) var(--spacing-sm);
@@ -422,7 +433,7 @@ const levelTierName = computed(() => {
 
   .attr-row {
     display: grid;
-    grid-template-columns: 50px auto 40px auto 50px;
+    grid-template-columns: var(--attr-grid-columns);
     gap: var(--spacing-md);
     align-items: center;
     padding: var(--spacing-sm);
@@ -481,12 +492,6 @@ const levelTierName = computed(() => {
     }
   }
 
-  // 无额外点时的列布局（4列）
-  .attr-table-header:not(:has(+ .attr-row .col-extra)),
-  .attr-row:not(:has(.col-extra)) {
-    grid-template-columns: 50px auto 40px 50px;
-  }
-
   .status-message {
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -508,7 +513,7 @@ const levelTierName = computed(() => {
     }
 
     &.success {
-      background: rgba(56, 142, 60, 0.1);
+      background: rgba(46, 125, 50, 0.1);
       color: var(--success-color);
       border-color: var(--success-color);
     }
@@ -525,6 +530,8 @@ const levelTierName = computed(() => {
 @media (max-width: 768px) {
   .form-row {
     grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
 
     &.full-width {
       grid-template-columns: 1fr;
@@ -536,68 +543,151 @@ const levelTierName = computed(() => {
     align-items: stretch;
   }
 
-  .location-field {
-    .location-options {
-      max-height: 300px;
+  .attributes-panel {
+    --attr-grid-columns: 34px minmax(92px, 1fr) 30px 38px;
+
+    margin-top: var(--spacing-md);
+
+    &.has-extra-points {
+      --attr-grid-columns: 34px minmax(88px, 1fr) 30px minmax(88px, 1fr) 38px;
     }
 
-    .location-option {
-      .location-label {
-        font-size: 0.85rem;
+    .panel-header {
+      align-items: center;
+      padding: var(--spacing-xs) var(--spacing-sm);
+      gap: var(--spacing-xs);
+
+      h3 {
+        font-size: 1rem;
+      }
+
+      .points-summary {
+        gap: var(--spacing-xs);
+      }
+
+      .points-badge {
+        padding: 2px 6px;
+        font-size: 0.78rem;
+
+        strong {
+          font-size: 0.95rem;
+        }
+
+        .points-hint {
+          display: none;
+        }
       }
     }
-  }
 
-  .attributes-panel {
-    .panel-header {
-      flex-direction: column;
-      align-items: stretch;
+    .panel-content {
+      padding: var(--spacing-sm);
     }
 
     .attr-table-header {
-      display: none;
+      display: grid;
+      grid-template-columns: var(--attr-grid-columns);
+      gap: 6px;
+      padding: 2px 4px 4px;
+      font-size: 0.68rem;
     }
 
     .mobile-label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--text-color-secondary);
-      margin-bottom: var(--spacing-xs);
+      display: none;
     }
 
     .attr-row {
-      grid-template-columns: 1fr 1fr;
-      gap: var(--spacing-sm);
-      padding: var(--spacing-md) var(--spacing-sm);
+      grid-template-columns: var(--attr-grid-columns);
+      gap: 6px;
+      padding: 4px;
 
       .col-name {
-        grid-column: 1 / -1;
-        font-size: 1.1rem;
-        padding-bottom: var(--spacing-xs);
-        border-bottom: 1px solid var(--border-color-light, rgba(255, 255, 255, 0.05));
+        grid-column: auto;
+        font-size: 0.86rem;
+        padding-bottom: 0;
+        border-bottom: none;
       }
 
       .col-base,
       .col-extra,
       .col-tier,
       .col-result {
-        flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
+        justify-content: center;
       }
 
       .col-result {
-        align-items: flex-end;
+        justify-content: flex-end;
+      }
+
+      :deep(.stepper-controls) {
+        gap: 2px;
+        padding: 1px;
+      }
+
+      :deep(.stepper-btn) {
+        width: 24px;
+        height: 24px;
+        font-size: 0.95rem;
+      }
+
+      :deep(.stepper-value) {
+        min-width: 22px;
+        font-size: 0.88rem;
+      }
+
+      .tier-value,
+      .final-value {
+        font-size: 0.9rem;
       }
     }
 
-    // 无额外点时移动端改为3列（基础点、层级、总属性）
-    .attr-row:not(:has(.col-extra)) {
-      grid-template-columns: 1fr auto 1fr;
+    .status-message {
+      margin-top: var(--spacing-xs);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      font-size: 0.82rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .attributes-panel {
+    --attr-grid-columns: 30px minmax(86px, 1fr) 28px 34px;
+
+    &.has-extra-points {
+      --attr-grid-columns: 30px minmax(78px, 1fr) 26px minmax(78px, 1fr) 32px;
+    }
+
+    .panel-content {
+      padding: 6px;
+    }
+
+    .points-summary {
+      gap: var(--spacing-xs);
+    }
+
+    .points-badge {
+      font-size: 0.8rem;
+    }
+
+    .attr-row {
+      grid-template-columns: var(--attr-grid-columns);
+      gap: 4px;
+
+      .col-base,
+      .col-extra,
+      .col-tier,
+      .col-result {
+        align-items: center;
+      }
 
       .col-result {
-        align-items: flex-end;
+        justify-content: flex-end;
       }
+    }
+
+    .attr-table-header {
+      grid-template-columns: var(--attr-grid-columns);
+      gap: 4px;
     }
   }
 }

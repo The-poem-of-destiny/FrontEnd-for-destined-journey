@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { parseMacroDeep, useExpandableCards, useSelectableList } from '../../../composables';
+import { useMediaQuery } from '@vueuse/core';
+import CardActionFooter from '../../../components/CardActionFooter.vue';
+import { parseMacroDeep, useActiveCard, useSelectableList } from '../../../composables';
 import { useCharacterStore } from '../../../store/character';
 import type { Partner } from '../../../types';
 
@@ -16,6 +18,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const characterStore = useCharacterStore();
+const { toggleActive, isActive, clearIfMissing } = useActiveCard();
+const detailsAlwaysOpen = useMediaQuery('(min-width: 769px)');
 
 const availablePoints = computed(() => {
   return characterStore.character.reincarnationPoints - characterStore.consumedPoints;
@@ -27,16 +31,26 @@ const { isSelected, canSelect } = useSelectableList(
   () => availablePoints.value,
 );
 
-// 使用通用折叠状态管理
-const { toggleExpand, isExpanded } = useExpandableCards();
-
 // 处理选择
-const handleToggle = (item: Partner) => {
+const handleToggleSelect = (item: Partner) => {
   if (isSelected(item)) {
     emit('deselect', item);
   } else if (canSelect(item)) {
     emit('select', item);
   }
+};
+
+const handleToggleDetails = (item: Partner) => {
+  if (detailsAlwaysOpen.value) return;
+  toggleActive(item.name);
+};
+
+const isDetailsOpen = (name: string) => detailsAlwaysOpen.value || isActive(name);
+
+const getSelectButtonText = (item: Partner) => {
+  if (isSelected(item)) return '取消选择';
+  if (!canSelect(item)) return '点数不足';
+  return '选择';
 };
 
 // 解析后的伙伴数据
@@ -47,6 +61,7 @@ watch(
   () => props.items,
   async items => {
     parsedItems.value = await Promise.all(items.map(parseMacroDeep));
+    clearIfMissing(items.map(item => item.name));
   },
   { immediate: true },
 );
@@ -58,22 +73,21 @@ watch(
     <div
       v-for="item in parsedItems"
       :key="item.name"
-      class="destined-one-card"
+      class="destined-one-card selectable-card"
       :class="{
-        selected: isSelected(item),
-        disabled: !isSelected(item) && !canSelect(item),
-        expanded: isExpanded(item.name),
+        'is-selected': isSelected(item),
+        'is-disabled': !isSelected(item) && !canSelect(item),
+        'is-details-open': isDetailsOpen(item.name),
+        'is-details-static': detailsAlwaysOpen,
       }"
-      @click="handleToggle(item)"
+      :tabindex="detailsAlwaysOpen ? undefined : 0"
+      :aria-expanded="detailsAlwaysOpen ? undefined : isDetailsOpen(item.name)"
+      @click="handleToggleDetails(item)"
+      @keydown.enter.prevent="handleToggleDetails(item)"
+      @keydown.space.prevent="handleToggleDetails(item)"
     >
       <div class="card-header">
         <h3 class="item-name">{{ item.name }}</h3>
-        <div class="header-actions">
-          <div class="item-cost">{{ item.cost }} 点</div>
-          <button class="expand-btn" @click="toggleExpand(item.name, $event)">
-            {{ isExpanded(item.name) ? '收起' : '展开' }}
-          </button>
-        </div>
       </div>
 
       <!-- 基本信息（始终显示） -->
@@ -97,7 +111,7 @@ watch(
       </div>
 
       <!-- 详细信息（可折叠） -->
-      <div v-if="isExpanded(item.name)" class="card-body">
+      <div v-if="isDetailsOpen(item.name)" class="card-body themed-scrollbar">
         <div class="info-section">
           <div class="info-row">
             <span class="label">身份：</span>
@@ -261,6 +275,16 @@ watch(
 
         <div v-if="item.comment" class="comment">"{{ item.comment }}"</div>
       </div>
+
+      <CardActionFooter
+        :selected="isSelected(item)"
+        :disabled="!isSelected(item) && !canSelect(item)"
+        :details-open="isDetailsOpen(item.name)"
+        :show-detail-state="!detailsAlwaysOpen"
+        :select-label="getSelectButtonText(item)"
+        :cost-text="`${item.cost} 点`"
+        @toggle-select="handleToggleSelect(item)"
+      />
     </div>
   </div>
 </template>
@@ -268,7 +292,7 @@ watch(
 <style lang="scss" scoped>
 .destined-one-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--spacing-lg);
   padding: var(--spacing-md);
 }
@@ -289,28 +313,19 @@ watch(
   cursor: pointer;
   transition: all var(--transition-fast);
 
-  &:hover:not(.disabled) {
+  &:hover:not(.is-disabled):not(.is-details-static) {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
     border-color: var(--accent-color);
   }
 
-  &.selected {
-    border-color: var(--accent-color);
-    background: rgba(212, 175, 55, 0.15);
-    box-shadow: var(--shadow-md);
+  &.is-details-static {
+    cursor: default;
   }
 
-  &.disabled {
+  &.is-disabled {
     opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &.expanded {
-    .card-body {
-      max-height: 10000px;
-      opacity: 1;
-    }
+    border-style: dashed;
   }
 }
 
@@ -327,35 +342,7 @@ watch(
     color: var(--title-color);
     margin: 0;
     flex: 1;
-  }
-
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-  }
-
-  .item-cost {
-    font-weight: 600;
-    color: var(--accent-color);
-    font-size: 1rem;
-  }
-
-  .expand-btn {
-    padding: 2px var(--spacing-sm);
-    background: var(--input-bg);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: 0.8rem;
-    color: var(--text-color);
-    transition: all var(--transition-fast);
-
-    &:hover {
-      background: var(--accent-color);
-      color: var(--primary-bg);
-      border-color: var(--accent-color);
-    }
+    overflow-wrap: anywhere;
   }
 }
 
@@ -386,10 +373,9 @@ watch(
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: all var(--transition-normal);
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .info-section {
@@ -440,6 +426,7 @@ watch(
   color: var(--text-color);
   line-height: 1.6;
   font-size: 0.85rem;
+  overflow-wrap: anywhere;
 }
 
 .attributes {
@@ -517,6 +504,7 @@ watch(
   color: var(--text-color);
   line-height: 1.5;
   margin-bottom: var(--spacing-xs);
+  overflow-wrap: anywhere;
 
   &:last-child {
     margin-bottom: 0;
@@ -590,39 +578,80 @@ watch(
 @media (max-width: 768px) {
   .destined-one-list {
     grid-template-columns: 1fr;
-    gap: var(--spacing-md);
-    padding: var(--spacing-sm);
+    gap: 6px;
+    padding: var(--spacing-xs);
   }
 
   .destined-one-card {
-    padding: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
   }
 
   .card-header {
-    flex-wrap: wrap;
-    gap: var(--spacing-xs);
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: 4px;
+    padding-bottom: 4px;
 
     .item-name {
-      font-size: 1.1rem;
-      flex-basis: 100%;
-    }
-
-    .header-actions {
-      flex-basis: 100%;
-      justify-content: space-between;
-    }
-
-    .item-cost {
-      font-size: 0.9rem;
+      min-width: 0;
+      flex: 1;
+      flex-basis: auto;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 
   .card-summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px var(--spacing-sm);
+    margin-bottom: 0;
+
+    .summary-row {
+      font-size: 0.78rem;
+      min-width: 0;
+
+      .value {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  .destined-one-card.is-details-open {
+    .card-body {
+      max-height: 260px;
+      overflow-y: auto;
+      padding-top: var(--spacing-sm);
+    }
+  }
+
+  .card-body {
+    gap: var(--spacing-sm);
+  }
+
+  .info-section {
+    padding: var(--spacing-xs) 0;
   }
 
   .attributes {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .skill-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .attributes {
+    grid-template-columns: 1fr;
   }
 }
 </style>

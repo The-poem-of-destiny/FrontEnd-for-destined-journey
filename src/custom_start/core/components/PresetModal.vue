@@ -576,7 +576,7 @@ const cancelImport = () => {
   }
 
   &.load-button {
-    background: linear-gradient(135deg, var(--success-color) 0%, #2e7d32 100%);
+    background: linear-gradient(135deg, var(--success-color) 0%, #1b5e20 100%);
     color: white;
     border-color: var(--success-color);
 
@@ -587,9 +587,9 @@ const cancelImport = () => {
   }
 
   &.export-button {
-    background: linear-gradient(135deg, #5c6bc0 0%, #3949ab 100%);
+    background: linear-gradient(135deg, #8b7355 0%, #6f5840 100%);
     color: white;
-    border-color: #5c6bc0;
+    border-color: #8b7355;
 
     &:hover {
       transform: translateY(-1px);
@@ -598,9 +598,9 @@ const cancelImport = () => {
   }
 
   &.export-all-button {
-    background: linear-gradient(135deg, #5c6bc0 0%, #3949ab 100%);
+    background: linear-gradient(135deg, #8b7355 0%, #6f5840 100%);
     color: white;
-    border-color: #5c6bc0;
+    border-color: #8b7355;
     padding: var(--spacing-xs) var(--spacing-md);
     font-size: 0.85rem;
 
@@ -611,9 +611,9 @@ const cancelImport = () => {
   }
 
   &.import-button {
-    background: linear-gradient(135deg, #26a69a 0%, #00897b 100%);
+    background: linear-gradient(135deg, #c28f34 0%, #9a651f 100%);
     color: white;
-    border-color: #26a69a;
+    border-color: #c28f34;
 
     &:hover {
       transform: translateY(-1px);
@@ -880,7 +880,7 @@ const cancelImport = () => {
     }
 
     &.rename-label {
-      color: #5c6bc0;
+      color: var(--border-color-strong);
     }
 
     &.skip-label {
@@ -913,7 +913,7 @@ const cancelImport = () => {
   }
 
   .confirm-footer {
-    background: linear-gradient(135deg, var(--success-color) 0%, #2e7d32 100%);
+    background: linear-gradient(135deg, var(--success-color) 0%, #1b5e20 100%);
     color: white;
     border-color: var(--success-color);
 

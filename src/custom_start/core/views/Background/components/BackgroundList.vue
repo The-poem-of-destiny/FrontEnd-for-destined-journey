@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import CardActionFooter from '../../../components/CardActionFooter.vue';
 import FormTextarea from '../../../components/Form/FormTextarea.vue';
+import { useActiveCard } from '../../../composables';
 import { parseMacroDeep } from '../../../composables/use-macro';
 import { useCustomContentStore } from '../../../store/customContent';
 import type { Background } from '../../../types';
@@ -16,6 +18,7 @@ interface Props {
 
 interface Emits {
   (e: 'select', item: Background): void;
+  (e: 'deselect', item: Background): void;
   (e: 'update:customDescription', value: string): void;
 }
 
@@ -25,23 +28,7 @@ const emit = defineEmits<Emits>();
 // 使用自定义内容 store
 const customContentStore = useCustomContentStore();
 
-// 折叠状态管理
-const expandedCards = ref<Set<string>>(new Set());
-
-// 切换折叠状态
-const toggleExpand = (name: string, event: Event) => {
-  event.stopPropagation();
-  if (expandedCards.value.has(name)) {
-    expandedCards.value.delete(name);
-  } else {
-    expandedCards.value.add(name);
-  }
-};
-
-// 检查是否展开
-const isExpanded = (name: string) => {
-  return expandedCards.value.has(name);
-};
+const { toggleActive, isActive: isDetailsOpen, clearIfMissing } = useActiveCard();
 
 // 检查是否已选择
 const isSelected = (item: Background) => {
@@ -93,10 +80,22 @@ const customDescription = computed({
 });
 
 // 处理选择
-const handleSelect = (item: Background) => {
-  if (meetsRequirements(item)) {
+const handleToggleSelect = (item: Background) => {
+  if (isSelected(item)) {
+    emit('deselect', item);
+  } else if (meetsRequirements(item)) {
     emit('select', item);
   }
+};
+
+const handleToggleDetails = (item: Background) => {
+  toggleActive(item.name);
+};
+
+const getSelectButtonText = (item: Background) => {
+  if (isSelected(item)) return '取消选择';
+  if (!meetsRequirements(item)) return '条件不符';
+  return '选择';
 };
 
 // 处理自定义描述更新
@@ -125,6 +124,7 @@ watch(
 
     itemsKey.value = newKey;
     parsedItems.value = await Promise.all(items.map(parseMacroDeep));
+    clearIfMissing(items.map(item => item.name));
   },
   { immediate: true },
 );
@@ -136,23 +136,20 @@ watch(
     <div
       v-for="item in parsedItems"
       :key="item.name"
-      class="background-card"
+      class="background-card selectable-card"
       :class="{
-        selected: isSelected(item),
-        disabled: !meetsRequirements(item),
-        expanded: isExpanded(item.name),
+        'is-selected': isSelected(item),
+        'is-disabled': !isSelected(item) && !meetsRequirements(item),
+        'is-details-open': isDetailsOpen(item.name),
       }"
-      @click="handleSelect(item)"
+      tabindex="0"
+      :aria-expanded="isDetailsOpen(item.name)"
+      @click="handleToggleDetails(item)"
+      @keydown.enter.prevent="handleToggleDetails(item)"
+      @keydown.space.prevent="handleToggleDetails(item)"
     >
       <div class="card-header">
         <h3 class="background-name">{{ item.name }}</h3>
-        <button
-          v-if="item.description.length > 100"
-          class="expand-btn"
-          @click="toggleExpand(item.name, $event)"
-        >
-          {{ isExpanded(item.name) ? '收起' : '展开' }}
-        </button>
       </div>
 
       <!-- 限制要求 -->
@@ -183,7 +180,7 @@ watch(
 
       <!-- 描述内容（过长时可折叠） -->
       <p class="background-summary">
-        <template v-if="isExpanded(item.name) || item.description.length <= 100">
+        <template v-if="isDetailsOpen(item.name) || item.description.length <= 100">
           {{ item.description }}
         </template>
         <template v-else> {{ item.description.substring(0, 100) }}... </template>
@@ -208,6 +205,15 @@ watch(
           @update:model-value="handleCustomDescriptionUpdate"
         />
       </div>
+
+      <CardActionFooter
+        class="card-footer-slot"
+        :selected="isSelected(item)"
+        :disabled="!isSelected(item) && !meetsRequirements(item)"
+        :details-open="isDetailsOpen(item.name)"
+        :select-label="getSelectButtonText(item)"
+        @toggle-select="handleToggleSelect(item)"
+      />
     </div>
   </div>
 </template>
@@ -218,26 +224,6 @@ watch(
   flex-direction: column;
   gap: var(--spacing-md);
   padding: var(--spacing-md);
-  height: 100%;
-  overflow-y: auto;
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: var(--input-bg);
-    border-radius: var(--radius-md);
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: var(--radius-md);
-
-    &:hover {
-      background: var(--border-color-strong);
-    }
-  }
 }
 
 .empty-message {
@@ -255,22 +241,15 @@ watch(
   cursor: pointer;
   transition: all var(--transition-fast);
 
-  &:hover:not(.disabled) {
+  &:hover:not(.is-disabled):not(.is-selected) {
     border-color: var(--accent-color);
     background: rgba(212, 175, 55, 0.1);
     transform: translateX(4px);
   }
 
-  &.selected {
-    border-color: var(--accent-color);
-    background: rgba(212, 175, 55, 0.15);
-    box-shadow: var(--shadow-md);
-    border-left-width: 4px;
-  }
-
-  &.disabled {
+  &.is-disabled {
     opacity: 0.6;
-    cursor: not-allowed;
+    border-style: dashed;
 
     &:hover {
       transform: none;
@@ -292,24 +271,6 @@ watch(
     font-weight: 600;
     flex: 1;
   }
-
-  .expand-btn {
-    padding: 2px var(--spacing-sm);
-    background: var(--input-bg);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: 0.75rem;
-    color: var(--text-color);
-    transition: all var(--transition-fast);
-    white-space: nowrap;
-
-    &:hover {
-      background: var(--accent-color);
-      color: var(--primary-bg);
-      border-color: var(--accent-color);
-    }
-  }
 }
 
 .requirements {
@@ -328,6 +289,10 @@ watch(
   line-height: 1.6;
   margin: 0;
   font-size: 0.9rem;
+}
+
+.card-footer-slot {
+  margin-top: var(--spacing-sm);
 }
 
 .requirement-warning {
@@ -369,22 +334,63 @@ watch(
 @media (max-width: 768px) {
   .background-list {
     padding: var(--spacing-sm);
-    gap: var(--spacing-sm);
+    gap: 6px;
   }
 
   .background-card {
-    padding: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
   }
 
   .card-header {
+    margin-bottom: 4px;
+
     .background-name {
-      font-size: 1rem;
+      font-size: 0.95rem;
+      line-height: 1.35;
+    }
+  }
+
+  .requirements {
+    margin-bottom: 4px;
+    padding: 4px 6px;
+  }
+
+  .background-card:not(.is-details-open) {
+    .background-summary {
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+  }
+
+  .background-card.is-details-open {
+    .background-summary {
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 2px;
     }
   }
 
   .background-summary,
   .background-description {
     font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  .card-footer-slot {
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+
+  .custom-input-area {
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+
+    :deep(textarea) {
+      max-height: 160px;
+      overflow-y: auto;
+    }
   }
 }
 </style>

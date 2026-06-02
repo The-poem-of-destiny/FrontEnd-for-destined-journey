@@ -1,29 +1,41 @@
 <script setup lang="ts">
 import type { Equipment, Item, Rarity, Skill } from '../types';
+import CardActionFooter from './CardActionFooter.vue';
 
 interface Props {
   item: Equipment | Item | Skill;
   selected?: boolean;
   disabled?: boolean;
+  detailsOpen?: boolean;
+  detailsToggleable?: boolean;
 }
 
 interface Emits {
   (e: 'select', item: Equipment | Item | Skill): void;
   (e: 'deselect', item: Equipment | Item | Skill): void;
+  (e: 'toggle-details', item: Equipment | Item | Skill): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   selected: false,
   disabled: false,
+  detailsToggleable: true,
 });
 
 const emit = defineEmits<Emits>();
+const internalDetailsOpen = ref(false);
+const isDetailsOpen = computed(() => props.detailsOpen ?? internalDetailsOpen.value);
+const selectButtonText = computed(() => {
+  if (props.selected) return '取消选择';
+  if (props.disabled) return '点数不足';
+  return '选择';
+});
 
 // 稀有度对应的颜色
 const rarityColors: Record<Rarity, string> = {
   only: '#ff6f00',
   common: '#9e9e9e',
-  uncommon: '#388e3c',
+  uncommon: '#b88a2c',
   rare: '#193c96',
   epic: '#9c27b0',
   legendary: '#9e7121',
@@ -40,14 +52,22 @@ const rarityNames: Record<Rarity, string> = {
   mythic: '神话',
 };
 
-const handleClick = () => {
-  if (props.disabled) return;
-
+const handleToggleSelect = () => {
+  if (props.disabled && !props.selected) return;
   if (props.selected) {
     emit('deselect', props.item);
   } else {
     emit('select', props.item);
   }
+};
+
+const handleToggleDetails = () => {
+  if (!props.detailsToggleable) return;
+
+  if (props.detailsOpen === undefined) {
+    internalDetailsOpen.value = !internalDetailsOpen.value;
+  }
+  emit('toggle-details', props.item);
 };
 
 // 判断是否为技能类型
@@ -66,13 +86,19 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
 
 <template>
   <div
-    class="item-card"
+    class="item-card selectable-card"
     :class="{
       'is-selected': selected,
       'is-disabled': disabled,
+      'is-details-open': isDetailsOpen,
+      'is-details-static': !detailsToggleable,
     }"
     :style="{ '--rarity-color': rarityColors[item.rarity] }"
-    @click="handleClick"
+    :tabindex="detailsToggleable ? 0 : undefined"
+    :aria-expanded="detailsToggleable ? isDetailsOpen : undefined"
+    @click="handleToggleDetails"
+    @keydown.enter.prevent="handleToggleDetails"
+    @keydown.space.prevent="handleToggleDetails"
   >
     <!-- 卡片头部 -->
     <div class="card-header">
@@ -83,7 +109,7 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
     </div>
 
     <!-- 卡片内容 -->
-    <div class="card-body">
+    <div class="card-body themed-scrollbar">
       <div class="item-info">
         <span class="info-label">类型:</span>
         <span class="info-value">{{ item.type }}</span>
@@ -124,13 +150,16 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
     </div>
 
     <!-- 卡片底部 -->
-    <div class="card-footer">
-      <div class="item-cost">
-        <span class="cost-label">消耗点数:</span>
-        <span class="cost-value">{{ item.cost }}</span>
-      </div>
-      <div v-if="selected" class="selected-badge">✓ 已选择</div>
-    </div>
+    <CardActionFooter
+      class="card-footer-slot"
+      :selected="selected"
+      :disabled="disabled && !selected"
+      :details-open="isDetailsOpen"
+      :show-detail-state="detailsToggleable"
+      :select-label="selectButtonText"
+      :cost-text="`${item.cost} 点`"
+      @toggle-select="handleToggleSelect"
+    />
   </div>
 </template>
 
@@ -142,8 +171,7 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
   padding: var(--spacing-md);
   cursor: pointer;
   transition: all var(--transition-normal);
-  position: relative;
-  overflow: hidden;
+  min-width: 0;
 
   &::before {
     content: '';
@@ -156,26 +184,18 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
     opacity: 0.6;
   }
 
-  &:hover:not(.is-disabled) {
+  &:hover:not(.is-disabled):not(.is-details-static) {
     border-color: var(--accent-color);
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
   }
 
-  &.is-selected {
-    border-color: var(--accent-color);
-    background: linear-gradient(to bottom, var(--card-bg), rgba(212, 175, 55, 0.05));
-    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
-
-    &::before {
-      height: 4px;
-      opacity: 1;
-    }
+  &.is-details-static {
+    cursor: default;
   }
 
   &.is-disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    border-style: dashed;
   }
 }
 
@@ -191,6 +211,7 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--title-color);
+    overflow-wrap: anywhere;
   }
 
   .item-rarity {
@@ -203,7 +224,12 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
 }
 
 .card-body {
+  display: none;
+  max-height: 260px;
   margin-bottom: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color-light);
+  overflow-y: auto;
 
   .item-info {
     display: flex;
@@ -225,7 +251,7 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
         font-family: monospace;
         font-size: 0.9rem;
         font-weight: 600;
-        color: #4caf50;
+        color: var(--success-color);
       }
 
       &.consume {
@@ -286,6 +312,7 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
 
     .effect-value {
       color: var(--text-color);
+      overflow-wrap: anywhere;
     }
   }
 
@@ -295,60 +322,75 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
     line-height: 1.6;
     color: var(--text-light);
     font-style: italic;
+    overflow-wrap: anywhere;
   }
 }
 
-.card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--border-color-light);
-
-  .item-cost {
-    display: flex;
-    gap: var(--spacing-xs);
-    align-items: center;
-
-    .cost-label {
-      font-size: 0.9rem;
-      color: var(--text-light);
-    }
-
-    .cost-value {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--accent-color);
-    }
-  }
-
-  .selected-badge {
-    padding: 4px 12px;
-    background: var(--accent-color);
-    color: var(--primary-bg);
-    border-radius: var(--radius-md);
-    font-size: 0.85rem;
-    font-weight: 600;
+.is-details-open {
+  .card-body {
+    display: block;
   }
 }
 
 // 响应式设计
 @media (max-width: 768px) {
   .item-card {
-    padding: var(--spacing-sm);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'header footer'
+      'body body';
+    align-items: center;
+    min-height: 58px;
+    padding: 0;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+
+    &::before {
+      top: 0;
+      right: 0;
+      bottom: auto;
+      width: auto;
+      height: 3px;
+    }
+
+    &:hover:not(.is-disabled) {
+      transform: none;
+    }
   }
 
   .card-header {
+    grid-area: header;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 0;
+    padding: 7px var(--spacing-sm) 7px 12px;
+    border-bottom: none;
+    min-width: 0;
+
     .item-name {
-      font-size: 1rem;
+      font-size: 0.92rem;
+      line-height: 1.35;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .item-rarity {
-      font-size: 0.8rem;
+      font-size: 0.72rem;
+      padding: 1px 6px;
+      flex: none;
     }
   }
 
   .card-body {
+    grid-area: body;
+    max-height: 190px;
+    margin: 0;
+    overflow-y: auto;
+    padding: var(--spacing-sm);
+
     .item-info {
       font-size: 0.85rem;
     }
@@ -388,21 +430,27 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
     }
   }
 
-  .card-footer {
-    .item-cost {
-      .cost-label {
-        font-size: 0.85rem;
-      }
+  .card-footer-slot {
+    grid-area: footer;
+    padding: 6px var(--spacing-sm) 6px 0;
+    border-top: none;
+    min-width: max-content;
+  }
+}
 
-      .cost-value {
-        font-size: 1rem;
-      }
+@media (max-width: 480px) {
+  .card-header {
+    .item-name {
+      font-size: 0.86rem;
     }
 
-    .selected-badge {
-      font-size: 0.8rem;
-      padding: 3px 10px;
+    .item-rarity {
+      font-size: 0.68rem;
     }
+  }
+
+  .card-footer-slot {
+    padding-right: 7px;
   }
 }
 </style>

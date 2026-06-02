@@ -18,7 +18,7 @@
   --title-color: #5c4033;
   --accent-color: #d4af37;
   --error-color: #d32f2f;
-  --success-color: #388e3c;
+  --success-color: #2e7d32;
   --button-bg: #c6b8a5;
   --button-hover: #b0a295;
   --points-color: #5c4033;
@@ -55,10 +55,79 @@
 // ============ 全局样式 ============
 body {
   font-family: var(--font-body);
+  background: var(--primary-bg);
   color: var(--text-color);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.drag-scroll-x {
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  touch-action: pan-x;
+  user-select: none;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+
+  &.dragging {
+    cursor: grabbing;
+    scroll-snap-type: none !important;
+  }
+}
+
+.themed-scrollbar {
+  scrollbar-color: var(--border-color) var(--input-bg);
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--input-bg);
+    border-radius: var(--radius-md);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: var(--radius-md);
+
+    &:hover {
+      background: var(--border-color-strong);
+    }
+  }
+}
+
+.selectable-card {
+  position: relative;
+  overflow: hidden;
+  outline: none;
+
+  &:focus-visible {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.22);
+  }
+
+  &.is-selected {
+    border-color: var(--accent-color);
+    background: rgba(212, 175, 55, 0.18);
+    box-shadow:
+      0 0 0 1px rgba(212, 175, 55, 0.36),
+      var(--shadow-md);
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      bottom: -2px;
+      left: -2px;
+      width: 5px;
+      background: var(--accent-color);
+      z-index: 1;
+    }
+  }
 }
 
 // ============ 标题样式 ============
@@ -76,7 +145,7 @@ h6 {
 
 h1 {
   font-size: 1.88rem;
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 h2 {
   font-size: 1.5rem;

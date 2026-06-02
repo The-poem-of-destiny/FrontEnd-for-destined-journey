@@ -61,7 +61,7 @@ const totalCost = computed(() =>
       </div>
     </div>
 
-    <div class="panel-body">
+    <div class="panel-body themed-scrollbar">
       <!-- 装备列表 -->
       <div v-if="equipments.length > 0" class="section">
         <div class="section-title">
@@ -227,6 +227,7 @@ const totalCost = computed(() =>
       align-items: baseline;
       gap: var(--spacing-xs);
       font-size: 0.9rem;
+      flex-wrap: wrap;
 
       .points-label {
         color: var(--text-light);
@@ -343,7 +344,7 @@ const totalCost = computed(() =>
               margin-left: var(--spacing-xs);
               font-size: 0.85rem;
               font-weight: 500;
-              color: #4caf50;
+              color: var(--success-color);
             }
 
             .custom-tag {
@@ -353,8 +354,8 @@ const totalCost = computed(() =>
               gap: 4px;
               padding: 2px 6px;
               border-radius: var(--radius-sm);
-              background: rgba(76, 175, 80, 0.15);
-              color: #43a047;
+              background: rgba(212, 175, 55, 0.16);
+              color: var(--accent-color);
               font-size: 0.75rem;
               font-weight: 600;
 
@@ -377,8 +378,8 @@ const totalCost = computed(() =>
           border-style: dashed;
 
           &:hover {
-            border-color: #43a047;
-            box-shadow: 0 0 0 1px rgba(67, 160, 71, 0.2);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.22);
           }
         }
 
@@ -471,27 +472,6 @@ const totalCost = computed(() =>
   }
 }
 
-// 自定义滚动条
-.panel-body {
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: var(--input-bg);
-    border-radius: var(--radius-md);
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: var(--radius-md);
-
-    &:hover {
-      background: var(--border-color-strong);
-    }
-  }
-}
-
 // 响应式设计
 @media (max-width: 768px) {
   .selected-panel {
@@ -525,6 +505,8 @@ const totalCost = computed(() =>
           .item-info {
             .item-name {
               font-size: 0.85rem;
+              white-space: normal;
+              overflow-wrap: anywhere;
             }
 
             .item-cost {

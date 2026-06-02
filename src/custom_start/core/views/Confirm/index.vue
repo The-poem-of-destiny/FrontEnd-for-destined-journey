@@ -45,7 +45,7 @@ const displayLocation = computed(() => {
 // 品质颜色映射
 const rarityColorMap: Record<string, string> = {
   common: '#9e9e9e',
-  uncommon: '#4caf50',
+  uncommon: '#b88a2c',
   rare: '#2196f3',
   epic: '#9c27b0',
   legendary: '#ff9800',
@@ -99,7 +99,7 @@ const getStairwayView = (partner: Partner) => {
       <!-- 标题 -->
       <div class="panel-header">
         <h2 class="panel-title">信息确认</h2>
-        <p class="panel-subtitle">非自定义数据（除了装备）会直接写入 MVU 变量中，不会发送给 AI</p>
+        <p class="panel-subtitle">可结构化的数据会写入 MVU 变量；AI 只接收少量剧情上下文</p>
       </div>
 
       <!-- 文档内容 -->
@@ -461,7 +461,7 @@ const getStairwayView = (partner: Partner) => {
 
 <style lang="scss" scoped>
 .confirm-page {
-  max-width: 900px;
+  max-width: 1080px;
   margin: 0 auto;
 }
 
@@ -504,7 +504,7 @@ const getStairwayView = (partner: Partner) => {
 
 .points-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: var(--spacing-md);
 
   .point-item {
@@ -558,6 +558,7 @@ const getStairwayView = (partner: Partner) => {
 // 文档区块
 .doc-section {
   padding: var(--spacing-lg) 0;
+  border-bottom: 1px solid var(--border-color-light);
 
   &:last-child {
     border-bottom: none;
@@ -586,6 +587,7 @@ const getStairwayView = (partner: Partner) => {
 .doc-text {
   line-height: 1.8;
   color: var(--text-color);
+  overflow-wrap: anywhere;
 
   p {
     margin: 0 0 var(--spacing-sm) 0;
@@ -630,10 +632,14 @@ const getStairwayView = (partner: Partner) => {
   .item-title {
     font-size: 1.05rem;
     margin-bottom: var(--spacing-xs) !important;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-xs);
 
     .item-quantity {
       font-size: 0.9rem;
-      color: #4caf50;
+      color: var(--success-color);
       font-weight: 600;
       margin-left: var(--spacing-xs);
     }
@@ -736,6 +742,10 @@ const getStairwayView = (partner: Partner) => {
 
 // 响应式设计
 @media (max-width: 768px) {
+  .confirm-page {
+    max-width: 100%;
+  }
+
   .panel-header {
     padding: var(--spacing-md);
 
@@ -750,6 +760,7 @@ const getStairwayView = (partner: Partner) => {
 
   .points-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
   }
 
   .doc-text.attributes {
@@ -760,6 +771,32 @@ const getStairwayView = (partner: Partner) => {
   .destined-entry {
     margin-bottom: var(--spacing-md);
     padding-bottom: var(--spacing-md);
+  }
+
+  .section-title {
+    font-size: 1.05rem;
+  }
+
+  .final-notice {
+    .notice {
+      align-items: flex-start;
+      justify-content: flex-start;
+      text-align: left;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .panel-content {
+    padding: var(--spacing-sm);
+  }
+
+  .points-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .points-section {
+    padding: var(--spacing-sm) !important;
   }
 }
 </style>
