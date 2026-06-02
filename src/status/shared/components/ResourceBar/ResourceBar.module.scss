@@ -91,7 +91,15 @@
   background: var(--bar-color);
 }
 
-.resourceBarHp  { --bar-color: var(--theme-resource-hp); }
-.resourceBarMp  { --bar-color: var(--theme-resource-mp); }
-.resourceBarSp  { --bar-color: var(--theme-resource-sp); }
-.resourceBarExp { --bar-color: var(--theme-resource-exp); }
+.resourceBarHp {
+  --bar-color: var(--theme-resource-hp);
+}
+.resourceBarMp {
+  --bar-color: var(--theme-resource-mp);
+}
+.resourceBarSp {
+  --bar-color: var(--theme-resource-sp);
+}
+.resourceBarExp {
+  --bar-color: var(--theme-resource-exp);
+}

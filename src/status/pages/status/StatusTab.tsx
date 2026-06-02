@@ -57,9 +57,27 @@ const ProfileInfoFields = BasicInfoFields.filter(
 
 // 资源条配置
 const ResourceFields = [
-  { label: 'HP', currentKey: '生命值', maxKey: '生命值上限', type: 'hp' as const, icon: 'game-icons:heart-plus' },
-  { label: 'MP', currentKey: '法力值', maxKey: '法力值上限', type: 'mp' as const, icon: 'game-icons:water-drop' },
-  { label: 'SP', currentKey: '体力值', maxKey: '体力值上限', type: 'sp' as const, icon: 'game-icons:focused-lightning' },
+  {
+    label: 'HP',
+    currentKey: '生命值',
+    maxKey: '生命值上限',
+    type: 'hp' as const,
+    icon: 'game-icons:heart-plus',
+  },
+  {
+    label: 'MP',
+    currentKey: '法力值',
+    maxKey: '法力值上限',
+    type: 'mp' as const,
+    icon: 'game-icons:water-drop',
+  },
+  {
+    label: 'SP',
+    currentKey: '体力值',
+    maxKey: '体力值上限',
+    type: 'sp' as const,
+    icon: 'game-icons:focused-lightning',
+  },
 ] as const;
 
 const AttributeIconMap: Record<string, string> = {
@@ -375,12 +393,12 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   // 登神预览按高阶到低阶展示具体名称
   const ascensionPreviewItems: AscensionPreviewItem[] = ascension?.是否开启
     ? [
-      ascension?.神国?.名称 ? { type: 'kingdom' as const, label: ascension.神国.名称 } : null,
-      ascension?.神位 ? { type: 'rank' as const, label: ascension.神位 } : null,
-      ...Object.keys(ascension?.法则 ?? {}).map(label => ({ type: 'law' as const, label })),
-      ...Object.keys(ascension?.权能 ?? {}).map(label => ({ type: 'power' as const, label })),
-      ...Object.keys(ascension?.要素 ?? {}).map(label => ({ type: 'element' as const, label })),
-    ].filter((item): item is AscensionPreviewItem => Boolean(item?.label))
+        ascension?.神国?.名称 ? { type: 'kingdom' as const, label: ascension.神国.名称 } : null,
+        ascension?.神位 ? { type: 'rank' as const, label: ascension.神位 } : null,
+        ...Object.keys(ascension?.法则 ?? {}).map(label => ({ type: 'law' as const, label })),
+        ...Object.keys(ascension?.权能 ?? {}).map(label => ({ type: 'power' as const, label })),
+        ...Object.keys(ascension?.要素 ?? {}).map(label => ({ type: 'element' as const, label })),
+      ].filter((item): item is AscensionPreviewItem => Boolean(item?.label))
     : [];
   const visibleAscensionPreviewItems = ascensionPreviewItems.slice(0, AscensionPreviewLimit);
   const hiddenAscensionPreviewCount = Math.max(

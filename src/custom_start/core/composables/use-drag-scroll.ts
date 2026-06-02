@@ -1,4 +1,4 @@
-import { reactive, ref } from "vue";
+import { reactive, ref } from 'vue';
 
 /**
  * 横向拖动滚动逻辑
