@@ -1,4 +1,5 @@
-import { FC } from 'react';
+import type { CSSProperties, FC } from 'react';
+import { getIconifyMask } from '../../../core/utils';
 import styles from './ResourceBar.module.scss';
 
 export interface ResourceBarProps {
@@ -6,6 +7,7 @@ export interface ResourceBarProps {
   current: number;
   max: number;
   type: 'hp' | 'mp' | 'sp' | 'exp';
+  icon?: string;
   showValues?: boolean;
 }
 
@@ -25,14 +27,25 @@ export const ResourceBar: FC<ResourceBarProps> = ({
   current,
   max,
   type,
+  icon,
   showValues = true,
 }) => {
   const percentage = max > 0 ? Math.min((current / max) * 100, 100) : 0;
   const typeClass = styles[typeStyleMap[type]] || '';
+  const iconStyle = icon
+    ? ({ '--resource-icon': getIconifyMask(icon) } as CSSProperties)
+    : undefined;
 
   return (
-    <div className={`${styles.resourceBar} ${typeClass}`}>
-      <div className={styles.resourceBarLabel}>{label}</div>
+    <div className={`${styles.resourceBar} ${typeClass}`} style={iconStyle}>
+      <div className={styles.resourceBarLabelGroup}>
+        {icon ? (
+          <span className={styles.resourceBarIcon} aria-hidden="true" />
+        ) : (
+          <span className={styles.resourceBarAccent} />
+        )}
+        <div className={styles.resourceBarLabel}>{label}</div>
+      </div>
       <div className={styles.resourceBarTrack}>
         <div className={styles.resourceBarFill} style={{ width: `${percentage}%` }} />
         {showValues && (

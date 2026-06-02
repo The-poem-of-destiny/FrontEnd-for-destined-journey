@@ -1,4 +1,4 @@
-import { FC, ReactNode, useEffect, useMemo, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
 import { useEditorSettingStore } from '../../core/stores';
 import {
@@ -7,12 +7,12 @@ import {
   getAssetCollectionSource,
   getAssetFilterOptions,
   getFilteredAssetEntries,
+  getQualityClass,
   readSessionState,
   writeSessionState,
 } from '../../core/utils';
 import type { ItemData } from '../../shared/components';
 import {
-  Card,
   DeleteConfirmModal,
   EditableField,
   EmptyHint,
@@ -77,7 +77,9 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const [activeFilter, setActiveFilter] = useState<string>(() =>
     readSessionState<string>(filterStorageKey, ALL_FILTER),
   );
+  const [selectedItem, setSelectedItem] = useState<InspectItemState>(null);
   const [inspectItem, setInspectItem] = useState<InspectItemState>(null);
+  const [isCompactLayout, setIsCompactLayout] = useState(false);
   const player = data.主角;
 
   /** 获取当前类别配置 */
@@ -107,6 +109,20 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const inspectCategoryData = inspectItem ? getCategoryData(inspectItem.categoryId) : null;
   const inspectedItemData =
     inspectItem && inspectCategoryData ? inspectCategoryData[inspectItem.name] : undefined;
+
+  const selectedCategoryConfig = selectedItem ? getCategoryConfig(selectedItem.categoryId) : null;
+  const selectedCategoryData = selectedItem ? getCategoryData(selectedItem.categoryId) : null;
+  const selectedItemData =
+    selectedItem && selectedCategoryData ? selectedCategoryData[selectedItem.name] : undefined;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 720px)');
+    const syncLayout = () => setIsCompactLayout(mediaQuery.matches);
+
+    syncLayout();
+    mediaQuery.addEventListener('change', syncLayout);
+    return () => mediaQuery.removeEventListener('change', syncLayout);
+  }, []);
 
   useEffect(() => {
     if (activeCategoryConfig.id !== activeCategory) {
@@ -155,20 +171,57 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
       );
       return acc;
     }, {});
-  }, [activeCategory, activeCategoryItems, filterOptions, filteredEntries.length]);
+  }, [activeCategory, activeCategoryItems, filterOptions]);
+
+  useEffect(() => {
+    if (filteredEntries.length === 0) {
+      setSelectedItem(null);
+      return;
+    }
+
+    const selectedStillVisible =
+      selectedItem?.categoryId === activeCategory &&
+      filteredEntries.some(([name]) => name === selectedItem.name);
+
+    if (!selectedStillVisible) {
+      setSelectedItem({
+        categoryId: activeCategory,
+        name: filteredEntries[0][0],
+      });
+    }
+  }, [activeCategory, filteredEntries, selectedItem]);
 
   /** 切换类别时重置筛选器 */
   const handleCategoryChange = (category: CategoryId) => {
     setActiveCategory(category);
     setActiveFilter(ALL_FILTER);
+    setSelectedItem(null);
     setInspectItem(null);
   };
 
-  const handleInspectItem = (name: string) => {
-    setInspectItem({
+  const handleSelectItem = (name: string) => {
+    const nextItem = {
       categoryId: activeCategory,
       name,
-    });
+    };
+
+    setSelectedItem(nextItem);
+    if (isCompactLayout) {
+      setInspectItem(nextItem);
+    }
+  };
+
+  const handleItemRowKeyDown = (event: React.KeyboardEvent<HTMLDivElement>, name: string) => {
+    if (event.target !== event.currentTarget) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    event.preventDefault();
+    handleSelectItem(name);
+  };
+
+  const handleDeleteItemClick = (event: React.MouseEvent<HTMLButtonElement>, name: string) => {
+    event.stopPropagation();
+    handleDeleteItem(name);
   };
 
   const handleCloseInspect = () => {
@@ -181,6 +234,44 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
       path: `${activeCategoryConfig.pathPrefix}.${name}`,
       name,
     });
+  };
+
+  const getTitleSuffix = (config: typeof activeCategoryConfig, item: ItemData) => {
+    if (config.itemCategory === 'item') {
+      return <span className={styles.itemCount}>×{item.数量}</span>;
+    }
+
+    if (config.itemCategory === 'equipment') {
+      return item.位置 ? <span className={styles.itemSlot}>[{item.位置}]</span> : null;
+    }
+
+    return item.消耗 ? <span className={styles.itemCost}>{item.消耗}</span> : null;
+  };
+
+  const getItemTypeLabel = (item: ItemData) => item.类型 || '未分类';
+
+  const getItemTags = (item: ItemData) => item.标签?.filter(Boolean) ?? [];
+
+  const renderDetail = (
+    itemState: InspectItemState,
+    config: typeof activeCategoryConfig | null,
+    itemData: ItemData | undefined,
+  ) => {
+    if (!itemState || !config || !itemData) {
+      return <EmptyHint className={styles.emptyHint} text="选择一件持有物查看详情" />;
+    }
+
+    return (
+      <ItemDetail
+        name={itemState.name}
+        data={itemData}
+        titleSuffix={getTitleSuffix(config, itemData)}
+        editEnabled={editEnabled}
+        pathPrefix={`${config.pathPrefix}.${itemState.name}`}
+        itemCategory={config.itemCategory}
+        displayMode="modal-detail"
+      />
+    );
   };
 
   /** 渲染货币 */
@@ -208,27 +299,62 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     );
   };
 
-  const renderItemList = (emptyText: string, getTitleSuffix: (item: ItemData) => ReactNode) => {
+  const renderItemList = (emptyText: string) => {
     if (filteredEntries.length === 0) {
       return <EmptyHint className={styles.emptyHint} text={emptyText} />;
     }
 
     return (
       <div className={styles.itemList}>
-        {filteredEntries.map(([name, item]) => (
-          <ItemDetail
-            key={name}
-            name={name}
-            data={item}
-            titleSuffix={getTitleSuffix(item)}
-            editEnabled={editEnabled}
-            pathPrefix={`${activeCategoryConfig.pathPrefix}.${name}`}
-            onDelete={() => handleDeleteItem(name)}
-            itemCategory={activeCategoryConfig.itemCategory}
-            displayMode="panel-card"
-            onInspect={() => handleInspectItem(name)}
-          />
-        ))}
+        {filteredEntries.map(([name, item]) => {
+          const isSelected =
+            selectedItem?.categoryId === activeCategory && selectedItem.name === name;
+          const qualityClass = getQualityClass(item.品质, styles);
+          const itemTags = getItemTags(item);
+
+          return (
+            <div
+              key={name}
+              role="button"
+              tabIndex={0}
+              className={`${styles.itemRow} ${isSelected ? styles.isSelected : ''}`}
+              onClick={() => handleSelectItem(name)}
+              onKeyDown={event => handleItemRowKeyDown(event, name)}
+            >
+              <span className={`${styles.itemQualityMark} ${qualityClass}`.trim()} />
+              <span className={styles.itemRowMain}>
+                <span className={styles.itemRowTitle}>
+                  <span className={`${styles.itemRowName} ${qualityClass}`.trim()}>{name}</span>
+                  <span className={styles.itemRowType}>{getItemTypeLabel(item)}</span>
+                </span>
+                {itemTags.length > 0 ? (
+                  <span className={styles.itemRowTags}>
+                    {itemTags.map((tag, idx) => (
+                      <span key={`${tag}-${idx}`} className={styles.itemRowTag}>
+                        {tag}
+                      </span>
+                    ))}
+                  </span>
+                ) : null}
+              </span>
+              <span className={styles.itemRowActions}>
+                <span className={styles.itemRowSuffix}>
+                  {getTitleSuffix(activeCategoryConfig, item)}
+                </span>
+                {editEnabled ? (
+                  <button
+                    type="button"
+                    className={styles.itemDeleteButton}
+                    onClick={event => handleDeleteItemClick(event, name)}
+                    title="删除"
+                  >
+                    <i className="fa-solid fa-trash-can" />
+                  </button>
+                ) : null}
+              </span>
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -239,7 +365,6 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
       normalizedActiveFilter === ALL_FILTER
         ? '背包空空如也'
         : `没有${normalizedActiveFilter}类型的物品`,
-      item => <span className={styles.itemCount}>×{item.数量}</span>,
     );
   };
 
@@ -249,7 +374,6 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
       normalizedActiveFilter === ALL_FILTER
         ? '暂无装备'
         : `没有${normalizedActiveFilter}位置的装备`,
-      item => (item.位置 ? <span className={styles.itemSlot}>[{item.位置}]</span> : null),
     );
   };
 
@@ -259,7 +383,6 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
       normalizedActiveFilter === ALL_FILTER
         ? '暂无技能'
         : `没有${normalizedActiveFilter}类型的技能`,
-      item => (item.消耗 ? <span className={styles.itemCost}>{item.消耗}</span> : null),
     );
   };
 
@@ -280,42 +403,62 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   return (
     <div className={styles.itemsTab}>
       {/* 货币显示 */}
-      <Card className={styles.itemsTabCurrency}>{renderCurrency()}</Card>
+      <div className={styles.itemsTabHeader}>
+        {/* 类别切换 */}
+        <div className={styles.itemsTabCategories}>
+          {ItemCategories.map(cat => {
+            const itemCount = Object.keys(getCategoryData(cat.id)).length;
 
-      {/* 类别切换 */}
-      <div className={styles.itemsTabCategories}>
-        {ItemCategories.map(cat => (
-          <button
-            key={cat.id}
-            type="button"
-            className={`${styles.categoryBtn} ${activeCategory === cat.id ? styles.isActive : ''}`}
-            onClick={() => handleCategoryChange(cat.id)}
-          >
-            <i className={cat.icon} />
-            <span>{cat.label}</span>
-          </button>
-        ))}
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                className={`${styles.categoryBtn} ${activeCategory === cat.id ? styles.isActive : ''}`}
+                onClick={() => handleCategoryChange(cat.id)}
+              >
+                <i className={cat.icon} />
+                <span>{cat.label}</span>
+                <span className={styles.categoryCount}>{itemCount}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {renderCurrency()}
       </div>
 
-      {/* 子分类筛选器 */}
-      {filterOptions.length > 1 && (
-        <div className={styles.filterBar}>
-          {filterOptions.map(option => (
-            <button
-              key={option}
-              type="button"
-              className={`${styles.filterBtn} ${activeFilter === option ? styles.isActive : ''}`}
-              onClick={() => setActiveFilter(option)}
-            >
-              {option}
-              <span className={styles.filterCount}>{activeFilterCountMap[option] ?? 0}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      <div className={styles.itemsWorkspace}>
+        {/* 子分类筛选器 */}
+        {filterOptions.length > 1 && (
+          <div className={styles.filterBar}>
+            {filterOptions.map(option => (
+              <button
+                key={option}
+                type="button"
+                className={`${styles.filterBtn} ${activeFilter === option ? styles.isActive : ''}`}
+                onClick={() => setActiveFilter(option)}
+              >
+                {option}
+                <span className={styles.filterCount}>{activeFilterCountMap[option] ?? 0}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
-      {/* 内容区域 */}
-      <div className={styles.itemsTabContent}>{renderCategoryContent()}</div>
+        {/* 内容区域 */}
+        <div className={styles.itemsTabContent}>
+          <div className={styles.itemsIndex}>{renderCategoryContent()}</div>
+          <aside className={styles.itemsDetailPanel}>
+            <div className={styles.itemsDetailHeader}>
+              <span>{selectedItem?.name ?? '持有物详情'}</span>
+              <span>{activeCategoryConfig.label}</span>
+            </div>
+            <div className={styles.itemsDetailBody}>
+              {renderDetail(selectedItem, selectedCategoryConfig, selectedItemData)}
+            </div>
+          </aside>
+        </div>
+      </div>
 
       {/* 资产详情中央面板 */}
       <ItemInspectModal
@@ -328,28 +471,9 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
         }
         onClose={handleCloseInspect}
       >
-        {inspectItem && inspectCategoryConfig && inspectedItemData ? (
-          <ItemDetail
-            name={inspectItem.name}
-            data={inspectedItemData}
-            titleSuffix={
-              inspectCategoryConfig.itemCategory === 'item' ? (
-                <span className={styles.itemCount}>×{inspectedItemData.数量}</span>
-              ) : inspectCategoryConfig.itemCategory === 'equipment' ? (
-                inspectedItemData.位置 ? (
-                  <span className={styles.itemSlot}>[{inspectedItemData.位置}]</span>
-                ) : null
-              ) : inspectedItemData.消耗 ? (
-                <span className={styles.itemCost}>{inspectedItemData.消耗}</span>
-              ) : null
-            }
-            editEnabled={editEnabled}
-            pathPrefix={`${inspectCategoryConfig.pathPrefix}.${inspectItem.name}`}
-            onDelete={() => handleDeleteItem(inspectItem.name)}
-            itemCategory={inspectCategoryConfig.itemCategory}
-            displayMode="modal-detail"
-          />
-        ) : null}
+        {inspectItem && inspectCategoryConfig && inspectedItemData
+          ? renderDetail(inspectItem, inspectCategoryConfig, inspectedItemData)
+          : null}
       </ItemInspectModal>
 
       {/* 删除确认弹窗 */}

@@ -1,4 +1,5 @@
-import { FC, useEffect, useMemo, useState } from 'react';
+import type { CSSProperties, FC } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
 import { useEditorSettingStore } from '../../core/stores';
 import {
@@ -6,6 +7,7 @@ import {
   getAvatarActionState,
   getAvatarRecord,
   getAvatarScopeKey,
+  getIconifyMask,
   isAvatarRemovedRecord,
   readAvatarFileAsDataUrl,
   removeAvatarRecord,
@@ -48,12 +50,44 @@ const BasicInfoFields: BasicInfoFieldConfig[] = [
   { key: '冒险者等级', label: '冒险者等级', type: 'text', editable: true, defaultValue: '未评级' },
 ];
 
+// 角色档案字段，排除冗余字段
+const ProfileInfoFields = BasicInfoFields.filter(
+  field => !['生命层级', '等级', '冒险者等级'].includes(field.key),
+);
+
 // 资源条配置
 const ResourceFields = [
-  { label: 'HP', currentKey: '生命值', maxKey: '生命值上限', type: 'hp' as const },
-  { label: 'MP', currentKey: '法力值', maxKey: '法力值上限', type: 'mp' as const },
-  { label: 'SP', currentKey: '体力值', maxKey: '体力值上限', type: 'sp' as const },
+  { label: 'HP', currentKey: '生命值', maxKey: '生命值上限', type: 'hp' as const, icon: 'game-icons:heart-plus' },
+  { label: 'MP', currentKey: '法力值', maxKey: '法力值上限', type: 'mp' as const, icon: 'game-icons:water-drop' },
+  { label: 'SP', currentKey: '体力值', maxKey: '体力值上限', type: 'sp' as const, icon: 'game-icons:focused-lightning' },
 ] as const;
+
+const AttributeIconMap: Record<string, string> = {
+  力量: 'game-icons:fist',
+  敏捷: 'game-icons:wingfoot',
+  体质: 'game-icons:checked-shield',
+  智力: 'game-icons:open-book',
+  精神: 'game-icons:semi-closed-eye',
+};
+
+const getIconStyle = (icon: string) => ({ '--status-icon': getIconifyMask(icon) }) as CSSProperties;
+
+// 登神标签显示限制
+const AscensionPreviewLimit = 5;
+
+// 登神级别
+type AscensionPreviewItem = {
+  type: 'kingdom' | 'rank' | 'law' | 'power' | 'element';
+  label: string;
+};
+
+const AscensionPreviewTypeLabel: Record<AscensionPreviewItem['type'], string> = {
+  kingdom: '神国',
+  rank: '神位',
+  law: '法则',
+  power: '权能',
+  element: '要素',
+};
 
 /**
  * 状态页内容组件
@@ -248,6 +282,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
           current={current}
           max={max}
           type={field.type}
+          icon={field.icon}
         />
       );
     }
@@ -269,6 +304,44 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
             type="number"
             numberConfig={{ min: 0, step: 1 }}
           />
+        </div>
+      </div>
+    );
+  };
+
+  const renderExperienceField = () => {
+    const max = _.isNumber(player.升级所需经验) ? player.升级所需经验 : 999;
+
+    if (!editEnabled) {
+      return (
+        <ResourceBar
+          label="EXP"
+          current={player.累计经验值 ?? 0}
+          max={max}
+          type="exp"
+          icon="game-icons:round-star"
+        />
+      );
+    }
+
+    return (
+      <div className={styles.resourceEditRow}>
+        <span className={styles.resourceLabel}>EXP</span>
+        <div className={styles.resourceEditors}>
+          <EditableField
+            path="主角.累计经验值"
+            value={player.累计经验值 ?? 0}
+            type="number"
+            numberConfig={{
+              min: 0,
+              max: _.isNumber(player.升级所需经验) ? player.升级所需经验 - 1 : undefined,
+              step: 1,
+            }}
+          />
+          <span className={styles.resourceSeparator}>/</span>
+          <span className={styles.expMax}>
+            {_.isNumber(player.升级所需经验) ? player.升级所需经验 : 'MAX'}
+          </span>
         </div>
       </div>
     );
@@ -298,6 +371,22 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const ascensionSummary = ascension?.是否开启
     ? _.compact(ascensionParts).join(' · ') || '已开启'
     : '未开启';
+
+  // 登神预览按高阶到低阶展示具体名称
+  const ascensionPreviewItems: AscensionPreviewItem[] = ascension?.是否开启
+    ? [
+      ascension?.神国?.名称 ? { type: 'kingdom' as const, label: ascension.神国.名称 } : null,
+      ascension?.神位 ? { type: 'rank' as const, label: ascension.神位 } : null,
+      ...Object.keys(ascension?.法则 ?? {}).map(label => ({ type: 'law' as const, label })),
+      ...Object.keys(ascension?.权能 ?? {}).map(label => ({ type: 'power' as const, label })),
+      ...Object.keys(ascension?.要素 ?? {}).map(label => ({ type: 'element' as const, label })),
+    ].filter((item): item is AscensionPreviewItem => Boolean(item?.label))
+    : [];
+  const visibleAscensionPreviewItems = ascensionPreviewItems.slice(0, AscensionPreviewLimit);
+  const hiddenAscensionPreviewCount = Math.max(
+    ascensionPreviewItems.length - visibleAscensionPreviewItems.length,
+    0,
+  );
   const playerAvatarDisplayUrl = isPlayerAvatarRemoved
     ? ''
     : playerAvatarUrl || playerDefaultAvatarUrl;
@@ -311,178 +400,183 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   return (
     <div className={styles.statusTab}>
-      <Card className={`${styles.statusTabCard} ${styles.overviewCard}`}>
-        <div className={styles.overviewHeader}>
-          <div className={styles.overviewHeading}>
-            <span className={styles.overviewEyebrow}>角色总览</span>
-            <div className={styles.overviewTitleRow}>
-              <AvatarPanel
-                src={playerAvatarDisplayUrl}
-                alt="主角头像"
-                size="lg"
-                className={styles.overviewAvatarInline}
-                onClick={() => setIsPlayerAvatarModalOpen(true)}
-                onImageError={handlePlayerAvatarImageError}
-              />
-              <div className={styles.overviewIdentityBlock}>
-                <div className={styles.overviewIdentityTopRow}>
-                  <span className={styles.overviewLevel}>Lv.{player.等级 ?? 1}</span>
-                  <span className={styles.overviewTier}>{player.生命层级 || '未记录生命层级'}</span>
+      <Card
+        className={`${styles.statusTabCard} ${styles.overviewCard}`}
+        bodyClassName={styles.overviewCardBody}
+      >
+        <div className={styles.dashboardGrid}>
+          <div className={styles.leftColumn}>
+            <section className={styles.corePanel}>
+              <div className={styles.heroRow}>
+                <AvatarPanel
+                  src={playerAvatarDisplayUrl}
+                  alt="主角头像"
+                  size="lg"
+                  className={styles.heroAvatar}
+                  onClick={() => setIsPlayerAvatarModalOpen(true)}
+                  onImageError={handlePlayerAvatarImageError}
+                />
+                <div className={styles.heroIdentity}>
+                  <div className={styles.heroTitleRow}>
+                    <span className={styles.heroLevel}>Lv.{player.等级 ?? 1}</span>
+                    <span className={styles.heroTier}>{player.生命层级 || '未记录生命层级'}</span>
+                  </div>
+                  <div className={styles.heroSubtitle}>
+                    {editEnabled ? (
+                      <>
+                        <span className={styles.heroSubtitleLabel}>冒险者评级：</span>
+                        <EditableField
+                          path="主角.冒险者等级"
+                          value={player.冒险者等级 || '未评级'}
+                          type="text"
+                        />
+                      </>
+                    ) : (
+                      <span>冒险者评级：{player.冒险者等级 || '未评级'}</span>
+                    )}
+                  </div>
                 </div>
-                <span className={styles.overviewSubtitle}>
-                  {player.冒险者等级 || '未评级冒险者'}
-                </span>
               </div>
-            </div>
-            <div className={styles.overviewStats}>
-              {_.map(player.属性, (value, key) => (
-                <div key={key} className={styles.overviewStatItem}>
-                  <span className={styles.overviewStatLabel}>{key}</span>
+              <button
+                className={styles.ascensionPreview}
+                onClick={() => setActiveDetail('ascension')}
+                type="button"
+              >
+                <div className={styles.ascensionPreviewHeader}>
+                  <span className={styles.ascensionPreviewTitle}>
+                    <span
+                      className={styles.sectionIcon}
+                      style={getIconStyle('game-icons:spiked-halo')}
+                    />
+                    登神长阶
+                  </span>
+                  <i className={`fa-solid fa-chevron-right ${styles.detailEntryChevron}`} />
+                </div>
+                {visibleAscensionPreviewItems.length > 0 ? (
+                  <div className={styles.ascensionPreviewTags}>
+                    {visibleAscensionPreviewItems.map((item, index) => (
+                      <span
+                        key={`${item.type}-${item.label}-${index}`}
+                        className={`${styles.ascensionPreviewTag} ${styles[`ascensionTag${_.upperFirst(item.type)}`] ?? ''}`.trim()}
+                      >
+                        <span>{AscensionPreviewTypeLabel[item.type]}</span>
+                        <strong>{item.label}</strong>
+                      </span>
+                    ))}
+                    {hiddenAscensionPreviewCount > 0 && (
+                      <span className={styles.ascensionPreviewTag}>
+                        +{hiddenAscensionPreviewCount}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <span className={styles.ascensionPreviewEmpty}>未开启</span>
+                )}
+              </button>
+            </section>
+
+            <section className={styles.resourcePanel}>
+              <div className={styles.resources}>
+                {ResourceFields.map(field => renderResourceField(field))}
+                {renderExperienceField()}
+              </div>
+            </section>
+          </div>
+
+          <div className={styles.rightColumn}>
+            <section className={styles.infoPanel}>
+              <span className={styles.sectionTitle}>
+                <span className={styles.sectionIcon} style={getIconStyle('game-icons:id-card')} />
+                角色档案
+              </span>
+              <div className={styles.basicInfo}>
+                {ProfileInfoFields.map(field => renderBasicInfoField(field))}
+              </div>
+            </section>
+
+            <section className={styles.attributePanel}>
+              <div className={styles.attributePanelHeader}>
+                <span className={styles.sectionTitle}>
+                  <span className={styles.sectionIcon} style={getIconStyle('game-icons:skills')} />
+                  核心属性
+                </span>
+                <div className={styles.attributePointPill}>
+                  <span>自由属性点</span>
                   {editEnabled ? (
                     <EditableField
-                      path={`主角.属性.${key}`}
-                      value={value ?? 0}
+                      path="主角.属性点"
+                      value={player.属性点 ?? 0}
                       type="number"
-                      numberConfig={{ min: 0, max: 20, step: 1 }}
+                      numberConfig={{ min: 0, step: 1 }}
                     />
                   ) : (
-                    <span className={styles.overviewStatValue}>{value ?? 0}</span>
+                    <strong>{player.属性点 ?? 0}</strong>
                   )}
                 </div>
-              ))}
-              <div className={styles.overviewStatItem}>
-                <span className={styles.overviewStatLabel}>属性点</span>
-                {editEnabled ? (
-                  <EditableField
-                    path="主角.属性点"
-                    value={player.属性点 ?? 0}
-                    type="number"
-                    numberConfig={{ min: 0, step: 1 }}
-                  />
-                ) : (
-                  <span className={styles.overviewStatValue}>{player.属性点 ?? 0}</span>
-                )}
               </div>
-            </div>
-            <div className={styles.overviewSummaryGrid}>
-              <div className={styles.overviewSummaryItem}>
-                <span className={styles.overviewStatLabel}>状态效果</span>
-                <StatusEffectDisplay
-                  effects={statusEffects}
-                  mode="chips"
-                  maxVisible={4}
-                  showRemainingCount
-                  emptyText="无效果"
-                />
+              <div className={styles.attributeGrid}>
+                {_.map(player.属性, (value, key) => (
+                  <div key={key} className={styles.attributeItem}>
+                    <span className={styles.attributeLabelGroup}>
+                      {AttributeIconMap[key] && (
+                        <span
+                          className={styles.attributeIcon}
+                          style={getIconStyle(AttributeIconMap[key])}
+                        />
+                      )}
+                      <span className={styles.attributeLabel}>{key}</span>
+                    </span>
+                    {editEnabled ? (
+                      <EditableField
+                        path={`主角.属性.${key}`}
+                        value={value ?? 0}
+                        type="number"
+                        numberConfig={{ min: 0, max: 20, step: 1 }}
+                      />
+                    ) : (
+                      <span className={styles.attributeValue}>{value ?? 0}</span>
+                    )}
+                  </div>
+                ))}
               </div>
-              <div className={styles.overviewSummaryItem}>
-                <span className={styles.overviewStatLabel}>登神长阶</span>
-                <span className={styles.overviewStatSummary}>{ascensionSummary}</span>
-              </div>
-            </div>
+            </section>
           </div>
         </div>
 
-        <div className={styles.resources}>
-          {editEnabled ? (
-            <>
-              {ResourceFields.map(field => renderResourceField(field))}
-              <div className={styles.resourceEditRow}>
-                <span className={styles.resourceLabel}>EXP</span>
-                <div className={styles.resourceEditors}>
-                  <EditableField
-                    path="主角.累计经验值"
-                    value={player.累计经验值 ?? 0}
-                    type="number"
-                    numberConfig={{
-                      min: 0,
-                      max: _.isNumber(player.升级所需经验) ? player.升级所需经验 - 1 : undefined,
-                      step: 1,
-                    }}
+        <div className={styles.detailEntryGrid}>
+          <button
+            className={styles.detailEntryCard}
+            onClick={() => setActiveDetail('status-effects')}
+            type="button"
+          >
+            <div className={styles.detailEntryHeader}>
+              <div>
+                <div className={styles.detailEntryTitle}>
+                  <span
+                    className={styles.sectionIcon}
+                    style={getIconStyle('game-icons:vitruvian-man')}
                   />
-                  <span className={styles.resourceSeparator}>/</span>
-                  <span className={styles.expMax}>
-                    {_.isNumber(player.升级所需经验) ? player.升级所需经验 : 'MAX'}
-                  </span>
+                  状态效果
+                </div>
+                <div className={styles.detailEntrySummary}>
+                  <StatusEffectDisplay
+                    effects={statusEffects}
+                    mode="chips"
+                    compact
+                    maxVisible={4}
+                    showRemainingCount
+                    emptyText="无效果"
+                  />
                 </div>
               </div>
-            </>
-          ) : (
-            <>
-              {ResourceFields.map(field => (
-                <ResourceBar
-                  key={field.type}
-                  label={field.label}
-                  current={_.get(player, field.currentKey, 0)}
-                  max={_.get(player, field.maxKey, 0)}
-                  type={field.type}
-                />
-              ))}
-              <ResourceBar
-                label="EXP"
-                current={player.累计经验值 ?? 0}
-                max={_.isNumber(player.升级所需经验) ? player.升级所需经验 : 999}
-                type="exp"
-              />
-            </>
-          )}
-        </div>
-      </Card>
-
-      <div className={styles.primaryGrid}>
-        <Card title="角色档案" className={styles.statusTabCard}>
-          <div className={styles.basicInfo}>
-            {BasicInfoFields.map(field => renderBasicInfoField(field))}
-          </div>
-        </Card>
-      </div>
-
-      <div className={styles.secondaryStack}>
-        <button
-          className={styles.detailEntryCard}
-          onClick={() => setActiveDetail('status-effects')}
-          type="button"
-        >
-          <div className={styles.detailEntryHeader}>
-            <div>
-              <div className={styles.detailEntryTitle}>状态效果</div>
-              <div className={styles.detailEntrySummary}>
-                <StatusEffectDisplay
-                  effects={statusEffects}
-                  mode="chips"
-                  compact
-                  maxVisible={4}
-                  showRemainingCount
-                  emptyText="无效果"
-                />
+              <div className={styles.detailEntryMeta}>
+                <span className={styles.detailEntryCount}>{effectStats.total}</span>
+                <i className={`fa-solid fa-chevron-right ${styles.detailEntryChevron}`} />
               </div>
             </div>
-            <div className={styles.detailEntryMeta}>
-              <span className={styles.detailEntryCount}>{effectStats.total}</span>
-              <i className={`fa-solid fa-chevron-right ${styles.detailEntryChevron}`} />
-            </div>
-          </div>
-        </button>
-
-        <button
-          className={styles.detailEntryCard}
-          onClick={() => setActiveDetail('ascension')}
-          type="button"
-        >
-          <div className={styles.detailEntryHeader}>
-            <div>
-              <div className={styles.detailEntryTitle}>登神长阶</div>
-              <div className={styles.detailEntrySummary}>{ascensionSummary}</div>
-            </div>
-            <div className={styles.detailEntryMeta}>
-              <span className={styles.detailEntryCount}>
-                {ascension?.是否开启 ? '已开启' : '未开启'}
-              </span>
-              <i className={`fa-solid fa-chevron-right ${styles.detailEntryChevron}`} />
-            </div>
-          </div>
-        </button>
-      </div>
+          </button>
+        </div>
+      </Card>
 
       <DetailSheet
         open={activeDetail === 'status-effects'}
