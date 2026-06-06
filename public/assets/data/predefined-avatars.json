@@ -7,5 +7,5 @@
       - 文件扩展名只能是 `.png`、`.jpg`、`.jpeg`、`.webp`、`.avif`
     不符合规则的 URL 会被忽略。
   */
-  艾琳: 'https://files.catbox.moe/official/images/404.png',
+  // "艾琳": "https://files.catbox.moe/official/images/404.png",
 }
