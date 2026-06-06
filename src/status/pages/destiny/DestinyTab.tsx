@@ -7,12 +7,14 @@ import {
   getAssetCollectionSource,
   getAssetFilterOptions,
   getAvatarActionState,
-  getAvatarRecord,
+  getAvatarRecordsByScopeKey,
   getAvatarScopeKey,
+  getDefaultPartnerAvatarMap,
   getFilteredAssetEntries,
   markAvatarAsRemoved,
   readAvatarFileAsDataUrl,
   readSessionState,
+  removeAvatarRecord,
   saveAvatarRecord,
   writeSessionState,
 } from '../../core/utils';
@@ -61,11 +63,11 @@ const PartnerListCategories: Array<{
   label: string;
   matches: (partner: PartnerRecord) => boolean;
 }> = [
-  { key: 'all', label: '全部', matches: () => true },
-  { key: 'present', label: '在场', matches: partner => Boolean(partner.在场) },
-  { key: 'away', label: '不在场', matches: partner => !partner.在场 },
-  { key: 'contracted', label: '已缔约', matches: partner => Boolean(partner.命定契约) },
-];
+    { key: 'all', label: '全部', matches: () => true },
+    { key: 'present', label: '在场', matches: partner => Boolean(partner.在场) },
+    { key: 'away', label: '不在场', matches: partner => !partner.在场 },
+    { key: 'contracted', label: '已缔约', matches: partner => Boolean(partner.命定契约) },
+  ];
 
 const PartnerAssetSections: PartnerAssetSectionConfig[] = [
   {
@@ -137,6 +139,9 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     readSessionState<string>(partnerFilterStorageKey, ALL_FILTER),
   );
   const [partnerAvatarMap, setPartnerAvatarMap] = useState<Record<string, string>>({});
+  const [partnerDefaultAvatarMap, setPartnerDefaultAvatarMap] = useState<Record<string, string>>(
+    {},
+  );
   const [partnerAvatarRemovedMap, setPartnerAvatarRemovedMap] = useState<Record<string, boolean>>(
     {},
   );
@@ -344,11 +349,11 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 option === ALL_FILTER
                   ? totalCount
                   : _.size(
-                      _.pickBy(
-                        source,
-                        (item: PartnerAssetItem) => _.get(item, sectionConfig.filterKey) === option,
-                      ),
-                    );
+                    _.pickBy(
+                      source,
+                      (item: PartnerAssetItem) => _.get(item, sectionConfig.filterKey) === option,
+                    ),
+                  );
 
               return (
                 <button
@@ -527,7 +532,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       return '';
     }
 
-    return partnerAvatarMap[partner_name] ?? '';
+    return partnerAvatarMap[partner_name] || partnerDefaultAvatarMap[partner_name] || '';
   };
 
   const hasPartnerAvatar = (partner_name: string) => Boolean(getPartnerAvatarUrl(partner_name));
@@ -617,7 +622,31 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     }
   };
 
+  const handlePartnerAvatarReset = async (partner_name: string) => {
+    try {
+      await removeAvatarRecord(avatarScopeKey, 'partner', partner_name);
+      setPartnerAvatarMap(previous => ({
+        ...previous,
+        [partner_name]: '',
+      }));
+      setPartnerAvatarRemovedMap(previous => ({
+        ...previous,
+        [partner_name]: false,
+      }));
+    } catch (error) {
+      console.warn('[DestinyTab] 恢复伙伴默认头像失败:', error);
+    }
+  };
+
   const handlePartnerAvatarImageError = (partner_name: string) => {
+    if (!partnerAvatarMap[partner_name] && partnerDefaultAvatarMap[partner_name]) {
+      setPartnerDefaultAvatarMap(previous => ({
+        ...previous,
+        [partner_name]: '',
+      }));
+      return;
+    }
+
     setPartnerAvatarMap(previous => ({
       ...previous,
       [partner_name]: '',
@@ -1057,39 +1086,70 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
     const loadPartnerAvatars = async () => {
       try {
-        const records = await Promise.all(
-          partnerEntries.map(async ([partnerName]) => {
-            const avatarRecord = await getAvatarRecord(avatarScopeKey, 'partner', partnerName);
-            return [partnerName, avatarRecord] as const;
-          }),
+        const partnerNames = partnerEntries.map(([partnerName]) => partnerName);
+        console.log('[DestinyTab] 开始加载伙伴头像:', {
+          avatarScopeKey,
+          partnerNames,
+        });
+
+        if (partnerNames.length === 0) {
+          console.log('[DestinyTab] 无伙伴，清空伙伴头像状态');
+          if (!ignore) {
+            setPartnerAvatarMap({});
+            setPartnerDefaultAvatarMap({});
+            setPartnerAvatarRemovedMap({});
+          }
+          return;
+        }
+
+        const partnerNameSet = new Set(partnerNames);
+        const records = (await getAvatarRecordsByScopeKey(avatarScopeKey)).filter(
+          record => record.owner_type === 'partner' && partnerNameSet.has(record.owner_name),
         );
+        console.log('[DestinyTab] 读取到伙伴头像本地记录:', records);
 
         if (ignore) {
           return;
         }
 
-        const nextAvatarMap = records.reduce<Record<string, string>>(
-          (result, [partnerName, avatarRecord]) => {
-            result[partnerName] =
-              avatarRecord?.source_type === 'removed' ? '' : (avatarRecord?.value ?? '');
-            return result;
-          },
-          {},
-        );
-        const nextRemovedMap = records.reduce<Record<string, boolean>>(
-          (result, [partnerName, avatarRecord]) => {
-            result[partnerName] = avatarRecord?.source_type === 'removed';
-            return result;
-          },
-          {},
-        );
+        const recordsByPartnerName = _.keyBy(records, 'owner_name');
+        const defaultAvatarPartnerNames: string[] = [];
+        const nextAvatarMap: Record<string, string> = {};
+        const nextRemovedMap: Record<string, boolean> = {};
+
+        partnerNames.forEach(partnerName => {
+          const avatarRecord = recordsByPartnerName[partnerName];
+          const isAvatarRemoved = avatarRecord?.source_type === 'removed';
+          const customAvatarUrl = isAvatarRemoved ? '' : (avatarRecord?.value ?? '');
+
+          nextAvatarMap[partnerName] = customAvatarUrl;
+          nextRemovedMap[partnerName] = isAvatarRemoved;
+
+          if (!isAvatarRemoved && !customAvatarUrl) {
+            defaultAvatarPartnerNames.push(partnerName);
+          }
+        });
+        console.log('[DestinyTab] 需要读取默认头像的伙伴:', defaultAvatarPartnerNames);
+
+        const nextDefaultAvatarMap = await getDefaultPartnerAvatarMap(defaultAvatarPartnerNames);
+        if (ignore) {
+          return;
+        }
+
+        console.log('[DestinyTab] 伙伴头像合成结果:', {
+          custom: nextAvatarMap,
+          default: nextDefaultAvatarMap,
+          removed: nextRemovedMap,
+        });
 
         setPartnerAvatarMap(nextAvatarMap);
+        setPartnerDefaultAvatarMap(nextDefaultAvatarMap);
         setPartnerAvatarRemovedMap(nextRemovedMap);
       } catch (error) {
         console.warn('[DestinyTab] 读取伙伴头像失败:', error);
         if (!ignore) {
           setPartnerAvatarMap({});
+          setPartnerDefaultAvatarMap({});
           setPartnerAvatarRemovedMap({});
         }
       }
@@ -1134,11 +1194,15 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   }, [activePartnerName, selectedPartnerName]);
 
   const activePartnerAvatarActionState = activeAvatarPartnerName
-    ? getAvatarActionState({
+    ? {
+      ...getAvatarActionState({
         current_url: getPartnerAvatarUrl(activeAvatarPartnerName),
         custom_url: partnerAvatarMap[activeAvatarPartnerName],
+        default_url: partnerDefaultAvatarMap[activeAvatarPartnerName],
         removed: partnerAvatarRemovedMap[activeAvatarPartnerName],
-      })
+      }),
+      canDelete: Boolean(getPartnerAvatarUrl(activeAvatarPartnerName)),
+    }
     : null;
 
   return (
@@ -1192,16 +1256,18 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         <AvatarActionModal
           open
           title={`${activeAvatarPartnerName}头像`}
-          subtitle="支持导入本地图片、保存图片链接、导出当前头像，或删除当前伙伴头像。"
+          subtitle="支持导入本地图片、保存图片链接、导出当前头像、删除当前头像，或恢复到默认头像。"
           linkPlaceholder={`请输入${activeAvatarPartnerName}头像图片链接`}
           canExport={activePartnerAvatarActionState?.canExport ?? false}
           canDelete={activePartnerAvatarActionState?.canDelete ?? false}
+          canReset={activePartnerAvatarActionState?.canReset ?? false}
           deleteLabel="删除头像"
           onClose={closePartnerAvatarModal}
           onUpload={(file: File) => handlePartnerAvatarUpload(activeAvatarPartnerName, file)}
           onSubmitLink={(url: string) => handlePartnerAvatarUrlInput(activeAvatarPartnerName, url)}
           onExport={() => handlePartnerAvatarExport(activeAvatarPartnerName)}
           onDelete={() => handlePartnerAvatarRemove(activeAvatarPartnerName)}
+          onReset={() => handlePartnerAvatarReset(activeAvatarPartnerName)}
         />
       ) : null}
 

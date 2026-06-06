@@ -49,7 +49,15 @@ export const AvatarPanel: FC<AvatarPanelProps> = ({
         title={alt}
       >
         <div className={styles.imageShell}>
-          <img className={styles.image} src={displaySrc} alt={alt} onError={onImageError} />
+          <img
+            className={styles.image}
+            src={displaySrc}
+            alt={alt}
+            referrerPolicy="no-referrer"
+            loading="lazy"
+            decoding="async"
+            onError={onImageError}
+          />
         </div>
       </button>
     </div>

@@ -1,0 +1,11 @@
+{
+  /*
+  1. key 必须与关系列表里的伙伴名称完全一致
+  2. 头像 URL 必须满足以下条件：
+      - 协议必须是 `https`
+      - 域名只能是 `files.catbox.moe`、`i.ibb.co` 或 `wsrv.nl`
+      - 文件扩展名只能是 `.png`、`.jpg`、`.jpeg`、`.webp`、`.avif`
+    不符合规则的 URL 会被忽略。
+  */
+  艾琳: 'https://files.catbox.moe/official/images/404.png',
+}
