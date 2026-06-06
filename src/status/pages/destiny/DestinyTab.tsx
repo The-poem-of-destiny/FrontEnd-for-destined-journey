@@ -1003,13 +1003,13 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         {renderPartnerDetails(activePartnerName, activePartner)}
       </>
     ) : (
-      <EmptyHint className={styles.emptyHint} text="暂无可查看伙伴" />
+      <EmptyHint className={styles.emptyHint} text="暂无可查看关系" />
     );
 
   /** 渲染关系列表 */
   const renderPartners = () => {
     if (_.isEmpty(partners)) {
-      return <EmptyHint className={styles.emptyHint} text="暂无伙伴" />;
+      return <EmptyHint className={styles.emptyHint} text="暂无关系" />;
     }
 
     const detailContent = renderActivePartnerDetailContent();
@@ -1041,7 +1041,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
             ) : (
               <EmptyHint
                 className={styles.emptyHint}
-                text={`当前“${activePartnerListCategoryConfig?.label ?? '全部'}”分类下暂无伙伴`}
+                text={`当前“${activePartnerListCategoryConfig?.label ?? '全部'}”分类下暂无关系`}
               />
             )}
           </div>
@@ -1172,7 +1172,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
       {/* 关系列表 */}
       <section className={styles.destinyTabPartners}>
-        <div className={styles.partnerSectionTitle}>伙伴列表</div>
+        <div className={styles.partnerSectionTitle}>关系列表</div>
         {renderPartners()}
       </section>
 
@@ -1181,7 +1181,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
           <div className={styles.partnerDetailPageTopbar}>
             <button className={styles.partnerBackBtn} onClick={handlePartnerDetailBack}>
               <i className="fa-solid fa-chevron-left" />
-              <span>返回伙伴列表</span>
+              <span>返回关系列表</span>
             </button>
           </div>
           <div className={styles.partnerDetailPageBody}>{renderActivePartnerDetailContent()}</div>
