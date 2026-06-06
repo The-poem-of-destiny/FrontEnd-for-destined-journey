@@ -1096,10 +1096,37 @@
   color: var(--theme-text-muted);
 }
 
-// 图片
+// 相册
 .partnerGallery {
   padding: $spacing-sm 0;
   border-top: 1px dashed var(--theme-card-border);
+}
+
+.partnerGalleryEmptyPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm 0;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.partnerGalleryPredefinedPrompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 68%, transparent);
+  border-radius: $border-radius-sm;
+  background: color-mix(in srgb, var(--theme-card-bg) 74%, transparent);
+}
+
+.partnerGalleryPredefinedText {
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .partnerGalleryHeader {
@@ -1114,6 +1141,41 @@
   flex: 0 0 auto;
   color: var(--theme-text-muted);
   font-size: 11px;
+}
+
+.partnerGalleryActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-card-bg) 88%, transparent);
+  color: var(--theme-text-primary);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background $transition-fast,
+    border-color $transition-fast,
+    transform $transition-fast;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--theme-card-bg) 84%, var(--theme-text-primary) 4%);
+    border-color: color-mix(in srgb, var(--theme-card-border) 90%, transparent);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.partnerGalleryFileInput {
+  display: none;
 }
 
 .partnerGalleryGrid {
@@ -1156,6 +1218,37 @@
   outline-offset: -2px;
 }
 
+.partnerGalleryDeleteButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid color-mix(in srgb, var(--theme-error) 50%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-card-bg) 88%, transparent);
+  color: var(--theme-error);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity $transition-fast,
+    transform $transition-fast;
+}
+
+.partnerGalleryItem:hover .partnerGalleryDeleteButton,
+.partnerGalleryDeleteButton:focus-visible {
+  opacity: 1;
+}
+
+.partnerGalleryDeleteButton:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+}
+
 .partnerGalleryCaption {
   padding: 8px 10px;
   border-top: 1px solid color-mix(in srgb, var(--theme-card-border) 56%, transparent);
@@ -1163,6 +1256,42 @@
   font-size: 12px;
   line-height: 1.5;
   word-break: break-word;
+}
+
+.partnerGalleryTitleButton {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  word-break: break-word;
+  cursor: text;
+}
+
+.partnerGalleryTitleButton:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--theme-tab-indicator) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.partnerGalleryTitleInput {
+  width: 100%;
+  min-height: 28px;
+  padding: 4px 6px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 76%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--theme-window-bg) 22%, transparent);
+  color: var(--theme-text-primary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.partnerGalleryTitleInput:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--theme-tab-indicator) 72%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-tab-indicator) 14%, transparent);
 }
 
 .partnerGalleryPreviewOverlay {

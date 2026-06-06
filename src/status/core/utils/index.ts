@@ -4,5 +4,6 @@ export * from './format';
 export * from './iconify';
 export * from './partner-avatar';
 export * from './partner-gallery';
+export * from './partner-gallery-storage';
 export * from './quality';
 export * from './session-storage';
