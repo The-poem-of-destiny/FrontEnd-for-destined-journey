@@ -10,8 +10,10 @@ import {
   getAvatarRecordsByScopeKey,
   getAvatarScopeKey,
   getDefaultPartnerAvatarMap,
+  getDefaultPartnerGalleryMap,
   getFilteredAssetEntries,
   markAvatarAsRemoved,
+  PartnerGalleryItem,
   readAvatarFileAsDataUrl,
   readSessionState,
   removeAvatarRecord,
@@ -42,6 +44,7 @@ type PartnerDetailSection =
   | 'equipment'
   | 'skills'
   | 'inventory'
+  | 'gallery'
   | 'background';
 
 type PartnerRecord = Record<string, any>;
@@ -63,11 +66,11 @@ const PartnerListCategories: Array<{
   label: string;
   matches: (partner: PartnerRecord) => boolean;
 }> = [
-    { key: 'all', label: '全部', matches: () => true },
-    { key: 'present', label: '在场', matches: partner => Boolean(partner.在场) },
-    { key: 'away', label: '不在场', matches: partner => !partner.在场 },
-    { key: 'contracted', label: '已缔约', matches: partner => Boolean(partner.命定契约) },
-  ];
+  { key: 'all', label: '全部', matches: () => true },
+  { key: 'present', label: '在场', matches: partner => Boolean(partner.在场) },
+  { key: 'away', label: '不在场', matches: partner => !partner.在场 },
+  { key: 'contracted', label: '已缔约', matches: partner => Boolean(partner.命定契约) },
+];
 
 const PartnerAssetSections: PartnerAssetSectionConfig[] = [
   {
@@ -145,7 +148,15 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const [partnerAvatarRemovedMap, setPartnerAvatarRemovedMap] = useState<Record<string, boolean>>(
     {},
   );
+  const [partnerGalleryMap, setPartnerGalleryMap] = useState<Record<string, PartnerGalleryItem[]>>(
+    {},
+  );
+  const [isPartnerGalleryLoading, setIsPartnerGalleryLoading] = useState(false);
   const [activeAvatarPartnerName, setActiveAvatarPartnerName] = useState<string | null>(null);
+  const [activeGalleryPreview, setActiveGalleryPreview] = useState<{
+    partnerName: string;
+    item: PartnerGalleryItem;
+  } | null>(null);
 
   const partnerCategoryEntries = useMemo(() => {
     return PartnerListCategories.map(category => {
@@ -349,11 +360,11 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 option === ALL_FILTER
                   ? totalCount
                   : _.size(
-                    _.pickBy(
-                      source,
-                      (item: PartnerAssetItem) => _.get(item, sectionConfig.filterKey) === option,
-                    ),
-                  );
+                      _.pickBy(
+                        source,
+                        (item: PartnerAssetItem) => _.get(item, sectionConfig.filterKey) === option,
+                      ),
+                    );
 
               return (
                 <button
@@ -695,6 +706,57 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     );
   };
 
+  const renderPartnerGallerySection = (partnerName: string) => {
+    const galleryItems = partnerGalleryMap[partnerName] ?? [];
+
+    if (isPartnerGalleryLoading) {
+      return <EmptyHint className={styles.emptyHint} text="图片加载中..." />;
+    }
+
+    if (galleryItems.length === 0) {
+      return <EmptyHint className={styles.emptyHint} text="暂无图片" />;
+    }
+
+    return (
+      <div className={styles.partnerGallery}>
+        <div className={styles.partnerGalleryHeader}>
+          <div className={styles.sectionLabel}>图片</div>
+          <div className={styles.partnerGallerySummary}>共 {galleryItems.length} 张</div>
+        </div>
+
+        <div className={styles.partnerGalleryGrid}>
+          {galleryItems.map((item, index) => (
+            <figure
+              key={`${partnerName}-gallery-${item.title}-${item.url}-${index}`}
+              className={styles.partnerGalleryItem}
+            >
+              <button
+                type="button"
+                className={styles.partnerGalleryButton}
+                onClick={() => setActiveGalleryPreview({ partnerName, item })}
+                aria-label={`查看${item.title}`}
+              >
+                <img
+                  src={item.url}
+                  alt={item.title}
+                  className={styles.partnerGalleryImage}
+                  loading="lazy"
+                  onError={event => {
+                    const galleryItem = event.currentTarget.closest('figure') as HTMLElement | null;
+                    if (galleryItem) {
+                      galleryItem.style.display = 'none';
+                    }
+                  }}
+                />
+              </button>
+              <figcaption className={styles.partnerGalleryCaption}>{item.title}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const getPartnerSummaryText = (partner: PartnerRecord) => getPartnerRoleText(partner);
 
   const handlePartnerSelect = (partnerName: string) => {
@@ -781,6 +843,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       { key: 'skills', label: '技能' },
       { key: 'inventory', label: '背包' },
       { key: 'background', label: '背景' },
+      { key: 'gallery', label: '图片' },
     ];
 
     return (
@@ -988,6 +1051,8 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         {activePartnerAssetSection &&
           renderPartnerAssetSection(partnerName, activePartnerAssetSection)}
 
+        {activePartnerDetailSection === 'gallery' && renderPartnerGallerySection(partnerName)}
+
         {activePartnerDetailSection === 'background' && (
           <>
             {(partner.心里话 || editEnabled) && (
@@ -1163,6 +1228,45 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   }, [avatarScopeKey, partnerEntries]);
 
   useEffect(() => {
+    let ignore = false;
+
+    const loadPartnerGalleries = async () => {
+      try {
+        const partnerNames = partnerEntries.map(([partnerName]) => partnerName);
+        if (partnerNames.length === 0) {
+          if (!ignore) {
+            setIsPartnerGalleryLoading(false);
+            setPartnerGalleryMap({});
+          }
+          return;
+        }
+
+        if (!ignore) {
+          setIsPartnerGalleryLoading(true);
+        }
+
+        const nextGalleryMap = await getDefaultPartnerGalleryMap(partnerNames);
+        if (!ignore) {
+          setPartnerGalleryMap(nextGalleryMap);
+          setIsPartnerGalleryLoading(false);
+        }
+      } catch (error) {
+        console.warn('[DestinyTab] 读取伙伴图片失败:', error);
+        if (!ignore) {
+          setPartnerGalleryMap({});
+          setIsPartnerGalleryLoading(false);
+        }
+      }
+    };
+
+    void loadPartnerGalleries();
+
+    return () => {
+      ignore = true;
+    };
+  }, [partnerEntries]);
+
+  useEffect(() => {
     writeSessionState(partnerCategoryStorageKey, activePartnerListCategory);
   }, [activePartnerListCategory, partnerCategoryStorageKey]);
 
@@ -1195,14 +1299,14 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   const activePartnerAvatarActionState = activeAvatarPartnerName
     ? {
-      ...getAvatarActionState({
-        current_url: getPartnerAvatarUrl(activeAvatarPartnerName),
-        custom_url: partnerAvatarMap[activeAvatarPartnerName],
-        default_url: partnerDefaultAvatarMap[activeAvatarPartnerName],
-        removed: partnerAvatarRemovedMap[activeAvatarPartnerName],
-      }),
-      canDelete: Boolean(getPartnerAvatarUrl(activeAvatarPartnerName)),
-    }
+        ...getAvatarActionState({
+          current_url: getPartnerAvatarUrl(activeAvatarPartnerName),
+          custom_url: partnerAvatarMap[activeAvatarPartnerName],
+          default_url: partnerDefaultAvatarMap[activeAvatarPartnerName],
+          removed: partnerAvatarRemovedMap[activeAvatarPartnerName],
+        }),
+        canDelete: Boolean(getPartnerAvatarUrl(activeAvatarPartnerName)),
+      }
     : null;
 
   return (
@@ -1269,6 +1373,38 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
           onDelete={() => handlePartnerAvatarRemove(activeAvatarPartnerName)}
           onReset={() => handlePartnerAvatarReset(activeAvatarPartnerName)}
         />
+      ) : null}
+
+      {activeGalleryPreview ? (
+        <div
+          className={styles.partnerGalleryPreviewOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${activeGalleryPreview.partnerName}图片预览`}
+          onClick={() => setActiveGalleryPreview(null)}
+        >
+          <div
+            className={styles.partnerGalleryPreviewPanel}
+            onClick={(event: MouseEvent<HTMLDivElement>) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className={styles.partnerGalleryPreviewClose}
+              onClick={() => setActiveGalleryPreview(null)}
+              aria-label="关闭图片预览"
+            >
+              <i className="fa-solid fa-xmark" />
+            </button>
+            <img
+              src={activeGalleryPreview.item.url}
+              alt={activeGalleryPreview.item.title}
+              className={styles.partnerGalleryPreviewImage}
+            />
+            <div className={styles.partnerGalleryPreviewTitle}>
+              {activeGalleryPreview.item.title}
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {/* 删除确认弹窗 */}

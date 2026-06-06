@@ -502,7 +502,7 @@
 
 .partnerDetailNav {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
   gap: 6px;
   width: 100%;
   padding: 4px;
@@ -1094,6 +1094,156 @@
 .skillCost {
   font-size: 11px;
   color: var(--theme-text-muted);
+}
+
+// 图片
+.partnerGallery {
+  padding: $spacing-sm 0;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.partnerGalleryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.partnerGallerySummary {
+  flex: 0 0 auto;
+  color: var(--theme-text-muted);
+  font-size: 11px;
+}
+
+.partnerGalleryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: $spacing-sm;
+}
+
+.partnerGalleryItem {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  border-radius: $border-radius-sm;
+  background: color-mix(in srgb, var(--theme-card-bg) 72%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 6%, transparent);
+}
+
+.partnerGalleryImage {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.partnerGalleryButton {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.partnerGalleryButton:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--theme-tab-indicator) 65%, transparent);
+  outline-offset: -2px;
+}
+
+.partnerGalleryCaption {
+  padding: 8px 10px;
+  border-top: 1px solid color-mix(in srgb, var(--theme-card-border) 56%, transparent);
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.partnerGalleryPreviewOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-lg;
+  background: color-mix(in srgb, var(--theme-window-bg) 82%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.partnerGalleryPreviewPanel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  max-width: min(92vw, 960px);
+  max-height: 88vh;
+  padding: $spacing-md;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 78%, transparent);
+  border-radius: $border-radius-md;
+  background: color-mix(in srgb, var(--theme-card-bg) 94%, transparent);
+  box-shadow: 0 20px 60px color-mix(in srgb, var(--theme-window-bg) 45%, transparent);
+}
+
+.partnerGalleryPreviewImage {
+  display: block;
+  max-width: 100%;
+  max-height: calc(88vh - 96px);
+  object-fit: contain;
+  border-radius: $border-radius-sm;
+}
+
+.partnerGalleryPreviewTitle {
+  color: var(--theme-text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  word-break: break-word;
+}
+
+.partnerGalleryPreviewClose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 78%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-card-bg) 86%, transparent);
+  color: var(--theme-text-primary);
+  cursor: pointer;
+}
+
+@media (max-width: 540px) {
+  .partnerGalleryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .partnerGalleryPreviewOverlay {
+    padding: $spacing-sm;
+  }
+
+  .partnerGalleryPreviewPanel {
+    max-width: 96vw;
+    max-height: 90vh;
+    padding: $spacing-sm;
+  }
+}
+
+@media (max-width: 360px) {
+  .partnerGalleryGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 // 心里话
