@@ -277,6 +277,7 @@ watch(
       </div>
 
       <CardActionFooter
+        class="card-footer-slot"
         :selected="isSelected(item)"
         :disabled="!isSelected(item) && !canSelect(item)"
         :details-open="isDetailsOpen(item.name)"
@@ -306,6 +307,8 @@ watch(
 }
 
 .destined-one-card {
+  display: flex;
+  flex-direction: column;
   background: var(--card-bg);
   border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -327,6 +330,10 @@ watch(
     opacity: 0.5;
     border-style: dashed;
   }
+}
+
+.card-footer-slot {
+  margin-top: auto;
 }
 
 .card-header {

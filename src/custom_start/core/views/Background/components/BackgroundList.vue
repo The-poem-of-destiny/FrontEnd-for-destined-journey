@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core';
 import { computed, ref, watch } from 'vue';
 import CardActionFooter from '../../../components/CardActionFooter.vue';
 import FormTextarea from '../../../components/Form/FormTextarea.vue';
@@ -28,7 +29,9 @@ const emit = defineEmits<Emits>();
 // 使用自定义内容 store
 const customContentStore = useCustomContentStore();
 
-const { toggleActive, isActive: isDetailsOpen, clearIfMissing } = useActiveCard();
+const { toggleActive, isActive, clearIfMissing } = useActiveCard();
+const detailsAlwaysOpen = useMediaQuery('(min-width: 769px)');
+const isDetailsOpen = (name: string) => detailsAlwaysOpen.value || isActive(name);
 
 // 检查是否已选择
 const isSelected = (item: Background) => {
@@ -89,6 +92,7 @@ const handleToggleSelect = (item: Background) => {
 };
 
 const handleToggleDetails = (item: Background) => {
+  if (detailsAlwaysOpen.value) return;
   toggleActive(item.name);
 };
 
@@ -141,9 +145,10 @@ watch(
         'is-selected': isSelected(item),
         'is-disabled': !isSelected(item) && !meetsRequirements(item),
         'is-details-open': isDetailsOpen(item.name),
+        'is-details-static': detailsAlwaysOpen,
       }"
-      tabindex="0"
-      :aria-expanded="isDetailsOpen(item.name)"
+      :tabindex="detailsAlwaysOpen ? undefined : 0"
+      :aria-expanded="detailsAlwaysOpen ? undefined : isDetailsOpen(item.name)"
       @click="handleToggleDetails(item)"
       @keydown.enter.prevent="handleToggleDetails(item)"
       @keydown.space.prevent="handleToggleDetails(item)"
@@ -211,6 +216,7 @@ watch(
         :selected="isSelected(item)"
         :disabled="!isSelected(item) && !meetsRequirements(item)"
         :details-open="isDetailsOpen(item.name)"
+        :show-detail-state="!detailsAlwaysOpen"
         :select-label="getSelectButtonText(item)"
         @toggle-select="handleToggleSelect(item)"
       />
@@ -234,6 +240,8 @@ watch(
 }
 
 .background-card {
+  display: flex;
+  flex-direction: column;
   background: var(--card-bg);
   border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -241,7 +249,7 @@ watch(
   cursor: pointer;
   transition: all var(--transition-fast);
 
-  &:hover:not(.is-disabled):not(.is-selected) {
+  &:hover:not(.is-disabled):not(.is-selected):not(.is-details-static) {
     border-color: var(--accent-color);
     background: rgba(212, 175, 55, 0.1);
     transform: translateX(4px);
@@ -254,6 +262,10 @@ watch(
     &:hover {
       transform: none;
     }
+  }
+
+  &.is-details-static {
+    cursor: default;
   }
 }
 
@@ -292,7 +304,7 @@ watch(
 }
 
 .card-footer-slot {
-  margin-top: var(--spacing-sm);
+  margin-top: auto;
 }
 
 .requirement-warning {
@@ -379,7 +391,7 @@ watch(
   }
 
   .card-footer-slot {
-    margin-top: 6px;
+    margin-top: auto;
     padding-top: 6px;
   }
 
