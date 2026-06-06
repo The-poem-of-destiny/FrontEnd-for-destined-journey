@@ -163,6 +163,10 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const [activeAvatarPartnerName, setActiveAvatarPartnerName] = useState<string | null>(null);
   const [editingGalleryItemId, setEditingGalleryItemId] = useState<string | null>(null);
   const [editingGalleryTitle, setEditingGalleryTitle] = useState('');
+  const [pendingGalleryDelete, setPendingGalleryDelete] = useState<{
+    partnerName: string;
+    itemId: string;
+  } | null>(null);
   const [activeGalleryPreview, setActiveGalleryPreview] = useState<{
     partnerName: string;
     itemId: string;
@@ -764,6 +768,26 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     }
   };
 
+  const requestPartnerGalleryDelete = (partner_name: string, item: PartnerGalleryItem) => {
+    setPendingGalleryDelete({
+      partnerName: partner_name,
+      itemId: item.id,
+    });
+  };
+
+  const cancelPartnerGalleryDelete = () => {
+    setPendingGalleryDelete(null);
+  };
+
+  const confirmPartnerGalleryDelete = async () => {
+    if (!pendingGalleryDelete) {
+      return;
+    }
+
+    await handlePartnerGalleryDelete(pendingGalleryDelete.partnerName, pendingGalleryDelete.itemId);
+    setPendingGalleryDelete(null);
+  };
+
   const startPartnerGalleryTitleEdit = (item: PartnerGalleryItem) => {
     setEditingGalleryItemId(item.id);
     setEditingGalleryTitle(item.title);
@@ -903,7 +927,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 type="button"
                 className={styles.partnerGalleryDeleteButton}
                 onClick={() => {
-                  void handlePartnerGalleryDelete(partnerName, item.id);
+                  requestPartnerGalleryDelete(partnerName, item);
                 }}
                 aria-label={`删除${item.title}`}
                 title="删除图片"
@@ -1537,6 +1561,17 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       }
     : null;
 
+  const pendingGalleryDeleteTarget = pendingGalleryDelete
+    ? {
+        type: '相册图片',
+        path: '',
+        name:
+          (partnerGalleryMap[pendingGalleryDelete.partnerName] ?? []).find(
+            item => item.id === pendingGalleryDelete.itemId,
+          )?.title ?? '',
+      }
+    : null;
+
   const activeGalleryPreviewItem = activeGalleryPreview
     ? (partnerGalleryMap[activeGalleryPreview.partnerName] ?? []).find(
         item => item.id === activeGalleryPreview.itemId,
@@ -1640,6 +1675,15 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
           </div>
         </div>
       ) : null}
+
+      <DeleteConfirmModal
+        open={Boolean(pendingGalleryDelete)}
+        target={pendingGalleryDeleteTarget}
+        onConfirm={() => {
+          void confirmPartnerGalleryDelete();
+        }}
+        onCancel={cancelPartnerGalleryDelete}
+      />
 
       {/* 删除确认弹窗 */}
       <DeleteConfirmModal

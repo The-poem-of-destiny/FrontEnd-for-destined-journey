@@ -1249,6 +1249,12 @@
   transform: translateY(-1px);
 }
 
+.partnerGalleryDeleteButton i {
+  display: block;
+  font-size: 12px;
+  line-height: 1;
+}
+
 .partnerGalleryCaption {
   padding: 8px 10px;
   border-top: 1px solid color-mix(in srgb, var(--theme-card-border) 56%, transparent);
@@ -1356,6 +1362,12 @@
 @media (max-width: 540px) {
   .partnerGalleryGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .partnerGalleryDeleteButton {
+    top: 6px;
+    right: 6px;
+    opacity: 1;
   }
 
   .partnerGalleryPreviewOverlay {
