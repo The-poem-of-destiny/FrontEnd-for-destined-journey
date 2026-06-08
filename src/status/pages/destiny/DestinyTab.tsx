@@ -10,8 +10,8 @@ import {
   getAvatarActionState,
   getAvatarRecordsByScopeKey,
   getAvatarScopeKey,
-  getDefaultPartnerAvatarMap,
   getChatPartnerGalleryMap,
+  getDefaultPartnerAvatarMap,
   getFilteredAssetEntries,
   getPartnerGalleryRecordsByScopeKey,
   getPredefinedPartnerGalleryMap,
@@ -19,8 +19,8 @@ import {
   PartnerGalleryItem,
   readAvatarFileAsDataUrl,
   readSessionState,
-  removePartnerGalleryRecord,
   removeAvatarRecord,
+  removePartnerGalleryRecord,
   saveAvatarRecord,
   savePartnerGalleryItems,
   writeSessionState,
@@ -71,11 +71,11 @@ const PartnerListCategories: Array<{
   label: string;
   matches: (partner: PartnerRecord) => boolean;
 }> = [
-  { key: 'all', label: '全部', matches: () => true },
-  { key: 'present', label: '在场', matches: partner => Boolean(partner.在场) },
-  { key: 'away', label: '不在场', matches: partner => !partner.在场 },
-  { key: 'contracted', label: '已缔约', matches: partner => Boolean(partner.命定契约) },
-];
+    { key: 'all', label: '全部', matches: () => true },
+    { key: 'present', label: '在场', matches: partner => Boolean(partner.在场) },
+    { key: 'away', label: '不在场', matches: partner => !partner.在场 },
+    { key: 'contracted', label: '已缔约', matches: partner => Boolean(partner.命定契约) },
+  ];
 
 const PartnerAssetSections: PartnerAssetSectionConfig[] = [
   {
@@ -221,6 +221,18 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       ALL_FILTER,
     );
   }, [activePartnerAssetSection, activePartnerAssetSource]);
+  const activeGalleryPreviewItem = activeGalleryPreview
+    ? (partnerGalleryMap[activeGalleryPreview.partnerName] ?? []).find(
+        item => item.id === activeGalleryPreview.itemId,
+      )
+    : null;
+  const pendingGalleryDeleteTarget = pendingGalleryDelete
+    ? {
+        type: '伙伴相册图片',
+        path: '',
+        name: pendingGalleryDelete.partnerName,
+      }
+    : null;
 
   /**
    * 处理 FP 商店按钮点击
@@ -374,11 +386,11 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 option === ALL_FILTER
                   ? totalCount
                   : _.size(
-                      _.pickBy(
-                        source,
-                        (item: PartnerAssetItem) => _.get(item, sectionConfig.filterKey) === option,
-                      ),
-                    );
+                    _.pickBy(
+                      source,
+                      (item: PartnerAssetItem) => _.get(item, sectionConfig.filterKey) === option,
+                    ),
+                  );
 
               return (
                 <button
@@ -1387,13 +1399,8 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     const loadPartnerAvatars = async () => {
       try {
         const partnerNames = partnerEntries.map(([partnerName]) => partnerName);
-        console.log('[DestinyTab] 开始加载伙伴头像:', {
-          avatarScopeKey,
-          partnerNames,
-        });
 
         if (partnerNames.length === 0) {
-          console.log('[DestinyTab] 无伙伴，清空伙伴头像状态');
           if (!ignore) {
             setPartnerAvatarMap({});
             setPartnerDefaultAvatarMap({});
@@ -1429,18 +1436,11 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
             defaultAvatarPartnerNames.push(partnerName);
           }
         });
-        console.log('[DestinyTab] 需要读取默认头像的伙伴:', defaultAvatarPartnerNames);
 
         const nextDefaultAvatarMap = await getDefaultPartnerAvatarMap(defaultAvatarPartnerNames);
         if (ignore) {
           return;
         }
-
-        console.log('[DestinyTab] 伙伴头像合成结果:', {
-          custom: nextAvatarMap,
-          default: nextDefaultAvatarMap,
-          removed: nextRemovedMap,
-        });
 
         setPartnerAvatarMap(nextAvatarMap);
         setPartnerDefaultAvatarMap(nextDefaultAvatarMap);
@@ -1551,31 +1551,14 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   const activePartnerAvatarActionState = activeAvatarPartnerName
     ? {
-        ...getAvatarActionState({
-          current_url: getPartnerAvatarUrl(activeAvatarPartnerName),
-          custom_url: partnerAvatarMap[activeAvatarPartnerName],
-          default_url: partnerDefaultAvatarMap[activeAvatarPartnerName],
-          removed: partnerAvatarRemovedMap[activeAvatarPartnerName],
-        }),
-        canDelete: Boolean(getPartnerAvatarUrl(activeAvatarPartnerName)),
-      }
-    : null;
-
-  const pendingGalleryDeleteTarget = pendingGalleryDelete
-    ? {
-        type: '相册图片',
-        path: '',
-        name:
-          (partnerGalleryMap[pendingGalleryDelete.partnerName] ?? []).find(
-            item => item.id === pendingGalleryDelete.itemId,
-          )?.title ?? '',
-      }
-    : null;
-
-  const activeGalleryPreviewItem = activeGalleryPreview
-    ? (partnerGalleryMap[activeGalleryPreview.partnerName] ?? []).find(
-        item => item.id === activeGalleryPreview.itemId,
-      )
+      ...getAvatarActionState({
+        current_url: getPartnerAvatarUrl(activeAvatarPartnerName),
+        custom_url: partnerAvatarMap[activeAvatarPartnerName],
+        default_url: partnerDefaultAvatarMap[activeAvatarPartnerName],
+        removed: partnerAvatarRemovedMap[activeAvatarPartnerName],
+      }),
+      canDelete: Boolean(getPartnerAvatarUrl(activeAvatarPartnerName)),
+    }
     : null;
 
   return (
