@@ -156,6 +156,9 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const [partnerGalleryMap, setPartnerGalleryMap] = useState<Record<string, PartnerGalleryItem[]>>(
     {},
   );
+  const [partnerExternalGalleryMap, setPartnerExternalGalleryMap] = useState<
+    Record<string, PartnerGalleryItem[]>
+  >({});
   const [partnerPredefinedGalleryMap, setPartnerPredefinedGalleryMap] = useState<
     Record<string, PartnerGalleryItem[]>
   >({});
@@ -763,6 +766,19 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     }
   };
 
+  const handlePartnerGalleryLoadExternal = async (partner_name: string) => {
+    const externalItems = partnerExternalGalleryMap[partner_name] ?? [];
+    if (externalItems.length === 0) {
+      return;
+    }
+
+    try {
+      await persistPartnerGalleryItems(partner_name, externalItems.map(createPartnerGalleryItem));
+    } catch (error) {
+      console.warn('[DestinyTab] 加载外部伙伴相册失败:', error);
+    }
+  };
+
   const handlePartnerGalleryDelete = async (partner_name: string, item_id: string) => {
     const nextItems = (partnerGalleryMap[partner_name] ?? []).filter(item => item.id !== item_id);
 
@@ -872,6 +888,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   const renderPartnerGallerySection = (partnerName: string) => {
     const galleryItems = partnerGalleryMap[partnerName] ?? [];
+    const externalGalleryItems = partnerExternalGalleryMap[partnerName] ?? [];
     const predefinedGalleryItems = partnerPredefinedGalleryMap[partnerName] ?? [];
 
     const renderGalleryUploadControl = () => (
@@ -897,6 +914,23 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       return (
         <div className={styles.partnerGalleryEmptyPanel}>
           <EmptyHint className={styles.emptyHint} text="暂无相册图片" />
+          {externalGalleryItems.length > 0 ? (
+            <div className={styles.partnerGalleryPredefinedPrompt}>
+              <div className={styles.partnerGalleryPredefinedText}>
+                有 {externalGalleryItems.length} 张外部相册图片，是否加载？
+              </div>
+              <button
+                type="button"
+                className={styles.partnerGalleryActionButton}
+                onClick={() => {
+                  void handlePartnerGalleryLoadExternal(partnerName);
+                }}
+              >
+                <i className="fa-solid fa-images" />
+                <span>加载外部图片</span>
+              </button>
+            </div>
+          ) : null}
           {predefinedGalleryItems.length > 0 ? (
             <div className={styles.partnerGalleryPredefinedPrompt}>
               <div className={styles.partnerGalleryPredefinedText}>
@@ -1472,6 +1506,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
           if (!ignore) {
             setIsPartnerGalleryLoading(false);
             setPartnerGalleryMap({});
+            setPartnerExternalGalleryMap({});
             setPartnerPredefinedGalleryMap({});
           }
           return;
@@ -1490,7 +1525,18 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         const nextGalleryMap = partnerNames.reduce<Record<string, PartnerGalleryItem[]>>(
           (result, partnerName) => {
             const localRecord = recordsByPartnerName[partnerName];
-            result[partnerName] = localRecord ? localRecord.items : (chatGalleryMap[partnerName] ?? []);
+            result[partnerName] = localRecord ? localRecord.items : [];
+            return result;
+          },
+          {},
+        );
+        const nextExternalGalleryMap = partnerNames.reduce<Record<string, PartnerGalleryItem[]>>(
+          (result, partnerName) => {
+            const localRecord = recordsByPartnerName[partnerName];
+            const chatGalleryItems = chatGalleryMap[partnerName] ?? [];
+            if (!localRecord && chatGalleryItems.length > 0) {
+              result[partnerName] = chatGalleryItems;
+            }
             return result;
           },
           {},
@@ -1498,6 +1544,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         const nextPredefinedGalleryMap = await getPredefinedPartnerGalleryMap(partnerNames);
         if (!ignore) {
           setPartnerGalleryMap(nextGalleryMap);
+          setPartnerExternalGalleryMap(nextExternalGalleryMap);
           setPartnerPredefinedGalleryMap(nextPredefinedGalleryMap);
           setIsPartnerGalleryLoading(false);
         }
@@ -1505,6 +1552,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         console.warn('[DestinyTab] 读取伙伴图片失败:', error);
         if (!ignore) {
           setPartnerGalleryMap({});
+          setPartnerExternalGalleryMap({});
           setPartnerPredefinedGalleryMap({});
           setIsPartnerGalleryLoading(false);
         }
