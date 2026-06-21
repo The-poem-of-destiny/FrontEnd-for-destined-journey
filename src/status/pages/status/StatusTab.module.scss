@@ -550,7 +550,6 @@
     gap: 7px;
   }
 
-  .attributeGrid,
   .detailEntryGrid {
     grid-template-columns: 1fr;
   }
@@ -558,15 +557,6 @@
   .basicInfoRow {
     grid-template-columns: 1fr;
     gap: 4px;
-  }
-
-  .attributePanelHeader {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .attributePointPill {
-    align-self: flex-start;
   }
 }
 
