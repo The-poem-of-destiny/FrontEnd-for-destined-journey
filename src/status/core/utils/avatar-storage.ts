@@ -88,6 +88,13 @@ export const getAvatarRecord = async (
   });
 };
 
+export const getAvatarRecordsByScopeKey = async (scope_key: string): Promise<AvatarRecord[]> => {
+  return await withStore('readonly', async store => {
+    const records = await readRequest(store.index('scope_key').getAll(scope_key));
+    return (records as AvatarRecord[] | undefined) ?? [];
+  });
+};
+
 export const saveAvatarRecord = async (
   avatar_record: Omit<AvatarRecord, 'key' | 'updated_at'>,
 ): Promise<AvatarRecord> => {

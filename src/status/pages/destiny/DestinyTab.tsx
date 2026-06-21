@@ -1,19 +1,28 @@
-import { FC, KeyboardEvent, MouseEvent, ReactNode, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, FC, KeyboardEvent, MouseEvent, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
 import { useEditorSettingStore } from '../../core/stores';
 import {
   buildSessionKey,
+  createPartnerGalleryItem,
   exportAvatarFile,
   getAssetCollectionSource,
   getAssetFilterOptions,
   getAvatarActionState,
-  getAvatarRecord,
+  getAvatarRecordsByScopeKey,
   getAvatarScopeKey,
+  getChatPartnerGalleryMap,
+  getDefaultPartnerAvatarMap,
   getFilteredAssetEntries,
+  getPartnerGalleryRecordsByScopeKey,
+  getPredefinedPartnerGalleryMap,
   markAvatarAsRemoved,
+  PartnerGalleryItem,
   readAvatarFileAsDataUrl,
   readSessionState,
+  removeAvatarRecord,
+  removePartnerGalleryRecord,
   saveAvatarRecord,
+  savePartnerGalleryItems,
   writeSessionState,
 } from '../../core/utils';
 import {
@@ -40,6 +49,7 @@ type PartnerDetailSection =
   | 'equipment'
   | 'skills'
   | 'inventory'
+  | 'gallery'
   | 'background';
 
 type PartnerRecord = Record<string, any>;
@@ -61,11 +71,11 @@ const PartnerListCategories: Array<{
   label: string;
   matches: (partner: PartnerRecord) => boolean;
 }> = [
-  { key: 'all', label: '全部', matches: () => true },
-  { key: 'present', label: '在场', matches: partner => Boolean(partner.在场) },
-  { key: 'away', label: '不在场', matches: partner => !partner.在场 },
-  { key: 'contracted', label: '已缔约', matches: partner => Boolean(partner.命定契约) },
-];
+    { key: 'all', label: '全部', matches: () => true },
+    { key: 'present', label: '在场', matches: partner => Boolean(partner.在场) },
+    { key: 'away', label: '不在场', matches: partner => !partner.在场 },
+    { key: 'contracted', label: '已缔约', matches: partner => Boolean(partner.命定契约) },
+  ];
 
 const PartnerAssetSections: PartnerAssetSectionConfig[] = [
   {
@@ -137,10 +147,33 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     readSessionState<string>(partnerFilterStorageKey, ALL_FILTER),
   );
   const [partnerAvatarMap, setPartnerAvatarMap] = useState<Record<string, string>>({});
+  const [partnerDefaultAvatarMap, setPartnerDefaultAvatarMap] = useState<Record<string, string>>(
+    {},
+  );
   const [partnerAvatarRemovedMap, setPartnerAvatarRemovedMap] = useState<Record<string, boolean>>(
     {},
   );
+  const [partnerGalleryMap, setPartnerGalleryMap] = useState<Record<string, PartnerGalleryItem[]>>(
+    {},
+  );
+  const [partnerExternalGalleryMap, setPartnerExternalGalleryMap] = useState<
+    Record<string, PartnerGalleryItem[]>
+  >({});
+  const [partnerPredefinedGalleryMap, setPartnerPredefinedGalleryMap] = useState<
+    Record<string, PartnerGalleryItem[]>
+  >({});
+  const [isPartnerGalleryLoading, setIsPartnerGalleryLoading] = useState(false);
   const [activeAvatarPartnerName, setActiveAvatarPartnerName] = useState<string | null>(null);
+  const [editingGalleryItemId, setEditingGalleryItemId] = useState<string | null>(null);
+  const [editingGalleryTitle, setEditingGalleryTitle] = useState('');
+  const [pendingGalleryDelete, setPendingGalleryDelete] = useState<{
+    partnerName: string;
+    itemId: string;
+  } | null>(null);
+  const [activeGalleryPreview, setActiveGalleryPreview] = useState<{
+    partnerName: string;
+    itemId: string;
+  } | null>(null);
 
   const partnerCategoryEntries = useMemo(() => {
     return PartnerListCategories.map(category => {
@@ -191,6 +224,18 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       ALL_FILTER,
     );
   }, [activePartnerAssetSection, activePartnerAssetSource]);
+  const activeGalleryPreviewItem = activeGalleryPreview
+    ? (partnerGalleryMap[activeGalleryPreview.partnerName] ?? []).find(
+        item => item.id === activeGalleryPreview.itemId,
+      )
+    : null;
+  const pendingGalleryDeleteTarget = pendingGalleryDelete
+    ? {
+        type: '伙伴相册图片',
+        path: '',
+        name: pendingGalleryDelete.partnerName,
+      }
+    : null;
 
   /**
    * 处理 FP 商店按钮点击
@@ -344,11 +389,11 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 option === ALL_FILTER
                   ? totalCount
                   : _.size(
-                      _.pickBy(
-                        source,
-                        (item: PartnerAssetItem) => _.get(item, sectionConfig.filterKey) === option,
-                      ),
-                    );
+                    _.pickBy(
+                      source,
+                      (item: PartnerAssetItem) => _.get(item, sectionConfig.filterKey) === option,
+                    ),
+                  );
 
               return (
                 <button
@@ -527,7 +572,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       return '';
     }
 
-    return partnerAvatarMap[partner_name] ?? '';
+    return partnerAvatarMap[partner_name] || partnerDefaultAvatarMap[partner_name] || '';
   };
 
   const hasPartnerAvatar = (partner_name: string) => Boolean(getPartnerAvatarUrl(partner_name));
@@ -617,7 +662,31 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     }
   };
 
+  const handlePartnerAvatarReset = async (partner_name: string) => {
+    try {
+      await removeAvatarRecord(avatarScopeKey, 'partner', partner_name);
+      setPartnerAvatarMap(previous => ({
+        ...previous,
+        [partner_name]: '',
+      }));
+      setPartnerAvatarRemovedMap(previous => ({
+        ...previous,
+        [partner_name]: false,
+      }));
+    } catch (error) {
+      console.warn('[DestinyTab] 恢复伙伴默认头像失败:', error);
+    }
+  };
+
   const handlePartnerAvatarImageError = (partner_name: string) => {
+    if (!partnerAvatarMap[partner_name] && partnerDefaultAvatarMap[partner_name]) {
+      setPartnerDefaultAvatarMap(previous => ({
+        ...previous,
+        [partner_name]: '',
+      }));
+      return;
+    }
+
     setPartnerAvatarMap(previous => ({
       ...previous,
       [partner_name]: '',
@@ -630,6 +699,157 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   const closePartnerAvatarModal = () => {
     setActiveAvatarPartnerName(null);
+  };
+
+  const getFallbackGalleryTitle = (file: File) => {
+    const fileName = _.trim(file.name || '相册图片');
+    return _.trim(fileName.replace(/\.[^.]+$/, '')) || '相册图片';
+  };
+
+  const persistPartnerGalleryItems = async (
+    partner_name: string,
+    next_items: PartnerGalleryItem[],
+  ) => {
+    if (next_items.length === 0) {
+      await removePartnerGalleryRecord(avatarScopeKey, partner_name);
+    } else {
+      await savePartnerGalleryItems(avatarScopeKey, partner_name, next_items);
+    }
+
+    setPartnerGalleryMap(previous => ({
+      ...previous,
+      [partner_name]: next_items,
+    }));
+  };
+
+  const handlePartnerGalleryUpload = async (
+    partner_name: string,
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const selectedFile = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!selectedFile) {
+      return;
+    }
+
+    try {
+      const nextGalleryUrl = await readAvatarFileAsDataUrl(selectedFile);
+      if (!nextGalleryUrl) {
+        return;
+      }
+
+      const nextItem = createPartnerGalleryItem({
+        title: getFallbackGalleryTitle(selectedFile),
+        url: nextGalleryUrl,
+      });
+      const nextItems = [...(partnerGalleryMap[partner_name] ?? []), nextItem];
+
+      await persistPartnerGalleryItems(partner_name, nextItems);
+      setEditingGalleryItemId(nextItem.id);
+      setEditingGalleryTitle(nextItem.title);
+    } catch (error) {
+      console.warn('[DestinyTab] 添加伙伴相册图片失败:', error);
+    }
+  };
+
+  const handlePartnerGalleryLoadPredefined = async (partner_name: string) => {
+    const predefinedItems = partnerPredefinedGalleryMap[partner_name] ?? [];
+    if (predefinedItems.length === 0) {
+      return;
+    }
+
+    try {
+      await persistPartnerGalleryItems(partner_name, predefinedItems.map(createPartnerGalleryItem));
+    } catch (error) {
+      console.warn('[DestinyTab] 加载预定义伙伴相册失败:', error);
+    }
+  };
+
+  const handlePartnerGalleryLoadExternal = async (partner_name: string) => {
+    const externalItems = partnerExternalGalleryMap[partner_name] ?? [];
+    if (externalItems.length === 0) {
+      return;
+    }
+
+    try {
+      await persistPartnerGalleryItems(partner_name, externalItems.map(createPartnerGalleryItem));
+    } catch (error) {
+      console.warn('[DestinyTab] 加载外部伙伴相册失败:', error);
+    }
+  };
+
+  const handlePartnerGalleryDelete = async (partner_name: string, item_id: string) => {
+    const nextItems = (partnerGalleryMap[partner_name] ?? []).filter(item => item.id !== item_id);
+
+    try {
+      await persistPartnerGalleryItems(partner_name, nextItems);
+      if (activeGalleryPreview?.partnerName === partner_name && activeGalleryPreview.itemId === item_id) {
+        setActiveGalleryPreview(null);
+      }
+      if (editingGalleryItemId === item_id) {
+        setEditingGalleryItemId(null);
+        setEditingGalleryTitle('');
+      }
+    } catch (error) {
+      console.warn('[DestinyTab] 删除伙伴相册图片失败:', error);
+    }
+  };
+
+  const requestPartnerGalleryDelete = (partner_name: string, item: PartnerGalleryItem) => {
+    setPendingGalleryDelete({
+      partnerName: partner_name,
+      itemId: item.id,
+    });
+  };
+
+  const cancelPartnerGalleryDelete = () => {
+    setPendingGalleryDelete(null);
+  };
+
+  const confirmPartnerGalleryDelete = async () => {
+    if (!pendingGalleryDelete) {
+      return;
+    }
+
+    await handlePartnerGalleryDelete(pendingGalleryDelete.partnerName, pendingGalleryDelete.itemId);
+    setPendingGalleryDelete(null);
+  };
+
+  const startPartnerGalleryTitleEdit = (item: PartnerGalleryItem) => {
+    setEditingGalleryItemId(item.id);
+    setEditingGalleryTitle(item.title);
+  };
+
+  const cancelPartnerGalleryTitleEdit = () => {
+    setEditingGalleryItemId(null);
+    setEditingGalleryTitle('');
+  };
+
+  const commitPartnerGalleryTitleEdit = async (partner_name: string, item_id: string) => {
+    const currentItems = partnerGalleryMap[partner_name] ?? [];
+    const currentItem = currentItems.find(item => item.id === item_id);
+    if (!currentItem) {
+      cancelPartnerGalleryTitleEdit();
+      return;
+    }
+
+    const nextTitle = _.trim(editingGalleryTitle) || currentItem.title;
+    if (nextTitle === currentItem.title) {
+      cancelPartnerGalleryTitleEdit();
+      return;
+    }
+
+    const nextItems = currentItems.map(item =>
+      item.id === item_id ? { ...item, title: nextTitle } : item,
+    );
+
+    try {
+      await persistPartnerGalleryItems(partner_name, nextItems);
+      cancelPartnerGalleryTitleEdit();
+    } catch (error) {
+      console.warn('[DestinyTab] 修改伙伴相册标题失败:', error);
+    }
   };
 
   const renderPartnerAvatarAddInlineButton = (partnerName: string) => (
@@ -663,6 +883,158 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         }}
         onImageError={() => handlePartnerAvatarImageError(partnerName)}
       />
+    );
+  };
+
+  const renderPartnerGallerySection = (partnerName: string) => {
+    const galleryItems = partnerGalleryMap[partnerName] ?? [];
+    const externalGalleryItems = partnerExternalGalleryMap[partnerName] ?? [];
+    const predefinedGalleryItems = partnerPredefinedGalleryMap[partnerName] ?? [];
+
+    const renderGalleryUploadControl = () => (
+      <label className={styles.partnerGalleryActionButton}>
+        <i className="fa-solid fa-upload" />
+        <span>添加图片</span>
+        <input
+          className={styles.partnerGalleryFileInput}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          onChange={event => {
+            void handlePartnerGalleryUpload(partnerName, event);
+          }}
+        />
+      </label>
+    );
+
+    if (isPartnerGalleryLoading) {
+      return <EmptyHint className={styles.emptyHint} text="相册加载中..." />;
+    }
+
+    if (galleryItems.length === 0) {
+      return (
+        <div className={styles.partnerGalleryEmptyPanel}>
+          <EmptyHint className={styles.emptyHint} text="暂无相册图片" />
+          {externalGalleryItems.length > 0 ? (
+            <div className={styles.partnerGalleryPredefinedPrompt}>
+              <div className={styles.partnerGalleryPredefinedText}>
+                有 {externalGalleryItems.length} 张外部相册图片，是否加载？
+              </div>
+              <button
+                type="button"
+                className={styles.partnerGalleryActionButton}
+                onClick={() => {
+                  void handlePartnerGalleryLoadExternal(partnerName);
+                }}
+              >
+                <i className="fa-solid fa-images" />
+                <span>加载外部图片</span>
+              </button>
+            </div>
+          ) : null}
+          {predefinedGalleryItems.length > 0 ? (
+            <div className={styles.partnerGalleryPredefinedPrompt}>
+              <div className={styles.partnerGalleryPredefinedText}>
+                有 {predefinedGalleryItems.length} 张预定义相册图片，是否加载？
+              </div>
+              <button
+                type="button"
+                className={styles.partnerGalleryActionButton}
+                onClick={() => {
+                  void handlePartnerGalleryLoadPredefined(partnerName);
+                }}
+              >
+                <i className="fa-solid fa-images" />
+                <span>加载预定义图片</span>
+              </button>
+            </div>
+          ) : null}
+          {renderGalleryUploadControl()}
+        </div>
+      );
+    }
+
+    return (
+      <div className={styles.partnerGallery}>
+        <div className={styles.partnerGalleryHeader}>
+          <div>
+            <div className={styles.sectionLabel}>相册</div>
+            <div className={styles.partnerGallerySummary}>共 {galleryItems.length} 张</div>
+          </div>
+          {renderGalleryUploadControl()}
+        </div>
+
+        <div className={styles.partnerGalleryGrid}>
+          {galleryItems.map((item, index) => (
+            <figure
+              key={item.id || `${partnerName}-gallery-${index}`}
+              className={styles.partnerGalleryItem}
+            >
+              <button
+                type="button"
+                className={styles.partnerGalleryDeleteButton}
+                onClick={() => {
+                  requestPartnerGalleryDelete(partnerName, item);
+                }}
+                aria-label={`删除${item.title}`}
+                title="删除图片"
+              >
+                <i className="fa-solid fa-trash" />
+              </button>
+              <button
+                type="button"
+                className={styles.partnerGalleryButton}
+                onClick={() => setActiveGalleryPreview({ partnerName, itemId: item.id })}
+                aria-label={`查看${item.title}`}
+              >
+                <img
+                  src={item.url}
+                  alt={item.title}
+                  className={styles.partnerGalleryImage}
+                  loading="lazy"
+                  onError={event => {
+                    const galleryItem = event.currentTarget.closest('figure') as HTMLElement | null;
+                    if (galleryItem) {
+                      galleryItem.style.display = 'none';
+                    }
+                  }}
+                />
+              </button>
+              <figcaption className={styles.partnerGalleryCaption}>
+                {editingGalleryItemId === item.id ? (
+                  <input
+                    className={styles.partnerGalleryTitleInput}
+                    value={editingGalleryTitle}
+                    autoFocus
+                    onChange={event => setEditingGalleryTitle(event.target.value)}
+                    onBlur={() => {
+                      void commitPartnerGalleryTitleEdit(partnerName, item.id);
+                    }}
+                    onKeyDown={event => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        void commitPartnerGalleryTitleEdit(partnerName, item.id);
+                      }
+                      if (event.key === 'Escape') {
+                        event.preventDefault();
+                        cancelPartnerGalleryTitleEdit();
+                      }
+                    }}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.partnerGalleryTitleButton}
+                    onClick={() => startPartnerGalleryTitleEdit(item)}
+                    title="修改标题"
+                  >
+                    {item.title}
+                  </button>
+                )}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
     );
   };
 
@@ -752,6 +1124,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       { key: 'skills', label: '技能' },
       { key: 'inventory', label: '背包' },
       { key: 'background', label: '背景' },
+      { key: 'gallery', label: '相册' },
     ];
 
     return (
@@ -959,6 +1332,8 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         {activePartnerAssetSection &&
           renderPartnerAssetSection(partnerName, activePartnerAssetSection)}
 
+        {activePartnerDetailSection === 'gallery' && renderPartnerGallerySection(partnerName)}
+
         {activePartnerDetailSection === 'background' && (
           <>
             {(partner.心里话 || editEnabled) && (
@@ -1003,13 +1378,13 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         {renderPartnerDetails(activePartnerName, activePartner)}
       </>
     ) : (
-      <EmptyHint className={styles.emptyHint} text="暂无可查看伙伴" />
+      <EmptyHint className={styles.emptyHint} text="暂无可查看关系" />
     );
 
   /** 渲染关系列表 */
   const renderPartners = () => {
     if (_.isEmpty(partners)) {
-      return <EmptyHint className={styles.emptyHint} text="暂无伙伴" />;
+      return <EmptyHint className={styles.emptyHint} text="暂无关系" />;
     }
 
     const detailContent = renderActivePartnerDetailContent();
@@ -1041,7 +1416,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
             ) : (
               <EmptyHint
                 className={styles.emptyHint}
-                text={`当前“${activePartnerListCategoryConfig?.label ?? '全部'}”分类下暂无伙伴`}
+                text={`当前“${activePartnerListCategoryConfig?.label ?? '全部'}”分类下暂无关系`}
               />
             )}
           </div>
@@ -1057,45 +1432,134 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
     const loadPartnerAvatars = async () => {
       try {
-        const records = await Promise.all(
-          partnerEntries.map(async ([partnerName]) => {
-            const avatarRecord = await getAvatarRecord(avatarScopeKey, 'partner', partnerName);
-            return [partnerName, avatarRecord] as const;
-          }),
+        const partnerNames = partnerEntries.map(([partnerName]) => partnerName);
+
+        if (partnerNames.length === 0) {
+          if (!ignore) {
+            setPartnerAvatarMap({});
+            setPartnerDefaultAvatarMap({});
+            setPartnerAvatarRemovedMap({});
+          }
+          return;
+        }
+
+        const partnerNameSet = new Set(partnerNames);
+        const records = (await getAvatarRecordsByScopeKey(avatarScopeKey)).filter(
+          record => record.owner_type === 'partner' && partnerNameSet.has(record.owner_name),
         );
+        console.log('[DestinyTab] 读取到伙伴头像本地记录:', records);
 
         if (ignore) {
           return;
         }
 
-        const nextAvatarMap = records.reduce<Record<string, string>>(
-          (result, [partnerName, avatarRecord]) => {
-            result[partnerName] =
-              avatarRecord?.source_type === 'removed' ? '' : (avatarRecord?.value ?? '');
-            return result;
-          },
-          {},
-        );
-        const nextRemovedMap = records.reduce<Record<string, boolean>>(
-          (result, [partnerName, avatarRecord]) => {
-            result[partnerName] = avatarRecord?.source_type === 'removed';
-            return result;
-          },
-          {},
-        );
+        const recordsByPartnerName = _.keyBy(records, 'owner_name');
+        const defaultAvatarPartnerNames: string[] = [];
+        const nextAvatarMap: Record<string, string> = {};
+        const nextRemovedMap: Record<string, boolean> = {};
+
+        partnerNames.forEach(partnerName => {
+          const avatarRecord = recordsByPartnerName[partnerName];
+          const isAvatarRemoved = avatarRecord?.source_type === 'removed';
+          const customAvatarUrl = isAvatarRemoved ? '' : (avatarRecord?.value ?? '');
+
+          nextAvatarMap[partnerName] = customAvatarUrl;
+          nextRemovedMap[partnerName] = isAvatarRemoved;
+
+          if (!isAvatarRemoved && !customAvatarUrl) {
+            defaultAvatarPartnerNames.push(partnerName);
+          }
+        });
+
+        const nextDefaultAvatarMap = await getDefaultPartnerAvatarMap(defaultAvatarPartnerNames);
+        if (ignore) {
+          return;
+        }
 
         setPartnerAvatarMap(nextAvatarMap);
+        setPartnerDefaultAvatarMap(nextDefaultAvatarMap);
         setPartnerAvatarRemovedMap(nextRemovedMap);
       } catch (error) {
         console.warn('[DestinyTab] 读取伙伴头像失败:', error);
         if (!ignore) {
           setPartnerAvatarMap({});
+          setPartnerDefaultAvatarMap({});
           setPartnerAvatarRemovedMap({});
         }
       }
     };
 
     void loadPartnerAvatars();
+
+    return () => {
+      ignore = true;
+    };
+  }, [avatarScopeKey, partnerEntries]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadPartnerGalleries = async () => {
+      try {
+        const partnerNames = partnerEntries.map(([partnerName]) => partnerName);
+        if (partnerNames.length === 0) {
+          if (!ignore) {
+            setIsPartnerGalleryLoading(false);
+            setPartnerGalleryMap({});
+            setPartnerExternalGalleryMap({});
+            setPartnerPredefinedGalleryMap({});
+          }
+          return;
+        }
+
+        if (!ignore) {
+          setIsPartnerGalleryLoading(true);
+        }
+
+        const partnerNameSet = new Set(partnerNames);
+        const records = (await getPartnerGalleryRecordsByScopeKey(avatarScopeKey)).filter(
+          record => record.owner_type === 'partner' && partnerNameSet.has(record.owner_name),
+        );
+        const recordsByPartnerName = _.keyBy(records, 'owner_name');
+        const chatGalleryMap = getChatPartnerGalleryMap(partnerNames);
+        const nextGalleryMap = partnerNames.reduce<Record<string, PartnerGalleryItem[]>>(
+          (result, partnerName) => {
+            const localRecord = recordsByPartnerName[partnerName];
+            result[partnerName] = localRecord ? localRecord.items : [];
+            return result;
+          },
+          {},
+        );
+        const nextExternalGalleryMap = partnerNames.reduce<Record<string, PartnerGalleryItem[]>>(
+          (result, partnerName) => {
+            const localRecord = recordsByPartnerName[partnerName];
+            const chatGalleryItems = chatGalleryMap[partnerName] ?? [];
+            if (!localRecord && chatGalleryItems.length > 0) {
+              result[partnerName] = chatGalleryItems;
+            }
+            return result;
+          },
+          {},
+        );
+        const nextPredefinedGalleryMap = await getPredefinedPartnerGalleryMap(partnerNames);
+        if (!ignore) {
+          setPartnerGalleryMap(nextGalleryMap);
+          setPartnerExternalGalleryMap(nextExternalGalleryMap);
+          setPartnerPredefinedGalleryMap(nextPredefinedGalleryMap);
+          setIsPartnerGalleryLoading(false);
+        }
+      } catch (error) {
+        console.warn('[DestinyTab] 读取伙伴图片失败:', error);
+        if (!ignore) {
+          setPartnerGalleryMap({});
+          setPartnerExternalGalleryMap({});
+          setPartnerPredefinedGalleryMap({});
+          setIsPartnerGalleryLoading(false);
+        }
+      }
+    };
+
+    void loadPartnerGalleries();
 
     return () => {
       ignore = true;
@@ -1134,11 +1598,15 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   }, [activePartnerName, selectedPartnerName]);
 
   const activePartnerAvatarActionState = activeAvatarPartnerName
-    ? getAvatarActionState({
+    ? {
+      ...getAvatarActionState({
         current_url: getPartnerAvatarUrl(activeAvatarPartnerName),
         custom_url: partnerAvatarMap[activeAvatarPartnerName],
+        default_url: partnerDefaultAvatarMap[activeAvatarPartnerName],
         removed: partnerAvatarRemovedMap[activeAvatarPartnerName],
-      })
+      }),
+      canDelete: Boolean(getPartnerAvatarUrl(activeAvatarPartnerName)),
+    }
     : null;
 
   return (
@@ -1172,7 +1640,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
       {/* 关系列表 */}
       <section className={styles.destinyTabPartners}>
-        <div className={styles.partnerSectionTitle}>伙伴列表</div>
+        <div className={styles.partnerSectionTitle}>关系列表</div>
         {renderPartners()}
       </section>
 
@@ -1181,7 +1649,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
           <div className={styles.partnerDetailPageTopbar}>
             <button className={styles.partnerBackBtn} onClick={handlePartnerDetailBack}>
               <i className="fa-solid fa-chevron-left" />
-              <span>返回伙伴列表</span>
+              <span>返回关系列表</span>
             </button>
           </div>
           <div className={styles.partnerDetailPageBody}>{renderActivePartnerDetailContent()}</div>
@@ -1192,18 +1660,61 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         <AvatarActionModal
           open
           title={`${activeAvatarPartnerName}头像`}
-          subtitle="支持导入本地图片、保存图片链接、导出当前头像，或删除当前伙伴头像。"
+          subtitle="支持导入本地图片、保存图片链接、导出当前头像、删除当前头像，或恢复到默认头像。"
           linkPlaceholder={`请输入${activeAvatarPartnerName}头像图片链接`}
           canExport={activePartnerAvatarActionState?.canExport ?? false}
           canDelete={activePartnerAvatarActionState?.canDelete ?? false}
+          canReset={activePartnerAvatarActionState?.canReset ?? false}
           deleteLabel="删除头像"
           onClose={closePartnerAvatarModal}
           onUpload={(file: File) => handlePartnerAvatarUpload(activeAvatarPartnerName, file)}
           onSubmitLink={(url: string) => handlePartnerAvatarUrlInput(activeAvatarPartnerName, url)}
           onExport={() => handlePartnerAvatarExport(activeAvatarPartnerName)}
           onDelete={() => handlePartnerAvatarRemove(activeAvatarPartnerName)}
+          onReset={() => handlePartnerAvatarReset(activeAvatarPartnerName)}
         />
       ) : null}
+
+      {activeGalleryPreview && activeGalleryPreviewItem ? (
+        <div
+          className={styles.partnerGalleryPreviewOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${activeGalleryPreview.partnerName}相册预览`}
+          onClick={() => setActiveGalleryPreview(null)}
+        >
+          <div
+            className={styles.partnerGalleryPreviewPanel}
+            onClick={(event: MouseEvent<HTMLDivElement>) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className={styles.partnerGalleryPreviewClose}
+              onClick={() => setActiveGalleryPreview(null)}
+              aria-label="关闭图片预览"
+            >
+              <i className="fa-solid fa-xmark" />
+            </button>
+            <img
+              src={activeGalleryPreviewItem.url}
+              alt={activeGalleryPreviewItem.title}
+              className={styles.partnerGalleryPreviewImage}
+            />
+            <div className={styles.partnerGalleryPreviewTitle}>
+              {activeGalleryPreviewItem.title}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <DeleteConfirmModal
+        open={Boolean(pendingGalleryDelete)}
+        target={pendingGalleryDeleteTarget}
+        onConfirm={() => {
+          void confirmPartnerGalleryDelete();
+        }}
+        onCancel={cancelPartnerGalleryDelete}
+      />
 
       {/* 删除确认弹窗 */}
       <DeleteConfirmModal

@@ -165,6 +165,8 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
 
 <style lang="scss" scoped>
 .item-card {
+  display: flex;
+  flex-direction: column;
   background: var(--card-bg);
   border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -332,15 +334,14 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
   }
 }
 
+.card-footer-slot {
+  margin-top: auto;
+}
+
 // 响应式设计
 @media (max-width: 768px) {
   .item-card {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      'header footer'
-      'body body';
-    align-items: center;
+    align-items: stretch;
     min-height: 58px;
     padding: 0;
     border-width: 1px;
@@ -360,7 +361,6 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
   }
 
   .card-header {
-    grid-area: header;
     align-items: center;
     gap: 6px;
     margin-bottom: 0;
@@ -385,7 +385,6 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
   }
 
   .card-body {
-    grid-area: body;
     max-height: 190px;
     margin: 0;
     overflow-y: auto;
@@ -431,10 +430,8 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
   }
 
   .card-footer-slot {
-    grid-area: footer;
-    padding: 6px var(--spacing-sm) 6px 0;
+    padding: 6px var(--spacing-sm);
     border-top: none;
-    min-width: max-content;
   }
 }
 

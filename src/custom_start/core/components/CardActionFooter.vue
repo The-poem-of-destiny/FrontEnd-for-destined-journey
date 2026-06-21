@@ -54,15 +54,10 @@ const emit = defineEmits<{
 <style lang="scss" scoped>
 .card-action-footer {
   display: flex;
-  justify-content: flex-end;
   align-items: center;
   gap: var(--spacing-md);
   padding-top: var(--spacing-sm);
   border-top: 1px solid var(--border-color-light);
-
-  &.has-cost {
-    justify-content: space-between;
-  }
 }
 
 .card-cost {
@@ -88,6 +83,7 @@ const emit = defineEmits<{
   align-items: center;
   justify-content: flex-end;
   gap: var(--spacing-sm);
+  margin-left: auto;
   min-width: 0;
 }
 

@@ -1,6 +1,9 @@
 @use '../../shared/styles/variables' as *;
 @use '../../shared/styles/mixins' as *;
 
+$destiny-partner-workspace-height: clamp(420px, 56vh, 780px);
+$destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
+
 .destinyTab {
   @include page-container;
   position: relative;
@@ -194,6 +197,7 @@
 
 .destinyTabPartners {
   @include list-container($spacing-md);
+  min-height: 0;
   padding: 0;
   border: none;
   background: transparent;
@@ -304,6 +308,9 @@
   grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
   gap: $spacing-md;
   align-items: start;
+  height: $destiny-partner-workspace-height;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .partnerList {
@@ -313,7 +320,12 @@
 .partnerSummaryList {
   @include list-container($spacing-sm);
   min-width: 0;
+  min-height: 0;
   padding-top: 1px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .partnerSummaryListHiddenMobile {
@@ -414,9 +426,14 @@
 
 .partnerDetailPanel {
   min-width: 0;
+  min-height: 0;
   padding: 0;
   border: none;
   background: transparent;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .partnerDetailHeader {
@@ -435,9 +452,8 @@
 }
 
 .partnerDetailPageBody {
-  min-height: auto;
-  height: auto;
-  flex: 0 0 auto;
+  min-height: 0;
+  flex: 1 1 auto;
   display: block;
 }
 
@@ -502,7 +518,7 @@
 
 .partnerDetailNav {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
   gap: 6px;
   width: 100%;
   padding: 4px;
@@ -615,6 +631,7 @@
 
   .partnerMasterDetail {
     grid-template-columns: 1fr;
+    height: $destiny-partner-workspace-height;
   }
 
   .partnerDetailPanel {
@@ -628,14 +645,17 @@
     flex-direction: column;
     gap: $spacing-sm;
     width: 100%;
-    min-height: auto;
-    height: auto;
+    min-height: 0;
+    height: $destiny-mobile-detail-height;
     padding: $spacing-md 0 0;
     background: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     z-index: auto;
-    overflow: visible;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
     align-items: stretch;
   }
 
@@ -643,8 +663,8 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    position: sticky;
-    top: 0;
+    position: static;
+    top: auto;
     z-index: 1;
     padding-bottom: $spacing-xs;
     background: color-mix(in srgb, var(--theme-content-bg) 72%, transparent);
@@ -1094,6 +1114,297 @@
 .skillCost {
   font-size: 11px;
   color: var(--theme-text-muted);
+}
+
+// 相册
+.partnerGallery {
+  padding: $spacing-sm 0;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.partnerGalleryEmptyPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm 0;
+  border-top: 1px dashed var(--theme-card-border);
+}
+
+.partnerGalleryPredefinedPrompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 68%, transparent);
+  border-radius: $border-radius-sm;
+  background: color-mix(in srgb, var(--theme-card-bg) 74%, transparent);
+}
+
+.partnerGalleryPredefinedText {
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.partnerGalleryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.partnerGallerySummary {
+  flex: 0 0 auto;
+  color: var(--theme-text-muted);
+  font-size: 11px;
+}
+
+.partnerGalleryActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-card-bg) 88%, transparent);
+  color: var(--theme-text-primary);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background $transition-fast,
+    border-color $transition-fast,
+    transform $transition-fast;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--theme-card-bg) 84%, var(--theme-text-primary) 4%);
+    border-color: color-mix(in srgb, var(--theme-card-border) 90%, transparent);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.partnerGalleryFileInput {
+  display: none;
+}
+
+.partnerGalleryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: $spacing-sm;
+}
+
+.partnerGalleryItem {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  border-radius: $border-radius-sm;
+  background: color-mix(in srgb, var(--theme-card-bg) 72%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 6%, transparent);
+}
+
+.partnerGalleryImage {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.partnerGalleryButton {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.partnerGalleryButton:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--theme-tab-indicator) 65%, transparent);
+  outline-offset: -2px;
+}
+
+.partnerGalleryDeleteButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid color-mix(in srgb, var(--theme-error) 50%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-card-bg) 88%, transparent);
+  color: var(--theme-error);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity $transition-fast,
+    transform $transition-fast;
+}
+
+.partnerGalleryItem:hover .partnerGalleryDeleteButton,
+.partnerGalleryDeleteButton:focus-visible {
+  opacity: 1;
+}
+
+.partnerGalleryDeleteButton:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.partnerGalleryDeleteButton i {
+  display: block;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.partnerGalleryCaption {
+  padding: 8px 10px;
+  border-top: 1px solid color-mix(in srgb, var(--theme-card-border) 56%, transparent);
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.partnerGalleryTitleButton {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  word-break: break-word;
+  cursor: text;
+}
+
+.partnerGalleryTitleButton:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--theme-tab-indicator) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.partnerGalleryTitleInput {
+  width: 100%;
+  min-height: 28px;
+  padding: 4px 6px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 76%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--theme-window-bg) 22%, transparent);
+  color: var(--theme-text-primary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.partnerGalleryTitleInput:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--theme-tab-indicator) 72%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-tab-indicator) 14%, transparent);
+}
+
+.partnerGalleryPreviewOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-lg;
+  background: color-mix(in srgb, var(--theme-window-bg) 82%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.partnerGalleryPreviewPanel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  max-width: min(92vw, 960px);
+  max-height: 88vh;
+  padding: $spacing-md;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 78%, transparent);
+  border-radius: $border-radius-md;
+  background: color-mix(in srgb, var(--theme-card-bg) 94%, transparent);
+  box-shadow: 0 20px 60px color-mix(in srgb, var(--theme-window-bg) 45%, transparent);
+}
+
+.partnerGalleryPreviewImage {
+  display: block;
+  max-width: 100%;
+  max-height: calc(88vh - 96px);
+  object-fit: contain;
+  border-radius: $border-radius-sm;
+}
+
+.partnerGalleryPreviewTitle {
+  color: var(--theme-text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  word-break: break-word;
+}
+
+.partnerGalleryPreviewClose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 78%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-card-bg) 86%, transparent);
+  color: var(--theme-text-primary);
+  cursor: pointer;
+}
+
+@media (max-width: 540px) {
+  .partnerGalleryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .partnerGalleryDeleteButton {
+    top: 6px;
+    right: 6px;
+    opacity: 1;
+  }
+
+  .partnerGalleryPreviewOverlay {
+    padding: $spacing-sm;
+  }
+
+  .partnerGalleryPreviewPanel {
+    max-width: 96vw;
+    max-height: 90vh;
+    padding: $spacing-sm;
+  }
+}
+
+@media (max-width: 360px) {
+  .partnerGalleryGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 // 心里话
