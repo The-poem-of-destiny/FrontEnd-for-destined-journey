@@ -306,8 +306,9 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   position: relative;
   display: grid;
   grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: $spacing-md;
-  align-items: start;
+  align-items: stretch;
   height: $destiny-partner-workspace-height;
   min-height: 0;
   overflow: hidden;
@@ -317,15 +318,19 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   @include list-container;
 }
 
-.partnerSummaryList {
-  @include list-container($spacing-sm);
+.partnerSummaryList,
+.partnerDetailPanel {
   min-width: 0;
   min-height: 0;
-  padding-top: 1px;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+}
+
+.partnerSummaryList {
+  @include list-container($spacing-sm);
+  padding-top: 1px;
 }
 
 .partnerSummaryListHiddenMobile {
@@ -425,15 +430,9 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 }
 
 .partnerDetailPanel {
-  min-width: 0;
-  min-height: 0;
   padding: 0;
   border: none;
   background: transparent;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
 }
 
 .partnerDetailHeader {
