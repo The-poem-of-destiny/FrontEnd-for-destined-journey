@@ -1,4 +1,13 @@
-import { ChangeEvent, FC, KeyboardEvent, MouseEvent, ReactNode, useEffect, useMemo, useState } from 'react';
+import {
+  ChangeEvent,
+  FC,
+  KeyboardEvent,
+  MouseEvent,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
 import { useEditorSettingStore } from '../../core/stores';
 import {
@@ -71,11 +80,11 @@ const PartnerListCategories: Array<{
   label: string;
   matches: (partner: PartnerRecord) => boolean;
 }> = [
-    { key: 'all', label: '全部', matches: () => true },
-    { key: 'present', label: '在场', matches: partner => Boolean(partner.在场) },
-    { key: 'away', label: '不在场', matches: partner => !partner.在场 },
-    { key: 'contracted', label: '已缔约', matches: partner => Boolean(partner.命定契约) },
-  ];
+  { key: 'all', label: '全部', matches: () => true },
+  { key: 'present', label: '在场', matches: partner => Boolean(partner.在场) },
+  { key: 'away', label: '不在场', matches: partner => !partner.在场 },
+  { key: 'contracted', label: '已缔约', matches: partner => Boolean(partner.命定契约) },
+];
 
 const PartnerAssetSections: PartnerAssetSectionConfig[] = [
   {
@@ -389,11 +398,11 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 option === ALL_FILTER
                   ? totalCount
                   : _.size(
-                    _.pickBy(
-                      source,
-                      (item: PartnerAssetItem) => _.get(item, sectionConfig.filterKey) === option,
-                    ),
-                  );
+                      _.pickBy(
+                        source,
+                        (item: PartnerAssetItem) => _.get(item, sectionConfig.filterKey) === option,
+                      ),
+                    );
 
               return (
                 <button
@@ -784,7 +793,10 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
     try {
       await persistPartnerGalleryItems(partner_name, nextItems);
-      if (activeGalleryPreview?.partnerName === partner_name && activeGalleryPreview.itemId === item_id) {
+      if (
+        activeGalleryPreview?.partnerName === partner_name &&
+        activeGalleryPreview.itemId === item_id
+      ) {
         setActiveGalleryPreview(null);
       }
       if (editingGalleryItemId === item_id) {
@@ -1599,14 +1611,14 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   const activePartnerAvatarActionState = activeAvatarPartnerName
     ? {
-      ...getAvatarActionState({
-        current_url: getPartnerAvatarUrl(activeAvatarPartnerName),
-        custom_url: partnerAvatarMap[activeAvatarPartnerName],
-        default_url: partnerDefaultAvatarMap[activeAvatarPartnerName],
-        removed: partnerAvatarRemovedMap[activeAvatarPartnerName],
-      }),
-      canDelete: Boolean(getPartnerAvatarUrl(activeAvatarPartnerName)),
-    }
+        ...getAvatarActionState({
+          current_url: getPartnerAvatarUrl(activeAvatarPartnerName),
+          custom_url: partnerAvatarMap[activeAvatarPartnerName],
+          default_url: partnerDefaultAvatarMap[activeAvatarPartnerName],
+          removed: partnerAvatarRemovedMap[activeAvatarPartnerName],
+        }),
+        canDelete: Boolean(getPartnerAvatarUrl(activeAvatarPartnerName)),
+      }
     : null;
 
   return (
