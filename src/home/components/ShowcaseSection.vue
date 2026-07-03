@@ -6,10 +6,6 @@
       <div class="author-badges">
         <span v-for="author in teamMembers" :key="author" class="author-badge">{{ author }}</span>
       </div>
-      <div class="credits-title">❖ 英灵殿 ❖</div>
-      <div class="author-badges">
-        <span v-for="author in hallOfFame" :key="author" class="author-badge">{{ author }}</span>
-      </div>
       <div class="credits-special"><strong>特别鸣谢：</strong>{{ specialThanks.join(' ') }}</div>
     </div>
 
@@ -40,6 +36,20 @@
           这里是阿斯塔利亚。"剑与魔法"、"诗与远方"、"历史与传说"、"生者与死者"、"英雄与史诗"、"神灵与命运"的世界。
         </p>
         <p>请拿起你梦中与儿时最浪漫的笔，亲自书写属于你自己的冒险故事吧。</p>
+
+        <div class="update-section">
+          <h3>获取最新更新</h3>
+          <ul>
+            <li>
+              <a
+                href="https://discord.com/channels/1134557553011998840/1448526819824504882"
+                target="_blank"
+                rel="noopener noreferrer"
+                >更新频道 *脑</a
+              >
+            </li>
+          </ul>
+        </div>
       </div>
     </details>
   </div>
@@ -47,28 +57,26 @@
 
 <script setup>
 const teamMembers = [
-  '@𝕽𝖍𝖞𝖘_𝖟_瑞',
-  '@Yoyo514',
-  '@十七',
-  '@Hilo',
-  '@快乐柠萌茶',
-  '@三饺初华',
-  '@银时萝',
-  '@镜梦幻',
-  '@风见幽泠',
-  '@lili',
-  '@北游',
-  '@仰望星空',
-  '@K1nn',
-  '@AkabaneSaki',
-  '@Aoo',
-  '@青砚',
-  '@Elfa',
+  'Rhys_z_瑞',
+  'Yoyo514',
+  '快乐柠萌茶',
+  'Hilo(404/403)',
+  '十七',
+  '三饺初华',
+  '银时萝',
+  '镜梦幻',
+  '风见幽泠',
+  'lili',
+  '北游',
+  '仰望星空',
+  'K1nn',
+  'AkabaneSaki',
+  'Aoo',
+  '青砚',
+  'Elfa',
 ];
 
-const hallOfFame = ['@Kitaikuyo', '@秋天的咸鱼'];
-
-const specialThanks = ['@FL已放弃治疗', '@tongtny123', '@肆祀一一', '@大乐'];
+const specialThanks = ['FL已放弃治疗', 'tongtny123', '肆祀一一', '大乐', 'Kitaikuyo', '秋天的咸鱼'];
 </script>
 
 <style scoped>
