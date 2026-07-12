@@ -53,13 +53,7 @@ import styles from './DestinyTab.module.scss';
 type FieldType = 'text' | 'number' | 'textarea' | 'tags' | 'toggle' | 'keyvalue';
 type PartnerListCategory = 'all' | 'present' | 'away' | 'contracted';
 type PartnerDetailSection =
-  | 'overview'
-  | 'status'
-  | 'equipment'
-  | 'skills'
-  | 'inventory'
-  | 'gallery'
-  | 'background';
+  'overview' | 'status' | 'equipment' | 'skills' | 'inventory' | 'gallery' | 'background';
 
 type PartnerRecord = Record<string, any>;
 type PartnerAssetItem = Record<string, any>;
