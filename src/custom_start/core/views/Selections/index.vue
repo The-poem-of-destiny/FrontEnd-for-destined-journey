@@ -324,30 +324,10 @@ const handleEditCustomItem = (
   gap: var(--spacing-md);
 }
 
-// 下半部分：已选面板
-.summary-area {
-  height: min(600px, 72vh);
-  min-height: 300px;
-}
-
 // 响应式设计
 @media (max-width: 768px) {
   .selections-container {
     gap: var(--spacing-md);
-  }
-
-  .summary-area {
-    height: min(42vh, 360px);
-    min-height: 220px;
-    max-height: min(42vh, 360px);
-  }
-}
-
-@media (max-width: 480px) {
-  .summary-area {
-    height: min(38vh, 320px);
-    min-height: 200px;
-    max-height: min(38vh, 320px);
   }
 }
 </style>
