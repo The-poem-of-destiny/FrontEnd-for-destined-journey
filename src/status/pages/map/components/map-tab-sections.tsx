@@ -2,6 +2,7 @@ import { FC, PointerEventHandler, RefObject, useEffect, useMemo, useState } from
 import { createPortal } from 'react-dom';
 import { MapViewerStatus } from '../../../core/hooks/use-map-viewer';
 import { MapMarker } from '../../../core/types/map-markers';
+import { type MapSourceKey } from '../../../core/types/map-source-list';
 import {
   DEFAULT_MARKER_COLOR,
   drawColorOptions,
@@ -14,16 +15,17 @@ interface MapToolbarProps {
   mapMarkerCount: number;
   markerAddMode: boolean;
   drawMode: boolean;
-  mapSourceKey: 'small' | 'large';
+  mapSourceKey: MapSourceKey;
   isMarkerPanelVisible: boolean;
-  onMapSourceChange: (key: 'small' | 'large') => void;
+  onMapSourceChange: (key: MapSourceKey) => void;
+  onOpenMapSource: () => void;
   onToggleDrawMode: () => void;
   onToggleWorkbench: () => void;
   drawColor: string;
   onDrawColorChange: (color: string) => void;
   onClearDraw: () => void;
   mapSourceList: Array<{
-    key: 'small' | 'large';
+    key: MapSourceKey;
     name: string;
   }>;
 }
@@ -97,6 +99,7 @@ export const MapToolbar: FC<MapToolbarProps> = ({
   mapSourceKey,
   isMarkerPanelVisible,
   onMapSourceChange,
+  onOpenMapSource,
   onToggleDrawMode,
   onToggleWorkbench,
   drawColor,
@@ -177,6 +180,9 @@ export const MapToolbar: FC<MapToolbarProps> = ({
               清空涂画
             </button>
           )}
+          <button className={styles.clearButton} onClick={onOpenMapSource} type="button">
+            查看当前清晰度地图
+          </button>
         </div>
       </div>
     </section>

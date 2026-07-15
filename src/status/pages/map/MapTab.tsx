@@ -4,7 +4,7 @@ import { DrawStroke, useCanvasDraw } from '../../core/hooks/use-canvas-draw';
 import { useMapMarkers } from '../../core/hooks/use-map-markers';
 import { MapViewerStatus, useMapViewer } from '../../core/hooks/use-map-viewer';
 import { MapMarker } from '../../core/types/map-markers';
-import { mapSourceList } from '../../core/types/map-source-list';
+import { mapSourceList, type MapSourceKey } from '../../core/types/map-source-list';
 import { DEFAULT_DRAW_COLOR } from '../../core/utils/map-constants';
 import { MapStage, MapToolbar, MarkerWorkbench } from './components/map-tab-sections';
 import styles from './MapTab.module.scss';
@@ -13,7 +13,9 @@ export const MapTab: FC = () => {
   const [drawMode, setDrawMode] = useState(false);
   const [drawStrokes, setDrawStrokes] = useState<DrawStroke[]>([]);
   const [drawColor, setDrawColor] = useState(DEFAULT_DRAW_COLOR);
-  const [mapSourceKey, setMapSourceKey] = useState<'small' | 'large'>('small');
+  const [mapSourceKey, setMapSourceKey] = useState<MapSourceKey>(() =>
+    typeof window !== 'undefined' && window.innerWidth <= 768 ? 'low' : 'small',
+  );
   const [markerSearch, setMarkerSearch] = useState('');
   const [mapViewerStatus, setMapViewerStatus] = useState<MapViewerStatus>('loading');
   const [mapLoadError, setMapLoadError] = useState('');
@@ -119,6 +121,13 @@ export const MapTab: FC = () => {
         .some(text => text!.toLowerCase().includes(keyword));
     });
   }, [mapMarkers, markerSearch]);
+
+  const handleOpenMapSource = useCallback(() => {
+    const source = mapSourceList.find(source => source.key === mapSourceKey);
+    if (!source) return;
+
+    window.open(source.url, '_blank', 'noopener,noreferrer');
+  }, [mapSourceKey]);
 
   const syncActiveMarkerCardPosition = useCallback(() => {
     const viewer = viewerRef.current;
@@ -459,6 +468,7 @@ export const MapTab: FC = () => {
           mapSourceKey={mapSourceKey}
           isMarkerPanelVisible={isMarkerPanelVisible}
           onMapSourceChange={setMapSourceKey}
+          onOpenMapSource={handleOpenMapSource}
           onToggleDrawMode={() => setDrawMode(prev => !prev)}
           onToggleWorkbench={() => setIsMarkerPanelVisible(prev => !prev)}
           drawColor={drawColor}

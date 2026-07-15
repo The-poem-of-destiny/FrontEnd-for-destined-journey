@@ -1,11 +1,12 @@
 import OpenSeadragon from 'openseadragon';
 import { useEffect, useRef } from 'react';
+import { type MapSourceKey } from '../types/map-source-list';
 import { mapSources } from '../types/map-sources';
 
 export type MapViewerStatus = 'loading' | 'ready' | 'error';
 
 interface UseMapViewerOptions {
-  mapSourceKey: 'small' | 'large';
+  mapSourceKey: MapSourceKey;
   onBeforeOpen?: () => void;
   onReady?: () => void;
   onUpdate?: () => void;
@@ -39,7 +40,7 @@ export const useMapViewer = ({
   const onUpdateRef = useRef(onUpdate);
   const onErrorRef = useRef(onError);
 
-  const objectUrlMapRef = useRef(new Map<'small' | 'large', string>());
+  const objectUrlMapRef = useRef(new Map<MapSourceKey, string>());
   const abortRef = useRef<AbortController | null>(null);
   const openSequenceRef = useRef(0);
 
