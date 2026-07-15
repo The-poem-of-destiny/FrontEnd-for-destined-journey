@@ -13,9 +13,7 @@ export const MapTab: FC = () => {
   const [drawMode, setDrawMode] = useState(false);
   const [drawStrokes, setDrawStrokes] = useState<DrawStroke[]>([]);
   const [drawColor, setDrawColor] = useState(DEFAULT_DRAW_COLOR);
-  const [mapSourceKey, setMapSourceKey] = useState<MapSourceKey>(() =>
-    typeof window !== 'undefined' && window.innerWidth <= 768 ? 'low' : 'small',
-  );
+  const [mapSourceKey, setMapSourceKey] = useState<MapSourceKey>('low');
   const [markerSearch, setMarkerSearch] = useState('');
   const [mapViewerStatus, setMapViewerStatus] = useState<MapViewerStatus>('loading');
   const [mapLoadError, setMapLoadError] = useState('');
