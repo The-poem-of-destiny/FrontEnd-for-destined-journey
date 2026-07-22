@@ -7,6 +7,22 @@ import {
   TaskSchema,
 } from './utils';
 
+const assets = z
+  .record(
+    z.string(),
+    z
+      .object({
+        品质: z.string().prefault(''),
+        类型: z.string().prefault(''),
+        结算: z.string().prefault(''),
+        标签: z.array(z.string()).prefault([]).transform(_.uniq),
+        效果: z.record(z.string(), z.string()).prefault({}),
+        描述: z.string().prefault(''),
+      })
+      .prefault({}),
+  )
+  .prefault({});
+
 /**
  * 玩家信息
  */
@@ -27,6 +43,7 @@ const player = z
       .record(z.string(), InventoryItemSchema)
       .prefault({})
       .transform(items => _.pickBy(items, item => item.数量 > 0)),
+    资产: assets,
     金钱: z.coerce.number().prefault(0).transform(Math.round),
     状态效果: z.record(z.string(), StatusEffectSchema).prefault({}),
   })
@@ -67,6 +84,7 @@ const player = z
       // 物品与金钱
       '金钱',
       '背包',
+      '资产',
       // 装备、技能、登神长阶
       '装备',
       '技能',

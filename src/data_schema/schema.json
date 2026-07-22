@@ -153,6 +153,52 @@
             "$ref": "#/$defs/__schema14"
           }
         },
+        "资产": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "default": {},
+            "type": "object",
+            "properties": {
+              "品质": {
+                "default": "",
+                "type": "string"
+              },
+              "类型": {
+                "default": "",
+                "type": "string"
+              },
+              "结算": {
+                "default": "",
+                "type": "string"
+              },
+              "标签": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "效果": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "描述": {
+                "default": "",
+                "type": "string"
+              }
+            }
+          }
+        },
         "金钱": {
           "default": 0,
           "type": "number"

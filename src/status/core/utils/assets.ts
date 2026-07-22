@@ -1,6 +1,6 @@
 import { sortEntriesByQuality } from './quality';
 
-export type AssetCollectionDataKey = '装备' | '技能' | '背包';
+export type AssetCollectionDataKey = '装备' | '技能' | '背包' | '资产';
 export type AssetCollectionFilterKey = string;
 
 export type AssetCollectionItem = { 品质?: string } & Record<string, any>;

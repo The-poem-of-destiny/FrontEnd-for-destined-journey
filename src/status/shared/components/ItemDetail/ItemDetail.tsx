@@ -26,10 +26,11 @@ export interface ItemData {
   位置?: string;
   消耗?: string;
   数量?: number;
+  结算?: string;
 }
 
 /** 物品类别 */
-export type ItemCategory = 'equipment' | 'skill' | 'item';
+export type ItemCategory = 'asset' | 'equipment' | 'skill' | 'item';
 
 /** 物品展示模式 */
 export type ItemDetailDisplayMode = 'compact' | 'panel-card' | 'modal-detail';
@@ -236,6 +237,13 @@ export const ItemDetail: FC<ItemDetailProps> = ({
           {renderEditableOrText('消耗', data.消耗 ?? '', 'text')}
         </div>
       ) : null}
+
+      {(data.结算 || itemCategory === 'asset') && (
+        <div className={styles.itemFieldRow}>
+          <span className={styles.fieldLabel}>结算</span>
+          {renderEditableOrText('结算', data.结算 ?? '', 'text')}
+        </div>
+      )}
 
       {itemCategory === 'item' && (displayMode === 'modal-detail' || editEnabled) ? (
         <div className={styles.itemFieldRow}>
