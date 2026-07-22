@@ -254,7 +254,16 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     }
 
     if (config.itemCategory === 'asset') {
-      return item.结算 ? <span className={styles.itemCost}>{item.结算}</span> : null;
+      if (!item.结算) return null;
+
+      const settlement = Array.from(item.结算);
+      const displaySettlement =
+        settlement.length > 4 ? `${settlement.slice(0, 4).join('')}...` : item.结算;
+      return (
+        <span className={styles.itemCost} title={item.结算}>
+          {displaySettlement}
+        </span>
+      );
     }
 
     return item.消耗 ? <span className={styles.itemCost}>{item.消耗}</span> : null;
