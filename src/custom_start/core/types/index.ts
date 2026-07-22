@@ -14,6 +14,11 @@ export interface Item {
   isCustom?: boolean; // 标识是否为自定义数据
 }
 
+// 资产类型
+export type Asset = Omit<Item, 'quantity'> & {
+  settlement?: string;
+};
+
 // 装备类型
 export type Equipment = Omit<Item, 'quantity'> & {
   position?: string;

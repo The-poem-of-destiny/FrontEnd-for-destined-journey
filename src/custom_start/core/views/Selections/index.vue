@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import CategorySelectionLayout from '../../components/CategorySelectionLayout.vue';
+import { getAssets } from '../../data/assets';
 import { getRaceCosts } from '../../data/base-info';
 import { getEquipments } from '../../data/equipments';
 import { getInitialItems } from '../../data/Items';
 import { getSkills } from '../../data/skills';
 import { useCharacterStore } from '../../store/character';
 import { useCustomContentStore } from '../../store/customContent';
-import type { Equipment, Item, Rarity, Skill } from '../../types';
+import type { Asset, Equipment, Item, Rarity, Skill } from '../../types';
 
 import CategoryTabs, { type CategoryType } from './components/CategoryTabs.vue';
 import CustomItemForm from './components/CustomItemForm.vue';
@@ -35,6 +36,7 @@ const getCategoryDisplayName = (name: string): string => {
 
 const equipments = computed(() => getEquipments());
 const initialItems = computed(() => getInitialItems());
+const assets = computed(() => getAssets());
 const skillGroups = computed(() => getSkills());
 
 const currentRace = computed(() => {
@@ -60,6 +62,8 @@ const subCategories = computed(() => {
       return Object.keys(equipments.value);
     case 'item':
       return Object.keys(initialItems.value);
+    case 'asset':
+      return Object.keys(assets.value);
     case 'skill':
       return orderedSkillCategories.value;
     default:
@@ -112,8 +116,8 @@ watch(
 );
 
 // 获取当前要显示的物品列表（应用品质筛选）
-const currentItems = computed<(Equipment | Item | Skill)[]>(() => {
-  let sourceItems: (Equipment | Item | Skill)[] = [];
+const currentItems = computed<(Asset | Equipment | Item | Skill)[]>(() => {
+  let sourceItems: (Asset | Equipment | Item | Skill)[] = [];
 
   switch (currentCategory.value) {
     case 'equipment':
@@ -121,6 +125,9 @@ const currentItems = computed<(Equipment | Item | Skill)[]>(() => {
       break;
     case 'item':
       sourceItems = (initialItems.value[currentSubCategory.value] || []) as Item[];
+      break;
+    case 'asset':
+      sourceItems = (assets.value[currentSubCategory.value] || []) as Asset[];
       break;
     case 'skill':
       sourceItems = skillGroups.value[currentSubCategory.value] || [];
@@ -136,12 +143,14 @@ const currentItems = computed<(Equipment | Item | Skill)[]>(() => {
 });
 
 // 获取当前选中的物品列表
-const currentSelectedItems = computed<(Equipment | Item | Skill)[]>(() => {
+const currentSelectedItems = computed<(Asset | Equipment | Item | Skill)[]>(() => {
   switch (currentCategory.value) {
     case 'equipment':
       return characterStore.selectedEquipments;
     case 'item':
       return characterStore.selectedItems;
+    case 'asset':
+      return characterStore.selectedAssets;
     case 'skill':
       return characterStore.selectedSkills;
     default:
@@ -150,13 +159,16 @@ const currentSelectedItems = computed<(Equipment | Item | Skill)[]>(() => {
 });
 
 // 选择物品
-const handleSelectItem = (item: Equipment | Item | Skill) => {
+const handleSelectItem = (item: Asset | Equipment | Item | Skill) => {
   switch (currentCategory.value) {
     case 'equipment':
       characterStore.addEquipment(item as Equipment);
       break;
     case 'item':
       characterStore.addItem(item as Item);
+      break;
+    case 'asset':
+      characterStore.addAsset(item as Asset);
       break;
     case 'skill':
       characterStore.addSkill(item as Skill);
@@ -165,13 +177,16 @@ const handleSelectItem = (item: Equipment | Item | Skill) => {
 };
 
 // 取消选择物品
-const handleDeselectItem = (item: Equipment | Item | Skill) => {
+const handleDeselectItem = (item: Asset | Equipment | Item | Skill) => {
   switch (currentCategory.value) {
     case 'equipment':
       characterStore.removeEquipment(item as Equipment);
       break;
     case 'item':
       characterStore.removeItem(item as Item);
+      break;
+    case 'asset':
+      characterStore.removeAsset(item as Asset);
       break;
     case 'skill':
       characterStore.removeSkill(item as Skill);
@@ -181,8 +196,8 @@ const handleDeselectItem = (item: Equipment | Item | Skill) => {
 
 // 从已选面板移除物品
 const handleRemoveFromPanel = (
-  item: Equipment | Item | Skill,
-  type: 'equipment' | 'item' | 'skill',
+  item: Asset | Equipment | Item | Skill,
+  type: 'equipment' | 'item' | 'asset' | 'skill',
 ) => {
   switch (type) {
     case 'equipment':
@@ -190,6 +205,9 @@ const handleRemoveFromPanel = (
       break;
     case 'item':
       characterStore.removeItem(item as Item);
+      break;
+    case 'asset':
+      characterStore.removeAsset(item as Asset);
       break;
     case 'skill':
       characterStore.removeSkill(item as Skill);
@@ -204,8 +222,8 @@ const handleClearAll = () => {
 
 // 添加/更新自定义物品
 const handleAddCustomItem = (
-  item: Equipment | Item | Skill,
-  type: 'equipment' | 'item' | 'skill',
+  item: Asset | Equipment | Item | Skill,
+  type: 'equipment' | 'item' | 'asset' | 'skill',
   replaceName?: string,
 ) => {
   const targetName = replaceName?.trim();
@@ -225,6 +243,13 @@ const handleAddCustomItem = (
         characterStore.addItem(item as Item);
       }
       break;
+    case 'asset':
+      if (targetName) {
+        characterStore.replaceAssetByName(item as Asset, targetName);
+      } else {
+        characterStore.addAsset(item as Asset);
+      }
+      break;
     case 'skill':
       if (targetName) {
         characterStore.replaceSkillByName(item as Skill, targetName);
@@ -239,12 +264,14 @@ const handleAddCustomItem = (
 
 // 回填自定义物品表单
 const handleEditCustomItem = (
-  item: Equipment | Item | Skill,
-  type: 'equipment' | 'item' | 'skill',
+  item: Asset | Equipment | Item | Skill,
+  type: 'equipment' | 'item' | 'asset' | 'skill',
 ) => {
   customItemFormRef.value?.fillFormByItem(item, type);
   toastr.info(
-    `已回填自定义${type === 'equipment' ? '装备' : type === 'item' ? '道具' : '技能'}「${item.name}」`,
+    `已回填自定义${
+      type === 'equipment' ? '装备' : type === 'item' ? '道具' : type === 'asset' ? '资产' : '技能'
+    }「${item.name}」`,
   );
 };
 </script>
@@ -293,6 +320,7 @@ const handleEditCustomItem = (
         <SelectedPanel
           :equipments="characterStore.selectedEquipments"
           :items="characterStore.selectedItems"
+          :assets="characterStore.selectedAssets"
           :skills="characterStore.selectedSkills"
           @remove="handleRemoveFromPanel"
           @edit-custom="handleEditCustomItem"

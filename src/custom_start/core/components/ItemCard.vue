@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { Equipment, Item, Rarity, Skill } from '../types';
+import type { Asset, Equipment, Item, Rarity, Skill } from '../types';
 import CardActionFooter from './CardActionFooter.vue';
 
 interface Props {
-  item: Equipment | Item | Skill;
+  item: Asset | Equipment | Item | Skill;
   selected?: boolean;
   disabled?: boolean;
   detailsOpen?: boolean;
@@ -11,9 +11,9 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'select', item: Equipment | Item | Skill): void;
-  (e: 'deselect', item: Equipment | Item | Skill): void;
-  (e: 'toggle-details', item: Equipment | Item | Skill): void;
+  (e: 'select', item: Asset | Equipment | Item | Skill): void;
+  (e: 'deselect', item: Asset | Equipment | Item | Skill): void;
+  (e: 'toggle-details', item: Asset | Equipment | Item | Skill): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -71,13 +71,17 @@ const handleToggleDetails = () => {
 };
 
 // 判断是否为技能类型
-const isSkill = (item: Equipment | Item | Skill): item is Skill => {
+const isSkill = (item: Asset | Equipment | Item | Skill): item is Skill => {
   return 'consume' in item;
 };
 
 // 判断是否为物品类型
-const isItem = (item: Equipment | Item | Skill): item is Item => {
+const isItem = (item: Asset | Equipment | Item | Skill): item is Item => {
   return 'quantity' in item;
+};
+
+const isAsset = (item: Asset | Equipment | Item | Skill): item is Asset => {
+  return 'settlement' in item;
 };
 
 const formatEffectEntries = (effect?: Record<string, string>) =>
@@ -130,6 +134,11 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
       <div v-if="isSkill(item) && item.consume" class="item-info">
         <span class="info-label">消耗:</span>
         <span class="info-value consume">{{ item.consume }}</span>
+      </div>
+
+      <div v-if="isAsset(item) && item.settlement" class="item-info">
+        <span class="info-label">结算:</span>
+        <span class="info-value">{{ item.settlement }}</span>
       </div>
 
       <div v-if="'effect' in item && Object.keys(item.effect || {}).length > 0" class="item-effect">

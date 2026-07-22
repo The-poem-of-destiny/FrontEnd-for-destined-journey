@@ -240,6 +240,43 @@ const getStairwayView = (partner: Partner) => {
           <p v-else class="empty-text">未选择道具</p>
         </section>
 
+        <!-- 资产 -->
+        <section class="doc-section">
+          <h3 class="section-title">
+            <i class="fa-solid fa-building-columns" aria-hidden="true"></i>
+            <span>资产 ({{ characterStore.selectedAssets.length }})</span>
+          </h3>
+          <div v-if="characterStore.selectedAssets.length > 0" class="doc-text">
+            <div
+              v-for="(asset, index) in characterStore.selectedAssets"
+              :key="asset.name"
+              class="item-entry"
+            >
+              <p class="item-title">
+                <strong>{{ index + 1 }}. </strong>
+                <span :style="{ color: rarityColorMap[asset.rarity] }">{{ asset.name }}</span>
+                <span class="item-cost">[{{ asset.cost }} 点]</span>
+              </p>
+              <p class="item-meta">
+                类型：{{ asset.type }}
+                <span v-if="asset.settlement"> | 结算：{{ asset.settlement }}</span>
+                <span v-if="asset.tag && asset.tag.length > 0">
+                  | 标签：{{ asset.tag.join('、') }}</span
+                >
+              </p>
+              <p v-if="Object.keys(asset.effect || {}).length > 0" class="item-desc">
+                效果：
+                <span v-for="(value, key) in asset.effect" :key="key" class="effect-inline">
+                  {{ key }}：{{ value }}
+                </span>
+              </p>
+              <p v-else class="item-desc">效果：无</p>
+              <p v-if="asset.description" class="item-flavor">{{ asset.description }}</p>
+            </div>
+          </div>
+          <p v-else class="empty-text">未选择资产</p>
+        </section>
+
         <!-- 技能 -->
         <section class="doc-section">
           <h3 class="section-title">

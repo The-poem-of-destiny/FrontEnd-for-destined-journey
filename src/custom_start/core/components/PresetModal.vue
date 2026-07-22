@@ -315,6 +315,10 @@ const cancelImport = () => {
                       ><i class="fa-solid fa-shield"></i> {{ preset.equipments.length }}</span
                     >
                     <span class="meta-item"
+                      ><i class="fa-solid fa-building-columns"></i>
+                      {{ preset.assets?.length ?? 0 }}</span
+                    >
+                    <span class="meta-item"
                       ><i class="fa-solid fa-wand-magic-sparkles"></i>
                       {{ preset.skills.length }}</span
                     >

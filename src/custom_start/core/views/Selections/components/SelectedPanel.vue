@@ -1,16 +1,25 @@
 <script setup lang="ts">
 import { useStorePoints } from '../../../composables/use-store-points';
-import type { Equipment, Item, Skill } from '../../../types';
+import type { Asset, Equipment, Item, Skill } from '../../../types';
 
 interface Props {
   equipments: Equipment[];
   items: Item[];
+  assets: Asset[];
   skills: Skill[];
 }
 
 interface Emits {
-  (e: 'remove', item: Equipment | Item | Skill, type: 'equipment' | 'item' | 'skill'): void;
-  (e: 'edit-custom', item: Equipment | Item | Skill, type: 'equipment' | 'item' | 'skill'): void;
+  (
+    e: 'remove',
+    item: Asset | Equipment | Item | Skill,
+    type: 'equipment' | 'item' | 'asset' | 'skill',
+  ): void;
+  (
+    e: 'edit-custom',
+    item: Asset | Equipment | Item | Skill,
+    type: 'equipment' | 'item' | 'asset' | 'skill',
+  ): void;
   (e: 'clear'): void;
 }
 
@@ -19,11 +28,17 @@ const emit = defineEmits<Emits>();
 
 const { availablePoints, totalPoints, consumedPoints } = useStorePoints();
 
-const handleRemove = (item: Equipment | Item | Skill, type: 'equipment' | 'item' | 'skill') => {
+const handleRemove = (
+  item: Asset | Equipment | Item | Skill,
+  type: 'equipment' | 'item' | 'asset' | 'skill',
+) => {
   emit('remove', item, type);
 };
 
-const handleEditCustom = (item: Equipment | Item | Skill, type: 'equipment' | 'item' | 'skill') => {
+const handleEditCustom = (
+  item: Asset | Equipment | Item | Skill,
+  type: 'equipment' | 'item' | 'asset' | 'skill',
+) => {
   emit('edit-custom', item, type);
 };
 
@@ -32,13 +47,14 @@ const handleClear = () => {
 };
 
 const totalCount = computed(() => {
-  return props.equipments.length + props.items.length + props.skills.length;
+  return props.equipments.length + props.items.length + props.assets.length + props.skills.length;
 });
 
 const totalCost = computed(() =>
   _.sum([
     _.sumBy(props.equipments, 'cost'),
     _.sumBy(props.items, 'cost'),
+    _.sumBy(props.assets, 'cost'),
     _.sumBy(props.skills, 'cost'),
   ]),
 );
@@ -123,6 +139,39 @@ const totalCost = computed(() =>
               <div class="item-cost">{{ item.cost }} 点</div>
             </div>
             <button class="remove-btn" @click.stop="handleRemove(item, 'item')">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 资产列表 -->
+      <div v-if="assets.length > 0" class="section">
+        <div class="section-title">
+          <span class="section-label">
+            <i class="fa-solid fa-building-columns" aria-hidden="true"></i>
+            <span>资产</span>
+          </span>
+          <span class="count">({{ assets.length }})</span>
+        </div>
+        <div class="item-list">
+          <div
+            v-for="item in assets"
+            :key="item.name"
+            class="selected-item"
+            :class="{ 'is-custom': item.isCustom }"
+            @click="item.isCustom && handleEditCustom(item, 'asset')"
+          >
+            <div class="item-info">
+              <div class="item-name">
+                <span class="name-text">{{ item.name }}</span>
+                <span v-if="item.isCustom" class="custom-tag">
+                  <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                </span>
+              </div>
+              <div class="item-cost">{{ item.cost }} 点</div>
+            </div>
+            <button class="remove-btn" @click.stop="handleRemove(item, 'asset')">
               <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
           </div>

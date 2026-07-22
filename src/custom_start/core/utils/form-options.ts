@@ -37,6 +37,7 @@ export const SKILL_TYPE_OPTIONS = [
 export const CATEGORY_OPTIONS = [
   { value: 'equipment', label: '装备' },
   { value: 'item', label: '道具' },
+  { value: 'asset', label: '资产' },
   { value: 'skill', label: '技能' },
 ] as const;
 

@@ -27,6 +27,7 @@ export function useJourney(): UseJourneyReturn {
         character.value,
         characterStore.selectedEquipments,
         characterStore.selectedItems,
+        characterStore.selectedAssets,
         characterStore.selectedSkills,
         characterStore.selectedPartners,
       );
