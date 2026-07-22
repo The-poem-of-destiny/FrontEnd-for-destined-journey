@@ -1,5 +1,4 @@
 import type { Item } from '../types';
-import { AssetItemCategories } from './assets';
 import { loadCustomItems, mergeData } from '../utils/loader';
 
 interface ItemData {
@@ -20,7 +19,7 @@ let mergedItemsData: ItemData | null = null;
  */
 async function initializeItems() {
   const customData = await loadCustomItems();
-  mergedItemsData = _.omit(mergeData(InitialItems, customData), AssetItemCategories) as ItemData;
+  mergedItemsData = mergeData(InitialItems, customData) as ItemData;
 }
 
 /**
