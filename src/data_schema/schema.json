@@ -154,50 +154,7 @@
           }
         },
         "资产": {
-          "default": {},
-          "type": "object",
-          "propertyNames": {
-            "type": "string"
-          },
-          "additionalProperties": {
-            "default": {},
-            "type": "object",
-            "properties": {
-              "品质": {
-                "default": "",
-                "type": "string"
-              },
-              "类型": {
-                "default": "",
-                "type": "string"
-              },
-              "结算": {
-                "default": "",
-                "type": "string"
-              },
-              "标签": {
-                "default": [],
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "效果": {
-                "default": {},
-                "type": "object",
-                "propertyNames": {
-                  "type": "string"
-                },
-                "additionalProperties": {
-                  "type": "string"
-                }
-              },
-              "描述": {
-                "default": "",
-                "type": "string"
-              }
-            }
-          }
+          "$ref": "#/$defs/__schema15"
         },
         "金钱": {
           "default": 0,
@@ -210,7 +167,7 @@
             "type": "string"
           },
           "additionalProperties": {
-            "$ref": "#/$defs/__schema15"
+            "$ref": "#/$defs/__schema16"
           }
         }
       }
@@ -291,7 +248,7 @@
               "type": "string"
             },
             "additionalProperties": {
-              "$ref": "#/$defs/__schema15"
+              "$ref": "#/$defs/__schema16"
             }
           },
           "背包": {
@@ -303,6 +260,9 @@
             "additionalProperties": {
               "$ref": "#/$defs/__schema14"
             }
+          },
+          "资产": {
+            "$ref": "#/$defs/__schema15"
           },
           "心里话": {
             "default": "",
@@ -641,6 +601,52 @@
       }
     },
     "__schema15": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "default": {},
+        "type": "object",
+        "properties": {
+          "品质": {
+            "default": "",
+            "type": "string"
+          },
+          "类型": {
+            "default": "",
+            "type": "string"
+          },
+          "结算": {
+            "default": "",
+            "type": "string"
+          },
+          "标签": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "效果": {
+            "default": {},
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "描述": {
+            "default": "",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "__schema16": {
       "default": {},
       "type": "object",
       "properties": {

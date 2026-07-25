@@ -113,6 +113,7 @@ const partners = z
           .record(z.string(), InventoryItemSchema)
           .prefault({})
           .transform(items => _.pickBy(items, item => item.数量 > 0)),
+        资产: assets,
         心里话: z.string().prefault(''),
         背景故事: z.string().prefault(''),
       })
@@ -138,6 +139,7 @@ const partners = z
           '状态效果',
           // 物品
           '背包',
+          '资产',
           // 装备、技能、登神长阶
           '装备',
           '技能',
