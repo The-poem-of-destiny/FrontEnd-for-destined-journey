@@ -53,16 +53,23 @@ import styles from './DestinyTab.module.scss';
 type FieldType = 'text' | 'number' | 'textarea' | 'tags' | 'toggle' | 'keyvalue';
 type PartnerListCategory = 'all' | 'present' | 'away' | 'contracted';
 type PartnerDetailSection =
-  'overview' | 'status' | 'equipment' | 'skills' | 'inventory' | 'gallery' | 'background';
+  | 'overview'
+  | 'status'
+  | 'equipment'
+  | 'skills'
+  | 'inventory'
+  | 'assets'
+  | 'gallery'
+  | 'background';
 
 type PartnerRecord = Record<string, any>;
 type PartnerAssetItem = Record<string, any>;
 type PartnerAssetSectionConfig = {
-  key: Extract<PartnerDetailSection, 'equipment' | 'skills' | 'inventory'>;
+  key: Extract<PartnerDetailSection, 'equipment' | 'skills' | 'inventory' | 'assets'>;
   label: string;
-  dataKey: '装备' | '技能' | '背包';
+  dataKey: '装备' | '技能' | '背包' | '资产';
   filterKey: string;
-  itemCategory: 'equipment' | 'skill' | 'item';
+  itemCategory: 'equipment' | 'skill' | 'item' | 'asset';
   emptyText: string;
   getTitleSuffix: (item: PartnerAssetItem) => ReactNode;
 };
@@ -110,6 +117,15 @@ const PartnerAssetSections: PartnerAssetSectionConfig[] = [
     emptyText: '背包空空如也',
     getTitleSuffix: item =>
       item.数量 ? <span className={styles.skillCost}>x{item.数量}</span> : null,
+  },
+  {
+    key: 'assets',
+    label: '资产',
+    dataKey: '资产',
+    filterKey: '类型',
+    itemCategory: 'asset',
+    emptyText: '暂无资产',
+    getTitleSuffix: () => null,
   },
 ];
 
@@ -1129,6 +1145,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       { key: 'equipment', label: '装备' },
       { key: 'skills', label: '技能' },
       { key: 'inventory', label: '背包' },
+      { key: 'assets', label: '资产' },
       { key: 'background', label: '背景' },
       { key: 'gallery', label: '相册' },
     ];
