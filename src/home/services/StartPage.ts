@@ -2,11 +2,8 @@
  * 场景列表配置
  */
 export const scenarios = [
-  { index: 1, label: '我的故事将由我亲手书写(自定义)' },
-  { index: 2, label: '《来自异世界的"勇者"》' },
-  { index: 3, label: '《红月之誓（画饼占坑）》' },
-  { index: 4, label: '《线与天堂与彼岸花》' },
-  { index: 5, label: '《慈悲的"魔王"（画饼占坑）》' },
+  { index: 1, label: '我的故事将由我亲手书写' },
+  { index: 2, label: '《线与天堂与彼岸花》' },
 ];
 
 /**
