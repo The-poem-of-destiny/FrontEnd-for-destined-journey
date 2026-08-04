@@ -1,5 +1,5 @@
 import JSON5 from 'json5';
-import type { Background, BaseInfoData, Equipment, Item, Partner, Skill } from '../types';
+import type { Asset, Background, BaseInfoData, Equipment, Item, Partner, Skill } from '../types';
 
 /**
  * 数据基础路径 - CDN 部署环境
@@ -43,6 +43,11 @@ export async function loadCustomEquipments(): Promise<Record<string, Equipment[]
  */
 export async function loadCustomItems(): Promise<Record<string, Item[]>> {
   return loadJsonData<Record<string, Item[]>>('items.json', '道具');
+}
+
+/** 加载自定义资产数据 */
+export async function loadCustomAssets(): Promise<Record<string, Asset[]>> {
+  return loadJsonData<Record<string, Asset[]>>('assets.json', '资产');
 }
 
 /**

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-export type CategoryType = 'equipment' | 'item' | 'skill';
+export type CategoryType = 'equipment' | 'item' | 'asset' | 'skill';
 
 interface Props {
   modelValue: CategoryType;
@@ -15,6 +15,7 @@ const emit = defineEmits<Emits>();
 const categories = [
   { key: 'equipment', label: '装备', icon: 'fa-solid fa-shield-halved' },
   { key: 'item', label: '道具', icon: 'fa-solid fa-box-open' },
+  { key: 'asset', label: '资产', icon: 'fa-solid fa-building-columns' },
   { key: 'skill', label: '技能', icon: 'fa-solid fa-wand-magic' },
 ] as const;
 

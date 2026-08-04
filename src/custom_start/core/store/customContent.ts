@@ -37,7 +37,7 @@ export const useCustomContentStore = defineStore('customContent', () => {
    * 自定义物品表单数据
    */
   const customItemForm = ref({
-    categoryType: 'equipment' as 'equipment' | 'item' | 'skill',
+    categoryType: 'equipment' as 'equipment' | 'item' | 'asset' | 'skill',
     customItemType: '',
     itemName: '',
     itemRarity: 'common' as Rarity,
@@ -45,6 +45,7 @@ export const useCustomContentStore = defineStore('customContent', () => {
     itemEffect: {} as Record<string, string>,
     itemDescription: '',
     itemConsume: '',
+    itemSettlement: '',
     itemQuantity: 1,
   });
 
@@ -85,6 +86,7 @@ export const useCustomContentStore = defineStore('customContent', () => {
       itemEffect: {},
       itemDescription: '',
       itemConsume: '',
+      itemSettlement: '',
       itemQuantity: 1,
     };
     editingCustomItemName.value = '';

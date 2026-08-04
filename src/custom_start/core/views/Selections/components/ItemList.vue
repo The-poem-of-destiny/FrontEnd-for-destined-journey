@@ -3,16 +3,16 @@ import { useMediaQuery } from '@vueuse/core';
 import ItemCard from '../../../components/ItemCard.vue';
 import { useActiveCard, useSelectableList } from '../../../composables';
 import { useStorePoints } from '../../../composables/use-store-points';
-import type { Equipment, Item, Skill } from '../../../types';
+import type { Asset, Equipment, Item, Skill } from '../../../types';
 
 interface Props {
-  items: (Equipment | Item | Skill)[];
-  selectedItems: (Equipment | Item | Skill)[];
+  items: (Asset | Equipment | Item | Skill)[];
+  selectedItems: (Asset | Equipment | Item | Skill)[];
 }
 
 interface Emits {
-  (e: 'select', item: Equipment | Item | Skill): void;
-  (e: 'deselect', item: Equipment | Item | Skill): void;
+  (e: 'select', item: Asset | Equipment | Item | Skill): void;
+  (e: 'deselect', item: Asset | Equipment | Item | Skill): void;
 }
 
 const props = defineProps<Props>();
@@ -28,15 +28,15 @@ const { isSelected, isDisabled } = useSelectableList(
   () => availablePoints.value,
 );
 
-const handleSelect = (item: Equipment | Item | Skill) => {
+const handleSelect = (item: Asset | Equipment | Item | Skill) => {
   emit('select', item);
 };
 
-const handleDeselect = (item: Equipment | Item | Skill) => {
+const handleDeselect = (item: Asset | Equipment | Item | Skill) => {
   emit('deselect', item);
 };
 
-const handleToggleDetails = (item: Equipment | Item | Skill) => {
+const handleToggleDetails = (item: Asset | Equipment | Item | Skill) => {
   if (detailsAlwaysOpen.value) return;
   toggleActive(item.name);
 };

@@ -1,5 +1,5 @@
 import { klona } from 'klona';
-import type { Background, CharacterConfig, Equipment, Item, Partner, Skill } from '../types';
+import type { Asset, Background, CharacterConfig, Equipment, Item, Partner, Skill } from '../types';
 
 /**
  * 预设数据结构
@@ -17,6 +17,8 @@ export interface CharacterPreset {
   equipments: Equipment[];
   /** 选择的道具列表 */
   items: Item[];
+  /** 选择的资产列表 */
+  assets?: Asset[];
   /** 选择的技能列表 */
   skills: Skill[];
   /** 选择的伙伴列表 */
@@ -196,6 +198,7 @@ export function createPresetFromStore(
     character: Omit<CharacterConfig, 'attributes'>;
     selectedEquipments: Equipment[];
     selectedItems: Item[];
+    selectedAssets: Asset[];
     selectedSkills: Skill[];
     selectedPartners: Partner[];
     selectedBackground: Background | null;
@@ -210,6 +213,7 @@ export function createPresetFromStore(
     character: klona(characterStore.character),
     equipments: klona(characterStore.selectedEquipments),
     items: klona(characterStore.selectedItems),
+    assets: klona(characterStore.selectedAssets),
     skills: klona(characterStore.selectedSkills),
     partners: klona(characterStore.selectedPartners),
     background: klona(characterStore.selectedBackground),
@@ -297,6 +301,7 @@ export function applyPresetToStore(
     clearAllSelections: () => void;
     addEquipment: (equipment: Equipment) => void;
     addItem: (item: Item) => void;
+    addAsset: (asset: Asset) => void;
     addSkill: (skill: Skill) => void;
     addPartner: (partner: Partner) => void;
     setBackground: (background: Background | null) => void;
@@ -321,9 +326,10 @@ export function applyPresetToStore(
     }
   });
 
-  // 3. 应用装备、道具、技能、伙伴
+  // 3. 应用装备、道具、资产、技能、伙伴
   _.forEach(preset.equipments, eq => characterStore.addEquipment(eq));
   _.forEach(preset.items, item => characterStore.addItem(item));
+  _.forEach(preset.assets ?? [], asset => characterStore.addAsset(asset));
   _.forEach(preset.skills, skill => characterStore.addSkill(skill));
   _.forEach(preset.partners, partner => characterStore.addPartner(partner));
 
@@ -363,6 +369,7 @@ export function isStoreMatchingPreset(
     character: Omit<CharacterConfig, 'attributes'>;
     selectedEquipments: Equipment[];
     selectedItems: Item[];
+    selectedAssets: Asset[];
     selectedSkills: Skill[];
     selectedPartners: Partner[];
     selectedBackground: Background | null;
@@ -377,6 +384,7 @@ export function isStoreMatchingPreset(
     _.isEqual(charToCompare, presetCharToCompare),
     _.isEqual(characterStore.selectedEquipments, preset.equipments),
     _.isEqual(characterStore.selectedItems, preset.items),
+    _.isEqual(characterStore.selectedAssets, preset.assets ?? []),
     _.isEqual(characterStore.selectedSkills, preset.skills),
     _.isEqual(characterStore.selectedPartners, preset.partners),
     _.isEqual(characterStore.selectedBackground, preset.background),
@@ -393,6 +401,7 @@ export function findMatchingPreset(characterStore: {
   character: Omit<CharacterConfig, 'attributes'>;
   selectedEquipments: Equipment[];
   selectedItems: Item[];
+  selectedAssets: Asset[];
   selectedSkills: Skill[];
   selectedPartners: Partner[];
   selectedBackground: Background | null;

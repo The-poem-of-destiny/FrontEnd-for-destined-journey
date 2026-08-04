@@ -10,15 +10,15 @@ import {
   FormTextarea,
 } from '../../../components/Form';
 import { useCustomContentStore } from '../../../store/customContent';
-import type { Equipment, Item, Rarity, Skill } from '../../../types';
+import type { Asset, Equipment, Item, Rarity, Skill } from '../../../types';
 import { calculateCostByPosition, getCostRange } from '../../../utils/cost-calculator';
 import { CATEGORY_OPTIONS, RARITY_OPTIONS } from '../../../utils/form-options';
 
 interface Emits {
   (
     e: 'add',
-    item: Equipment | Item | Skill,
-    type: 'equipment' | 'item' | 'skill',
+    item: Asset | Equipment | Item | Skill,
+    type: 'equipment' | 'item' | 'asset' | 'skill',
     replaceName?: string,
   ): void;
 }
@@ -47,7 +47,7 @@ const cancelEdit = () => {
 // 表单数据
 const categoryType = computed({
   get: () => customContentStore.customItemForm.categoryType,
-  set: (value: 'equipment' | 'item' | 'skill') =>
+  set: (value: 'equipment' | 'item' | 'asset' | 'skill') =>
     customContentStore.updateCustomItemForm('categoryType', value),
 });
 
@@ -87,6 +87,11 @@ const itemConsume = computed({
   set: (value: string) => customContentStore.updateCustomItemForm('itemConsume', value),
 });
 
+const itemSettlement = computed({
+  get: () => customContentStore.customItemForm.itemSettlement,
+  set: (value: string) => customContentStore.updateCustomItemForm('itemSettlement', value),
+});
+
 const itemQuantity = computed({
   get: () => customContentStore.customItemForm.itemQuantity,
   set: (value: number) => customContentStore.updateCustomItemForm('itemQuantity', value),
@@ -122,7 +127,10 @@ const resetForm = () => {
 };
 
 // 回填表单
-const fillFormByItem = (item: Equipment | Item | Skill, type: 'equipment' | 'item' | 'skill') => {
+const fillFormByItem = (
+  item: Asset | Equipment | Item | Skill,
+  type: 'equipment' | 'item' | 'asset' | 'skill',
+) => {
   customContentStore.setCustomItemForm({
     categoryType: type,
     customItemType: item.type || '',
@@ -132,6 +140,7 @@ const fillFormByItem = (item: Equipment | Item | Skill, type: 'equipment' | 'ite
     itemEffect: item.effect ? { ...item.effect } : {},
     itemDescription: item.description || '',
     itemConsume: type === 'skill' ? (item as Skill).consume || '' : '',
+    itemSettlement: type === 'asset' ? (item as Asset).settlement || '' : '',
     itemQuantity: type === 'item' ? (item as Item).quantity || 1 : 1,
   });
   customContentStore.updateEditingCustomItemName(item.name || '');
@@ -185,7 +194,7 @@ const confirmAdd = () => {
     isCustom: true, // 标记为自定义数据
   };
 
-  let newItem: Equipment | Item | Skill;
+  let newItem: Asset | Equipment | Item | Skill;
 
   if (categoryType.value === 'skill') {
     newItem = {
@@ -199,6 +208,11 @@ const confirmAdd = () => {
       quantity: itemQuantity.value,
       isCustom: true,
     } as Item;
+  } else if (categoryType.value === 'asset') {
+    newItem = {
+      ...baseItem,
+      settlement: itemSettlement.value.trim() || '',
+    } as Asset;
   } else {
     newItem = baseItem as Equipment;
   }
@@ -213,7 +227,7 @@ const confirmAdd = () => {
     <div class="form-header" @click="isExpanded = !isExpanded">
       <div class="header-left">
         <h3 class="form-title">✨ 自定义</h3>
-        <div class="form-desc">创建您的专属物品、装备或技能</div>
+        <div class="form-desc">创建您的专属物品、资产、装备或技能</div>
       </div>
       <div class="toggle-icon" :class="{ rotated: isExpanded }">▼</div>
     </div>
@@ -229,7 +243,7 @@ const confirmAdd = () => {
             class="category-btn"
             :class="{ active: categoryType === option.value, disabled: isEditing }"
             :disabled="isEditing"
-            @click="categoryType = option.value as 'equipment' | 'item' | 'skill'"
+            @click="categoryType = option.value as 'equipment' | 'item' | 'asset' | 'skill'"
           >
             {{ option.label }}
           </button>
@@ -295,6 +309,12 @@ const confirmAdd = () => {
       <div v-if="categoryType === 'skill'" class="form-row">
         <FormLabel label="消耗" />
         <FormInput v-model="itemConsume" placeholder="例如：[动作: 50 SP]" />
+      </div>
+
+      <!-- 结算（仅资产分类） -->
+      <div v-if="categoryType === 'asset'" class="form-row">
+        <FormLabel label="结算" />
+        <FormInput v-model="itemSettlement" placeholder="例如：每月收取 100 金币" />
       </div>
 
       <!-- 效果 -->

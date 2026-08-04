@@ -13,6 +13,7 @@ import {
 } from '../data/base-info';
 import { getSkills } from '../data/skills';
 import type {
+  Asset,
   Attributes,
   Background,
   CharacterConfig,
@@ -59,9 +60,10 @@ export const useCharacterStore = defineStore('character', () => {
     money: 0,
   });
 
-  // 选择的装备、道具、技能
+  // 选择的装备、道具、资产、技能
   const selectedEquipments = ref<Equipment[]>([]);
   const selectedItems = ref<Item[]>([]);
+  const selectedAssets = ref<Asset[]>([]);
   const selectedSkills = ref<Skill[]>([]);
 
   // 选择的伙伴和背景
@@ -85,6 +87,8 @@ export const useCharacterStore = defineStore('character', () => {
       _.sumBy(selectedEquipments.value, 'cost'),
       // 道具消耗
       _.sumBy(selectedItems.value, 'cost'),
+      // 资产消耗
+      _.sumBy(selectedAssets.value, 'cost'),
       // 技能消耗
       _.sumBy(selectedSkills.value, 'cost'),
       // 伙伴消耗
@@ -198,6 +202,19 @@ export const useCharacterStore = defineStore('character', () => {
     selectedItems.value.push(item);
   };
 
+  const addAsset = (asset: Asset) => {
+    selectedAssets.value.push(asset);
+  };
+
+  const removeAsset = (asset: Asset) => {
+    _.remove(selectedAssets.value, item => item.name === asset.name);
+  };
+
+  const replaceAssetByName = (asset: Asset, targetName: string) => {
+    _.remove(selectedAssets.value, item => item.name === targetName);
+    selectedAssets.value.push(asset);
+  };
+
   const addSkill = (skill: Skill) => {
     selectedSkills.value.push(skill);
   };
@@ -214,6 +231,7 @@ export const useCharacterStore = defineStore('character', () => {
   const clearSelections = () => {
     selectedEquipments.value = [];
     selectedItems.value = [];
+    selectedAssets.value = [];
     selectedSkills.value = [];
   };
 
@@ -226,6 +244,7 @@ export const useCharacterStore = defineStore('character', () => {
   const clearAllSelections = () => {
     selectedEquipments.value = [];
     selectedItems.value = [];
+    selectedAssets.value = [];
     selectedSkills.value = [];
     selectedPartners.value = [];
     selectedBackground.value = null;
@@ -337,6 +356,7 @@ export const useCharacterStore = defineStore('character', () => {
     consumedPoints,
     selectedEquipments,
     selectedItems,
+    selectedAssets,
     selectedSkills,
     selectedPartners,
     selectedBackground,
@@ -363,6 +383,9 @@ export const useCharacterStore = defineStore('character', () => {
     addItem,
     removeItem,
     replaceItemByName,
+    addAsset,
+    removeAsset,
+    replaceAssetByName,
     addSkill,
     removeSkill,
     replaceSkillByName,

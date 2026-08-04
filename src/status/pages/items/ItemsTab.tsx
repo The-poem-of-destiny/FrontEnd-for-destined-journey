@@ -48,6 +48,14 @@ const ItemCategories = [
     pathPrefix: '主角.技能',
     itemCategory: 'skill' as const,
   },
+  {
+    id: 'assets',
+    label: '资产',
+    icon: 'fa-solid fa-building-columns',
+    filterKey: '类型',
+    pathPrefix: '主角.资产',
+    itemCategory: 'asset' as const,
+  },
 ] as const;
 
 type CategoryId = (typeof ItemCategories)[number]['id'];
@@ -102,7 +110,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const activeCategoryConfig = getCategoryConfig(activeCategory);
   const activeCategoryItems = useMemo(
     () => getCategoryData(activeCategory),
-    [activeCategory, player.技能, player.装备, player.背包],
+    [activeCategory, player.技能, player.装备, player.背包, player.资产],
   );
 
   const inspectCategoryConfig = inspectItem ? getCategoryConfig(inspectItem.categoryId) : null;
@@ -243,6 +251,19 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
     if (config.itemCategory === 'equipment') {
       return item.位置 ? <span className={styles.itemSlot}>[{item.位置}]</span> : null;
+    }
+
+    if (config.itemCategory === 'asset') {
+      if (!item.结算) return null;
+
+      const settlement = Array.from(item.结算);
+      const displaySettlement =
+        settlement.length > 4 ? `${settlement.slice(0, 4).join('')}...` : item.结算;
+      return (
+        <span className={styles.itemCost} title={item.结算}>
+          {displaySettlement}
+        </span>
+      );
     }
 
     return item.消耗 ? <span className={styles.itemCost}>{item.消耗}</span> : null;
@@ -386,6 +407,14 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     );
   };
 
+  const renderAssets = () => {
+    return renderItemList(
+      normalizedActiveFilter === ALL_FILTER
+        ? '暂无资产'
+        : `没有${normalizedActiveFilter}类型的资产`,
+    );
+  };
+
   /** 渲染当前类别内容 */
   const renderCategoryContent = () => {
     switch (activeCategory) {
@@ -395,6 +424,8 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
         return renderEquipment();
       case 'skills':
         return renderSkills();
+      case 'assets':
+        return renderAssets();
       default:
         return null;
     }

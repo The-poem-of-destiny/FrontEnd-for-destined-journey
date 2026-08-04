@@ -6,6 +6,7 @@ import {
 } from '../data/base-info';
 import { RARITY_MAP } from '../data/constants';
 import type {
+  Asset,
   Attributes,
   Background,
   CharacterConfig,
@@ -52,6 +53,11 @@ const toEquipmentVariable = (item: MvuEquipmentSource) => ({
 const toInventoryVariable = (item: Item) => ({
   ...toBaseItemVariable(item),
   数量: Math.max(1, Math.round(item.quantity || 1)),
+});
+
+const toAssetVariable = (asset: Asset) => ({
+  ...toBaseItemVariable(asset),
+  结算: asset.settlement || '',
 });
 
 const toSkillVariable = (skill: MvuSkillSource) => ({
@@ -139,6 +145,7 @@ export async function writeCharacterToMvu(
   character: CharacterConfig,
   equipments: Equipment[],
   items: Item[],
+  assets: Asset[],
   skills: Skill[],
   partners: Partner[],
 ): Promise<void> {
@@ -171,6 +178,7 @@ export async function writeCharacterToMvu(
     状态效果: {},
     金钱: Math.max(0, Math.round(character.money)),
     背包: toNamedRecord(items, toInventoryVariable),
+    资产: toNamedRecord(assets, toAssetVariable),
     装备: toNamedRecord(equipments, toEquipmentVariable),
     技能: toNamedRecord(skills, toSkillVariable),
     登神长阶: toAscensionVariable(),
@@ -197,7 +205,7 @@ export function generateAIPrompt(
 
   lines.push('【剧情生成上下文】');
   lines.push(
-    '角色、属性、金钱、装备、背包、技能、伙伴等结构化数据已写入 <status_current_variables>。',
+    '角色、属性、金钱、装备、背包、资产、技能、伙伴等结构化数据已写入 <status_current_variables>。',
   );
   lines.push('以下只提供 schema 外字段和需要创作的开局上下文。');
   lines.push('');
