@@ -106,6 +106,12 @@ const partners = z
         喜爱: z.string().prefault(''),
         外貌: z.string().prefault(''),
         着装: z.string().prefault(''),
+        生命值: z.coerce.number().prefault(0),
+        生命值上限: z.coerce.number().prefault(0),
+        法力值: z.coerce.number().prefault(0),
+        法力值上限: z.coerce.number().prefault(0),
+        体力值: z.coerce.number().prefault(0),
+        体力值上限: z.coerce.number().prefault(0),
         命定契约: z.boolean().prefault(false),
         好感度: clampedMum(0, -100, 100),
         状态效果: z.record(z.string(), StatusEffectSchema).prefault({}),
@@ -118,8 +124,15 @@ const partners = z
         背景故事: z.string().prefault(''),
       })
       .prefault({})
-      .transform(data =>
-        _.pick(data, [
+      .transform(data => {
+        const processed = {
+          ...data,
+          生命值: _.clamp(data.生命值, 0, data.生命值上限),
+          法力值: _.clamp(data.法力值, 0, data.法力值上限),
+          体力值: _.clamp(data.体力值, 0, data.体力值上限),
+        };
+
+        return _.pick(processed, [
           // 状态信息
           '在场',
           // 基础信息
@@ -134,6 +147,13 @@ const partners = z
           '着装',
           // 等级
           '等级',
+          // 资源值
+          '生命值上限',
+          '生命值',
+          '法力值上限',
+          '法力值',
+          '体力值上限',
+          '体力值',
           // 属性
           '属性',
           '状态效果',
@@ -150,8 +170,8 @@ const partners = z
           // 故事信息
           '心里话',
           '背景故事',
-        ]),
-      ),
+        ]);
+      }),
   )
   .prefault({});
 
