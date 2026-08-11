@@ -78,12 +78,16 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   const categoryStorageKey = buildSessionKey('items', 'active-category');
   const filterStorageKey = buildSessionKey('items', 'active-filter');
+  const searchStorageKey = buildSessionKey('items', 'search');
 
   const [activeCategory, setActiveCategory] = useState<CategoryId>(() =>
     readSessionState<CategoryId>(categoryStorageKey, 'inventory'),
   );
   const [activeFilter, setActiveFilter] = useState<string>(() =>
     readSessionState<string>(filterStorageKey, ALL_FILTER),
+  );
+  const [searchKeyword, setSearchKeyword] = useState<string>(() =>
+    readSessionState<string>(searchStorageKey, ''),
   );
   const [selectedItem, setSelectedItem] = useState<InspectItemState>(null);
   const [inspectItem, setInspectItem] = useState<InspectItemState>(null);
@@ -144,6 +148,10 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     writeSessionState(filterStorageKey, activeFilter);
   }, [activeFilter, filterStorageKey]);
 
+  useEffect(() => {
+    writeSessionState(searchStorageKey, searchKeyword);
+  }, [searchKeyword, searchStorageKey]);
+
   /** 计算当前类别的所有筛选选项 */
   const filterOptions = useMemo(() => {
     return getAssetFilterOptions(activeCategoryItems, getFilterKey(activeCategory), ALL_FILTER);
@@ -159,13 +167,21 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const normalizedActiveFilter = filterOptions.includes(activeFilter) ? activeFilter : ALL_FILTER;
 
   const filteredEntries = useMemo(() => {
-    return getFilteredAssetEntries(
+    const entries = getFilteredAssetEntries(
       activeCategoryItems,
       getFilterKey(activeCategory),
       normalizedActiveFilter,
       ALL_FILTER,
     );
-  }, [activeCategory, activeCategoryItems, normalizedActiveFilter]);
+
+    const keyword = searchKeyword.trim().toLowerCase();
+    if (!keyword) return entries;
+
+    return entries.filter(([name, item]) => {
+      const haystack = [name, item.类型 ?? '', ...(item.标签 ?? [])].join(' ').toLowerCase();
+      return haystack.includes(keyword);
+    });
+  }, [activeCategory, activeCategoryItems, normalizedActiveFilter, searchKeyword]);
 
   const activeFilterCountMap = useMemo(() => {
     return filterOptions.reduce<Record<string, number>>((acc, option) => {
@@ -199,10 +215,11 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     }
   }, [activeCategory, filteredEntries, selectedItem]);
 
-  /** 切换类别时重置筛选器 */
+  /** 切换类别时重置筛选器与搜索词 */
   const handleCategoryChange = (category: CategoryId) => {
     setActiveCategory(category);
     setActiveFilter(ALL_FILTER);
+    setSearchKeyword('');
     setSelectedItem(null);
     setInspectItem(null);
   };
@@ -322,7 +339,12 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   const renderItemList = (emptyText: string) => {
     if (filteredEntries.length === 0) {
-      return <EmptyHint className={styles.emptyHint} text={emptyText} />;
+      return (
+        <EmptyHint
+          className={styles.emptyHint}
+          text={searchKeyword.trim() ? '没有找到匹配的物品' : emptyText}
+        />
+      );
     }
 
     return (
@@ -362,16 +384,14 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 <span className={styles.itemRowSuffix}>
                   {getTitleSuffix(activeCategoryConfig, item)}
                 </span>
-                {editEnabled ? (
-                  <button
-                    type="button"
-                    className={styles.itemDeleteButton}
-                    onClick={event => handleDeleteItemClick(event, name)}
-                    title="删除"
-                  >
-                    <i className="fa-solid fa-trash-can" />
-                  </button>
-                ) : null}
+                <button
+                  type="button"
+                  className={styles.itemDeleteButton}
+                  onClick={event => handleDeleteItemClick(event, name)}
+                  title="删除"
+                >
+                  <i className="fa-solid fa-trash-can" />
+                </button>
               </span>
             </div>
           );
@@ -459,6 +479,28 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
       </div>
 
       <div className={styles.itemsWorkspace}>
+        {/* 关键词搜索 */}
+        <div className={styles.searchBar}>
+          <i className="fa-solid fa-magnifying-glass" />
+          <input
+            type="text"
+            className={styles.searchInput}
+            placeholder="搜索物品名称/类型/标签"
+            value={searchKeyword}
+            onChange={event => setSearchKeyword(event.target.value)}
+          />
+          {searchKeyword && (
+            <button
+              type="button"
+              className={styles.searchClear}
+              onClick={() => setSearchKeyword('')}
+              title="清空搜索"
+            >
+              <i className="fa-solid fa-xmark" />
+            </button>
+          )}
+        </div>
+
         {/* 子分类筛选器 */}
         {filterOptions.length > 1 && (
           <div className={styles.filterBar}>
