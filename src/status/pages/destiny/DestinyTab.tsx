@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
-import { useEditorSettingStore } from '../../core/stores';
+import { useEditorSettingStore, useMvuDataStore } from '../../core/stores';
 import {
   buildSessionKey,
   createPartnerGalleryItem,
@@ -134,6 +134,7 @@ const PartnerAssetSections: PartnerAssetSectionConfig[] = [
  */
 const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const editEnabled = useEditorSettingStore(state => state.editEnabled);
+  const { updateField } = useMvuDataStore();
   const { deleteTarget, setDeleteTarget, handleDelete, cancelDelete, isConfirmOpen } =
     useDeleteConfirm();
   const destinyPoints = data.命运点数;
@@ -147,6 +148,8 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   );
   const partnerDetailStorageKey = buildSessionKey('destiny', 'partner-detail');
   const partnerFilterStorageKey = buildSessionKey('destiny', 'partner-filter');
+  const partnerSearchStorageKey = buildSessionKey('destiny', 'partner-search');
+  const partnerLabelStorageKey = buildSessionKey('destiny', 'partner-label');
   const avatarScopeKey = useMemo(() => getAvatarScopeKey(), []);
 
   const [activePartnerListCategory, setActivePartnerListCategory] = useState<PartnerListCategory>(
@@ -164,6 +167,12 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     );
   const [activePartnerAssetFilter, setActivePartnerAssetFilter] = useState<string>(() =>
     readSessionState<string>(partnerFilterStorageKey, ALL_FILTER),
+  );
+  const [partnerSearchKeyword, setPartnerSearchKeyword] = useState<string>(() =>
+    readSessionState<string>(partnerSearchStorageKey, ''),
+  );
+  const [activePartnerLabel, setActivePartnerLabel] = useState<string | null>(() =>
+    readSessionState<string | null>(partnerLabelStorageKey, null),
   );
   const [partnerAvatarMap, setPartnerAvatarMap] = useState<Record<string, string>>({});
   const [partnerDefaultAvatarMap, setPartnerDefaultAvatarMap] = useState<Record<string, string>>(
@@ -205,10 +214,43 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     });
   }, [partnerEntries]);
 
+  /** 全部伙伴标签（用于标签筛选） */
+  const allPartnerLabels = useMemo(() => {
+    const labelSet = new Set<string>();
+    partnerEntries.forEach(([, partner]) => {
+      (partner.标签 ?? []).forEach(tag => labelSet.add(tag));
+    });
+    return Array.from(labelSet);
+  }, [partnerEntries]);
+
   const activePartnerListCategoryConfig =
     partnerCategoryEntries.find(category => category.key === activePartnerListCategory) ??
     partnerCategoryEntries[0];
-  const visiblePartnerEntries = activePartnerListCategoryConfig?.entries ?? [];
+
+  /** 当前可见伙伴：固定分类 + 标签筛选 + 关键词搜索 叠加 */
+  const visiblePartnerEntries = useMemo(() => {
+    let entries = activePartnerListCategoryConfig?.entries ?? [];
+
+    if (activePartnerLabel) {
+      entries = entries.filter(([, partner]) => (partner.标签 ?? []).includes(activePartnerLabel));
+    }
+
+    const keyword = partnerSearchKeyword.trim().toLowerCase();
+    if (keyword) {
+      entries = entries.filter(([name, partner]) => {
+        const identity = Array.isArray(partner.身份) ? partner.身份.join(' ') : (partner.身份 ?? '');
+        const occupation = Array.isArray(partner.职业)
+          ? partner.职业.join(' ')
+          : (partner.职业 ?? '');
+        const haystack = [name, partner.种族 ?? '', identity, occupation, ...(partner.标签 ?? [])]
+          .join(' ')
+          .toLowerCase();
+        return haystack.includes(keyword);
+      });
+    }
+
+    return entries;
+  }, [activePartnerLabel, activePartnerListCategoryConfig, partnerSearchKeyword]);
   const activePartnerName =
     selectedPartnerName && visiblePartnerEntries.some(([name]) => name === selectedPartnerName)
       ? selectedPartnerName
@@ -494,11 +536,32 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     );
   };
 
-  const renderPartnerDeleteButton = (partnerName: string) => {
-    if (!editEnabled) {
-      return null;
+  /** 切换伙伴在场状态（快捷操作，不依赖编辑模式） */
+  const handleTogglePresence = async (partnerName: string, partner: PartnerRecord) => {
+    const next = !partner.在场;
+    const success = await updateField(`关系列表.${partnerName}.在场`, next);
+    if (success) {
+      toastr.success(next ? `「${partnerName}」已切换为在场` : `「${partnerName}」已切换为离场`);
+    } else {
+      toastr.error('在场状态切换失败');
     }
+  };
 
+  const renderPartnerPresenceToggle = (partnerName: string, partner: PartnerRecord) => (
+    <button
+      type="button"
+      className={`${styles.partnerPresenceToggle} ${partner.在场 ? styles.partnerPresenceToggleOn : ''}`}
+      onClick={(e: MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        void handleTogglePresence(partnerName, partner);
+      }}
+      title={partner.在场 ? '切换为离场' : '切换为在场'}
+    >
+      <i className={partner.在场 ? 'fa-solid fa-eye' : 'fa-regular fa-eye-slash'} />
+    </button>
+  );
+
+  const renderPartnerDeleteButton = (partnerName: string) => {
     return (
       <button
         className={styles.deletePartnerBtn}
@@ -517,7 +580,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     );
   };
 
-  const renderPartnerIdentity = (
+  const renderPartnerHeaderMeta = (
     partnerName: string,
     partner: PartnerRecord,
     showDelete = false,
@@ -528,7 +591,12 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
           <IconTitle text={partnerName} className={styles.partnerName} />
           {!hasPartnerAvatar(partnerName) ? renderPartnerAvatarAddInlineButton(partnerName) : null}
         </div>
-        {showDelete ? renderPartnerDeleteButton(partnerName) : null}
+        {showDelete ? (
+          <div className={styles.partnerHeaderActions}>
+            {renderPartnerPresenceToggle(partnerName, partner)}
+            {renderPartnerDeleteButton(partnerName)}
+          </div>
+        ) : null}
       </div>
       <div className={styles.partnerMeta}>
         <span className={styles.affectionBadge}>好感度 {partner.好感度 ?? 0}</span>
@@ -539,8 +607,33 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
           )}
         </div>
       </div>
+    </>
+  );
+
+  const renderPartnerRest = (partner: PartnerRecord) => (
+    <>
+      {(partner.标签?.length ?? 0) > 0 && (
+        <div className={styles.partnerLabelChips}>
+          {(partner.标签 ?? []).map((tag: string) => (
+            <span key={tag} className={styles.partnerLabelChip}>
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
       <div className={styles.partnerSummaryText}>{getPartnerSummaryText(partner)}</div>
       <div className={styles.partnerSummaryStatus}>{getPartnerStatusSummary(partner)}</div>
+    </>
+  );
+
+  const renderPartnerIdentity = (
+    partnerName: string,
+    partner: PartnerRecord,
+    showDelete = false,
+  ) => (
+    <>
+      {renderPartnerHeaderMeta(partnerName, partner, showDelete)}
+      {renderPartnerRest(partner)}
     </>
   );
 
@@ -556,15 +649,15 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     </div>
   );
 
+  /** 角色信息摘要：身份一行，等级层级一行（依赖 pre-line 换行） */
   const getPartnerRoleText = (partner: PartnerRecord) => {
-    const roleParts = [
+    const identity = _.compact([
       partner.种族,
       Array.isArray(partner.职业) ? partner.职业.join(' / ') : partner.职业,
-      partner.等级 ? `Lv.${partner.等级}` : '',
-      partner.生命层级,
-    ];
+    ]).join(' · ');
+    const meta = _.compact([partner.等级 ? `Lv.${partner.等级}` : '', partner.生命层级]).join(' · ');
 
-    return _.compact(roleParts).join(' · ') || '暂无定位';
+    return _.compact([identity, meta]).join('\n') || '暂无定位';
   };
 
   const getPartnerStatusSummary = (partner: PartnerRecord) => {
@@ -1080,6 +1173,8 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     setSelectedPartnerName(null);
     setActivePartnerDetailSection('overview');
     setActivePartnerAssetFilter(ALL_FILTER);
+    setPartnerSearchKeyword('');
+    setActivePartnerLabel(null);
     setIsPartnerDetailOpen(false);
   };
 
@@ -1129,12 +1224,11 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         }
       }}
     >
-      <div className={styles.partnerSummaryMain}>
-        {renderPartnerAvatar(partnerName)}
-        <div className={styles.partnerSummaryBody}>
-          {renderPartnerIdentity(partnerName, partner, true)}
-        </div>
+      {renderPartnerAvatar(partnerName)}
+      <div className={styles.partnerSummaryTopBody}>
+        {renderPartnerHeaderMeta(partnerName, partner, true)}
       </div>
+      <div className={styles.partnerSummaryRest}>{renderPartnerRest(partner)}</div>
     </div>
   );
 
@@ -1213,6 +1307,14 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 <div className={styles.partnerInfoPanel}>
                   <div className={styles.sectionLabel}>基础信息</div>
                   <div className={styles.partnerInfo}>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>标签</span>
+                      <EditableField
+                        path={`关系列表.${partnerName}.标签`}
+                        value={partner.标签 ?? []}
+                        type="tags"
+                      />
+                    </div>
                     {renderEditableRow(
                       '种族',
                       `关系列表.${partnerName}.种族`,
@@ -1428,6 +1530,50 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
           ))}
         </div>
 
+        <div className={styles.partnerToolbar}>
+          <div className={styles.partnerSearchBar}>
+            <i className="fa-solid fa-magnifying-glass" />
+            <input
+              type="text"
+              className={styles.partnerSearchInput}
+              placeholder="搜索伙伴名称/标签/种族/身份/职业"
+              value={partnerSearchKeyword}
+              onChange={e => setPartnerSearchKeyword(e.target.value)}
+            />
+            {partnerSearchKeyword && (
+              <button
+                type="button"
+                className={styles.partnerSearchClear}
+                onClick={() => setPartnerSearchKeyword('')}
+                title="清空搜索"
+              >
+                <i className="fa-solid fa-xmark" />
+              </button>
+            )}
+          </div>
+          {allPartnerLabels.length > 0 && (
+            <div className={styles.partnerLabelBar}>
+              <button
+                type="button"
+                className={`${styles.partnerLabelBtn} ${activePartnerLabel === null ? styles.partnerLabelBtnActive : ''}`}
+                onClick={() => setActivePartnerLabel(null)}
+              >
+                全部
+              </button>
+              {allPartnerLabels.map(label => (
+                <button
+                  key={label}
+                  type="button"
+                  className={`${styles.partnerLabelBtn} ${activePartnerLabel === label ? styles.partnerLabelBtnActive : ''}`}
+                  onClick={() => setActivePartnerLabel(label)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className={styles.partnerMasterDetail}>
           <div
             className={`${styles.partnerSummaryList} ${isPartnerDetailVisible ? styles.partnerSummaryListHiddenMobile : ''}`}
@@ -1613,6 +1759,14 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   useEffect(() => {
     writeSessionState(partnerFilterStorageKey, activePartnerAssetFilter);
   }, [activePartnerAssetFilter, partnerFilterStorageKey]);
+
+  useEffect(() => {
+    writeSessionState(partnerSearchStorageKey, partnerSearchKeyword);
+  }, [partnerSearchKeyword, partnerSearchStorageKey]);
+
+  useEffect(() => {
+    writeSessionState(partnerLabelStorageKey, activePartnerLabel);
+  }, [activePartnerLabel, partnerLabelStorageKey]);
 
   useEffect(() => {
     if (!selectedPartnerName || !activePartnerName) return;
