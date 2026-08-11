@@ -92,6 +92,10 @@ export interface ThemeColors {
   warning: string;
   /** 错误状态 */
   error: string;
+  /** 错误正文文字 */
+  errorText: string;
+  /** 实底错误控件文字 */
+  errorSolidText: string;
 
   // 命定系统专用
   /** 好感度条颜色 */
