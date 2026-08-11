@@ -1313,6 +1313,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                         path={`关系列表.${partnerName}.标签`}
                         value={partner.标签 ?? []}
                         type="tags"
+                        bypassEditGuard
                       />
                     </div>
                     {renderEditableRow(

@@ -118,6 +118,16 @@ export const useThemeStore = create<ThemeStore>()(
         const cssVarName = `--theme-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
         root.style.setProperty(cssVarName, String(value));
       });
+
+      // 标记主题明暗，供样式层按浅色/深色主题适配
+      const bg = colors.windowBg;
+      const match = /^#([0-9a-f]{6})$/i.exec(bg);
+      if (match) {
+        const channels = [0, 2, 4].map(i => parseInt(match[1].slice(i, i + 2), 16) / 255);
+        const luminance =
+          0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+        root.dataset.themeMode = luminance > 0.5 ? 'light' : 'dark';
+      }
     },
   })),
 );

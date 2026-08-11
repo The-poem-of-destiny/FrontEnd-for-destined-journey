@@ -27,6 +27,8 @@ export interface EditableFieldProps {
   label?: string;
   /** 是否禁用 */
   disabled?: boolean;
+  /** 绕过编辑模式锁：未开启"允许编辑数据"时也可编辑（仍走确认弹窗） */
+  bypassEditGuard?: boolean;
   /** 自定义类名 */
   className?: string;
   /** 数字编辑器配置 */
@@ -69,6 +71,7 @@ export const EditableField: FC<EditableFieldProps> = ({
   type = 'text',
   label,
   disabled = false,
+  bypassEditGuard = false,
   className,
   numberConfig,
   keyValueConfig,
@@ -84,7 +87,7 @@ export const EditableField: FC<EditableFieldProps> = ({
   const [showConfirm, setShowConfirm] = useState(false);
 
   const { editEnabled } = useEditorSettingStore();
-  const isDisabled = disabled || !editEnabled;
+  const isDisabled = disabled || (!bypassEditGuard && !editEnabled);
 
   const formattedCurrentValue = useMemo(() => value, [value]);
 

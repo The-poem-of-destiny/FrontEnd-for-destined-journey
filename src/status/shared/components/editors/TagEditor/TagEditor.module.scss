@@ -33,6 +33,13 @@
   word-break: break-word;
 }
 
+// 浅色主题：标签 chip 用浅色底 + 深色边框，避免深色块
+:global([data-theme-mode='light']) .tag {
+  background: var(--theme-card-bg);
+  border: 1px solid var(--theme-primary-bg);
+  color: var(--theme-text-primary);
+}
+
 .removeBtn {
   display: flex;
   align-items: center;
