@@ -88,7 +88,7 @@ export const ItemDetail: FC<ItemDetailProps> = ({
   const remainingEffectCount = Math.max(effectNames.length - summaryEffectNames.length, 0);
 
   const renderDeleteButton = () => {
-    if (!editEnabled || !onDelete) return null;
+    if (!onDelete) return null;
 
     return (
       <button

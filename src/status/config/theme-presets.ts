@@ -51,11 +51,11 @@ const ParchmentTheme: Theme = {
     // 品质颜色
     qualityCommon: '#e4d6bb',
     qualityUnique: '#d6a057',
-    qualityMythic: '#CD6B7E',
+    qualityMythic: '#D58292',
     qualityLegendary: '#e1c067',
-    qualityEpic: '#9A79CC',
-    qualityRare: '#578CCB',
-    qualityUncommon: '#519767',
+    qualityEpic: '#AB8FD4',
+    qualityRare: '#6E9CD2',
+    qualityUncommon: '#5EA975',
 
     // 交互状态
     primaryBg: '#91602c',
@@ -63,6 +63,8 @@ const ParchmentTheme: Theme = {
     success: '#4f9b68',
     warning: '#d1a13f',
     error: '#c14a3a',
+    errorText: '#ef8272',
+    errorSolidText: '#fff',
 
     // 命定系统
     affection: '#b4586c',
@@ -120,7 +122,7 @@ const CrimsonTheme: Theme = {
     // 文本颜色
     textPrimary: '#f2d7d9',
     textSecondary: '#d1a3a8',
-    textMuted: '#9f6f74',
+    textMuted: '#b78388',
 
     // 资源条
     resourceHp: '#c23a3a',
@@ -132,11 +134,11 @@ const CrimsonTheme: Theme = {
     // 品质颜色
     qualityCommon: '#e6c0c4',
     qualityUnique: '#d79a55',
-    qualityMythic: '#CA637F',
+    qualityMythic: '#D27A92',
     qualityLegendary: '#e0b35e',
-    qualityEpic: '#9572CD',
-    qualityRare: '#5086CA',
-    qualityUncommon: '#519167',
+    qualityEpic: '#A689D5',
+    qualityRare: '#6796D1',
+    qualityUncommon: '#5CA475',
 
     // 交互状态
     primaryBg: '#94323b',
@@ -144,6 +146,8 @@ const CrimsonTheme: Theme = {
     success: '#4e955f',
     warning: '#d0a040',
     error: '#d24b4f',
+    errorText: '#f07a7f',
+    errorSolidText: '#0d090a',
 
     // 命定系统
     affection: '#c04b61',
@@ -201,7 +205,7 @@ const IndigoTheme: Theme = {
     // 文本颜色
     textPrimary: '#dbe6f7',
     textSecondary: '#aabbd8',
-    textMuted: '#7386a6',
+    textMuted: '#8196b9',
 
     // 资源条
     resourceHp: '#b8423c',
@@ -213,11 +217,11 @@ const IndigoTheme: Theme = {
     // 品质颜色
     qualityCommon: '#d5e0f2',
     qualityUnique: '#d7a35b',
-    qualityMythic: '#C56D91',
+    qualityMythic: '#CE83A2',
     qualityLegendary: '#e1c36d',
-    qualityEpic: '#937AD2',
-    qualityRare: '#5B89D3',
-    qualityUncommon: '#569672',
+    qualityEpic: '#B89DFC',
+    qualityRare: '#739AD9',
+    qualityUncommon: '#64A681',
 
     // 交互状态
     primaryBg: '#3c5fb8',
@@ -225,6 +229,8 @@ const IndigoTheme: Theme = {
     success: '#4a9a6a',
     warning: '#d1a343',
     error: '#c65045',
+    errorText: '#ee776b',
+    errorSolidText: '#fff',
 
     // 命定系统
     affection: '#6b58c3',
@@ -282,7 +288,7 @@ const BronzeTheme: Theme = {
     // 文本颜色
     textPrimary: '#f1e4c3',
     textSecondary: '#cbb486',
-    textMuted: '#9a8660',
+    textMuted: '#aa956d',
 
     // 资源条
     resourceHp: '#b23c2f',
@@ -294,11 +300,11 @@ const BronzeTheme: Theme = {
     // 品质颜色
     qualityCommon: '#e3d5b2',
     qualityUnique: '#d39b42',
-    qualityMythic: '#CE6B83',
+    qualityMythic: '#D68296',
     qualityLegendary: '#e2b858',
-    qualityEpic: '#917DD0',
-    qualityRare: '#5C8CCC',
-    qualityUncommon: '#55986E',
+    qualityEpic: '#A493D8',
+    qualityRare: '#739CD3',
+    qualityUncommon: '#64A87D',
 
     // 交互状态
     primaryBg: '#8d6a1f',
@@ -306,6 +312,8 @@ const BronzeTheme: Theme = {
     success: '#48925f',
     warning: '#d49a2f',
     error: '#bf4533',
+    errorText: '#e97862',
+    errorSolidText: '#fff',
 
     // 命定系统
     affection: '#a85e44',
@@ -375,18 +383,20 @@ const SakuraTheme: Theme = {
     // 品质颜色
     qualityCommon: '#e6cddc',
     qualityUnique: '#d99a69',
-    qualityMythic: '#CA658C',
+    qualityMythic: '#D27C9D',
     qualityLegendary: '#e0b56a',
-    qualityEpic: '#9F71CF',
-    qualityRare: '#5F84D2',
-    qualityUncommon: '#5a9a74',
+    qualityEpic: '#AE88D7',
+    qualityRare: '#7796D9',
+    qualityUncommon: '#64A47E',
 
     // 交互状态
-    primaryBg: '#b45a86',
+    primaryBg: '#a44875',
     primaryText: '#fff0f8',
     success: '#4fa070',
     warning: '#d3a44a',
     error: '#d14a69',
+    errorText: '#ef7190',
+    errorSolidText: '#100a0d',
 
     // 命定系统
     affection: '#c56a9a',
@@ -456,9 +466,9 @@ const ObsidianTheme: Theme = {
     // 品质颜色
     qualityCommon: '#c9d2e0',
     qualityUnique: '#f09f4d',
-    qualityMythic: '#e4587d',
+    qualityMythic: '#E87292',
     qualityLegendary: '#e5c166',
-    qualityEpic: '#9a72f8',
+    qualityEpic: '#A885F9',
     qualityRare: '#5d97ff',
     qualityUncommon: '#56bf7b',
 
@@ -468,6 +478,8 @@ const ObsidianTheme: Theme = {
     success: '#35c98a',
     warning: '#f0b84b',
     error: '#ff6d6d',
+    errorText: '#ff6d6d',
+    errorSolidText: '#10131a',
 
     // 命定系统
     affection: '#ff6f91',
@@ -512,7 +524,7 @@ const IvoryTheme: Theme = {
     tabBarBg: '#eadfce',
     tabText: '#725944',
     tabActiveText: '#372615',
-    tabIndicator: '#b08343',
+    tabIndicator: '#936526',
     tabHoverBg: 'rgba(176, 131, 67, 0.12)',
 
     // 内容区域
@@ -536,12 +548,12 @@ const IvoryTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#6b6258',
-    qualityUnique: '#976219',
-    qualityMythic: '#b23d5a',
-    qualityLegendary: '#8A6813',
+    qualityUnique: '#855716',
+    qualityMythic: '#A33852',
+    qualityLegendary: '#785A11',
     qualityEpic: '#6e4ab4',
-    qualityRare: '#2e69b2',
-    qualityUncommon: '#2f7a4a',
+    qualityRare: '#2A5FA2',
+    qualityUncommon: '#296B41',
 
     // 交互状态
     primaryBg: '#b58a4a',
@@ -549,6 +561,8 @@ const IvoryTheme: Theme = {
     success: '#1f5e3c',
     warning: '#8a6422',
     error: '#8f2f23',
+    errorText: '#8f2f23',
+    errorSolidText: '#fff',
 
     // 命定系统
     affection: '#b35b6d',
@@ -565,7 +579,7 @@ const IvoryTheme: Theme = {
     ascensionLaw: 'rgba(118, 70, 178, 0.14)',
 
     // 货币
-    currencyGold: '#9a7514',
+    currencyGold: '#80600d',
     currencySilver: '#8a8a8a',
     currencyCopper: '#a46a34',
   },
@@ -617,19 +631,21 @@ const MistyLilacTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#5b5468',
-    qualityUnique: '#98651C',
-    qualityMythic: '#C22B80',
-    qualityLegendary: '#8D6A14',
-    qualityEpic: '#7F5DBF',
-    qualityRare: '#286CD7',
-    qualityUncommon: '#267F49',
+    qualityUnique: '#875A19',
+    qualityMythic: '#BA297A',
+    qualityLegendary: '#7B5D11',
+    qualityEpic: '#734EB9',
+    qualityRare: '#2563C6',
+    qualityUncommon: '#216F40',
 
     // 交互状态
     primaryBg: '#7A5CB3',
-    primaryText: '#2f273a',
+    primaryText: '#fbf8ff',
     success: '#1f7a45',
     warning: '#8f6219',
     error: '#b02337',
+    errorText: '#b02337',
+    errorSolidText: '#fff',
 
     // 命定系统
     affection: '#F05CB2',
@@ -646,7 +662,7 @@ const MistyLilacTheme: Theme = {
     ascensionLaw: 'rgba(117, 88, 171, 0.14)',
 
     // 货币
-    currencyGold: '#9D741B',
+    currencyGold: '#886015',
     currencySilver: '#6F667A',
     currencyCopper: '#8C7BAB',
   },

@@ -217,6 +217,13 @@
             "default": false,
             "type": "boolean"
           },
+          "标签": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "性格": {
             "default": "",
             "type": "string"

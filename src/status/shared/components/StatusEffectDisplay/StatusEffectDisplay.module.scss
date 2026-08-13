@@ -264,7 +264,7 @@
   &:hover {
     background: color-mix(in srgb, var(--theme-card-bg) 72%, transparent);
     border-color: color-mix(in srgb, var(--theme-card-border) 88%, transparent);
-    color: var(--theme-error);
+    color: var(--theme-error-text);
     transform: translateY(-1px);
   }
 }

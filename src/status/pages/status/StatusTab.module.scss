@@ -343,6 +343,45 @@
   line-height: 1;
 }
 
+.attributeValueGroup {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.attributePlusBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  min-height: 20px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--theme-tab-indicator) 46%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-tab-indicator) 14%, var(--theme-card-bg) 86%);
+  color: var(--theme-tab-indicator);
+  font-size: 10px;
+  cursor: pointer;
+  transition:
+    background $transition-fast,
+    border-color $transition-fast,
+    color $transition-fast;
+
+  &:hover {
+    background: color-mix(in srgb, var(--theme-tab-indicator) 26%, var(--theme-card-bg) 74%);
+    color: var(--theme-text-primary);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+}
+
 .statusTabLoading,
 .statusTabError,
 .statusTabEmpty {
@@ -350,7 +389,7 @@
 }
 
 .statusTabError {
-  color: var(--theme-error);
+  color: var(--theme-error-text);
 }
 
 .basicInfo {

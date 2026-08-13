@@ -103,6 +103,63 @@
   padding: $spacing-md 10px $spacing-md $spacing-md;
 }
 
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  min-height: 34px;
+  margin: 8px $spacing-sm 0;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-card-bg) 62%, transparent);
+  color: var(--theme-text-muted);
+  font-size: 12px;
+
+  i {
+    flex: 0 0 auto;
+    font-size: 12px;
+  }
+}
+
+.searchInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--theme-text-primary);
+  font-size: 12px;
+
+  &::placeholder {
+    color: var(--theme-text-muted);
+  }
+}
+
+.searchClear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition:
+    background $transition-fast,
+    color $transition-fast;
+
+  &:hover {
+    background: color-mix(in srgb, var(--theme-card-border) 60%, transparent);
+    color: var(--theme-text-primary);
+  }
+}
+
 .filterBar {
   display: flex;
   flex-wrap: wrap;

@@ -1,7 +1,7 @@
 import type { CSSProperties, FC } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
-import { useEditorSettingStore } from '../../core/stores';
+import { useEditorSettingStore, useMvuDataStore } from '../../core/stores';
 import {
   exportAvatarFile,
   getAvatarActionState,
@@ -18,6 +18,7 @@ import {
   AvatarActionModal,
   AvatarPanel,
   Card,
+  ConfirmModal,
   DeleteConfirmModal,
   DetailSheet,
   EditableField,
@@ -112,9 +113,12 @@ const AscensionPreviewTypeLabel: Record<AscensionPreviewItem['type'], string> = 
  */
 const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const editEnabled = useEditorSettingStore(state => state.editEnabled);
+  const { allocateAttributePoint } = useMvuDataStore();
   const { deleteTarget, setDeleteTarget, handleDelete, cancelDelete, isConfirmOpen } =
     useDeleteConfirm();
   const [activeDetail, setActiveDetail] = useState<'status-effects' | 'ascension' | null>(null);
+  const [pendingAttributeName, setPendingAttributeName] = useState<string | null>(null);
+  const [isAllocatingAttribute, setIsAllocatingAttribute] = useState(false);
   const [playerAvatarUrl, setPlayerAvatarUrl] = useState<string>('');
   const [playerDefaultAvatarUrl, setPlayerDefaultAvatarUrl] = useState<string>('');
   const [isPlayerAvatarRemoved, setIsPlayerAvatarRemoved] = useState(false);
@@ -365,6 +369,22 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
     );
   };
 
+  /** 确认后消耗 1 点自由属性点提升属性，提交期间避免并发写入。 */
+  const handleAttributeAllocationConfirm = async () => {
+    if (!pendingAttributeName || isAllocatingAttribute) return;
+
+    setIsAllocatingAttribute(true);
+    const success = await allocateAttributePoint(pendingAttributeName);
+    setIsAllocatingAttribute(false);
+    setPendingAttributeName(null);
+
+    if (success) {
+      toastr.success(`${pendingAttributeName} +1`);
+    } else {
+      toastr.error('加点失败，请检查剩余属性点或属性上限');
+    }
+  };
+
   const statusEffects = player.状态效果 ?? {};
   const effectEntries = Object.entries(statusEffects);
   const effectStats = {
@@ -552,7 +572,20 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                         numberConfig={{ min: 0, max: 20, step: 1 }}
                       />
                     ) : (
-                      <span className={styles.attributeValue}>{value ?? 0}</span>
+                      <span className={styles.attributeValueGroup}>
+                        <span className={styles.attributeValue}>{value ?? 0}</span>
+                         {(player.属性点 ?? 0) >= 1 && (value ?? 0) <= 19 && (
+                           <button
+                             type="button"
+                             className={styles.attributePlusBtn}
+                             onClick={() => setPendingAttributeName(key)}
+                             disabled={isAllocatingAttribute}
+                             title="消耗 1 点自由属性点"
+                          >
+                            <i className="fa-solid fa-plus" />
+                          </button>
+                        )}
+                      </span>
                     )}
                   </div>
                 ))}
@@ -652,6 +685,33 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
         target={deleteTarget}
         onConfirm={handleDelete}
         onCancel={cancelDelete}
+      />
+
+      <ConfirmModal
+        open={pendingAttributeName !== null}
+        title="确认分配属性点"
+        rows={[
+          { label: '目标属性', value: pendingAttributeName ?? '' },
+          { label: '消耗', value: '1 点自由属性点' },
+        ]}
+        buttons={[
+          {
+            text: '确认加点',
+            variant: 'primary',
+            onClick: () => void handleAttributeAllocationConfirm(),
+            disabled: isAllocatingAttribute,
+          },
+          {
+            text: '取消',
+            variant: 'secondary',
+            onClick: () => setPendingAttributeName(null),
+            disabled: isAllocatingAttribute,
+          },
+        ]}
+        onClose={() => {
+          if (!isAllocatingAttribute) setPendingAttributeName(null);
+        }}
+        closeOnOverlay={!isAllocatingAttribute}
       />
     </div>
   );

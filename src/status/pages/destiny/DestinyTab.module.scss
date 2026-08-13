@@ -90,6 +90,8 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 .partnerAvatar {
   flex: 0 0 auto;
   align-self: center;
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .partnerIdentityHeader {
@@ -271,6 +273,177 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   font-size: 10px;
 }
 
+// 伙伴搜索与标签筛选工具栏
+.partnerToolbar {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  padding-top: 1px;
+}
+
+.partnerSearchBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-card-bg) 68%, transparent);
+  color: var(--theme-text-muted);
+  font-size: 12px;
+
+  i {
+    flex: 0 0 auto;
+    font-size: 12px;
+  }
+}
+
+.partnerSearchInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--theme-text-primary);
+  font-size: 12px;
+
+  &::placeholder {
+    color: var(--theme-text-muted);
+  }
+}
+
+.partnerSearchClear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition:
+    background $transition-fast,
+    color $transition-fast;
+
+  &:hover {
+    background: color-mix(in srgb, var(--theme-card-border) 60%, transparent);
+    color: var(--theme-text-primary);
+  }
+}
+
+.partnerLabelBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.partnerLabelBtn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 70%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-card-bg) 62%, transparent);
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background $transition-fast,
+    border-color $transition-fast,
+    color $transition-fast;
+
+  &:hover {
+    background: color-mix(in srgb, var(--theme-card-bg) 80%, transparent);
+    border-color: color-mix(in srgb, var(--theme-card-border) 88%, transparent);
+    color: var(--theme-text-primary);
+  }
+}
+
+.partnerLabelBtnActive {
+  background: color-mix(in srgb, var(--theme-primary-bg) 22%, var(--theme-card-bg) 78%);
+  border-color: color-mix(in srgb, var(--theme-primary-bg) 50%, var(--theme-card-border) 50%);
+  color: var(--theme-text-primary);
+  font-weight: 600;
+}
+
+// 伙伴卡片头部操作区（在场切换 + 删除）
+.partnerHeaderActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  margin-left: auto;
+
+  > .deletePartnerBtn {
+    position: static;
+    top: auto;
+    right: auto;
+    margin-left: 0;
+  }
+}
+
+.partnerPresenceToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  min-width: 26px;
+  height: 26px;
+  min-height: 26px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  border-radius: $border-radius-sm;
+  background: color-mix(in srgb, var(--theme-card-bg) 78%, transparent);
+  color: var(--theme-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    background $transition-fast,
+    border-color $transition-fast,
+    color $transition-fast;
+
+  &:hover {
+    background: color-mix(in srgb, var(--theme-card-bg) 86%, transparent);
+    border-color: color-mix(in srgb, var(--theme-card-border) 90%, transparent);
+    color: var(--theme-text-primary);
+  }
+}
+
+.partnerPresenceToggleOn {
+  background: color-mix(in srgb, var(--theme-tag-present) 26%, var(--theme-card-bg) 74%);
+  border-color: color-mix(in srgb, var(--theme-tag-present) 46%, transparent);
+  color: var(--theme-tag-present-text);
+}
+
+// 伙伴自定义标签 chips
+.partnerLabelChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.partnerLabelChip {
+  min-width: 0;
+  overflow: hidden;
+  padding: 2px 7px;
+  border: 1px solid color-mix(in srgb, var(--theme-tab-indicator) 36%, var(--theme-card-border) 64%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-tab-indicator) 12%, var(--theme-card-bg) 88%);
+  color: var(--theme-text-secondary);
+  font-size: 10px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .destinyTabAscension {
   // 登神长阶卡片
 }
@@ -324,7 +497,6 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
 
@@ -340,6 +512,9 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 }
 
 .partnerSummaryCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: $spacing-sm;
   padding: $spacing-sm;
   border-radius: $border-radius-sm;
   border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
@@ -367,19 +542,24 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
     0 10px 24px color-mix(in srgb, var(--theme-window-bg) 16%, transparent);
 }
 
-.partnerSummaryMain {
-  display: flex;
-  align-items: flex-start;
-  gap: $spacing-md;
-  min-width: 0;
-}
-
-.partnerSummaryBody {
+.partnerSummaryTopBody {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   gap: 8px;
   min-width: 0;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.partnerSummaryRest {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: $spacing-sm;
+  min-width: 0;
+  grid-column: 1 / -1;
+  grid-row: 2;
 }
 
 .partnerSummaryHeader {
@@ -653,7 +833,6 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
     z-index: auto;
     overflow-y: auto;
     overflow-x: hidden;
-    overscroll-behavior: contain;
     scrollbar-gutter: stable;
     align-items: stretch;
   }
@@ -698,6 +877,30 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 
   .attributeGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  // 移动端：头像在左，右侧为完整信息；角色摘要单行
+  .partnerAvatar {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: start;
+  }
+
+  .partnerSummaryTopBody {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .partnerSummaryRest {
+    grid-column: 2;
+    grid-row: 2;
+    margin-top: 0;
+  }
+
+  .partnerSummaryText {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
@@ -759,7 +962,7 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   }
 
   &.affectionBarValue {
-    color: var(--theme-error);
+    color: var(--theme-error-text);
   }
 }
 
@@ -969,8 +1172,8 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 
 .attributeGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: $spacing-xs;
+  grid-template-columns: repeat(5, 1fr);
+  gap: $spacing-sm;
 }
 
 // 编辑模式下属性网格改为 2 列，适应编辑器宽度
@@ -1250,7 +1453,7 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   border: 1px solid color-mix(in srgb, var(--theme-error) 50%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--theme-card-bg) 88%, transparent);
-  color: var(--theme-error);
+  color: var(--theme-error-text);
   cursor: pointer;
   opacity: 0;
   transition:
@@ -1459,10 +1662,6 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 }
 
 @media (max-width: 540px) {
-  .partnerSummaryMain {
-    gap: $spacing-sm;
-  }
-
   .partnerSummaryHeader {
     gap: 6px;
   }

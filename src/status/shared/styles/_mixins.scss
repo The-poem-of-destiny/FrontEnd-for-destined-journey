@@ -135,7 +135,7 @@
 
   &:hover {
     opacity: 1;
-    color: var(--theme-error);
+    color: var(--theme-error-text);
     background: rgba(196, 73, 61, 0.12);
     border-color: rgba(196, 73, 61, 0.25);
   }
@@ -157,7 +157,7 @@
   background: rgba(196, 73, 61, 0.15);
   border: 1px solid rgba(196, 73, 61, 0.3);
   border-radius: 4px;
-  color: var(--theme-error);
+  color: var(--theme-error-text);
   cursor: pointer;
   transition: all 0.2s;
   font-size: 11px;
@@ -272,7 +272,7 @@
 @mixin button-danger {
   @include button-base;
   background: var(--theme-error);
-  color: white;
+  color: var(--theme-error-solid-text, white);
 
   &:hover:not(:disabled) {
     filter: brightness(1.1);

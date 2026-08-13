@@ -105,7 +105,7 @@
   font-size: 10px;
   font-weight: 700;
   line-height: 1;
-  color: #fff;
+  color: var(--theme-error-solid-text, #fff);
   background: var(--theme-error, #c4493d);
   border-radius: 999px;
   box-shadow: 0 4px 10px rgba(196, 73, 61, 0.18);
