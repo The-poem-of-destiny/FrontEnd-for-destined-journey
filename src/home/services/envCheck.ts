@@ -51,7 +51,7 @@ export function checkTavernHelper() {
     };
   }
 
-  const isVersionOk = compareVersion(version, '4.3.17') >= 0;
+  const isVersionOk = compareVersion(version, '4.8.19') >= 0;
 
   return {
     version,
