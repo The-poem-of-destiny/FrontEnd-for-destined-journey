@@ -124,8 +124,7 @@ export const useThemeStore = create<ThemeStore>()(
       const match = /^#([0-9a-f]{6})$/i.exec(bg);
       if (match) {
         const channels = [0, 2, 4].map(i => parseInt(match[1].slice(i, i + 2), 16) / 255);
-        const luminance =
-          0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+        const luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
         root.dataset.themeMode = luminance > 0.5 ? 'light' : 'dark';
       }
     },

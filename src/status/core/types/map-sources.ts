@@ -1,7 +1,7 @@
 export const mapSources = {
   low: {
     type: 'image',
-    url: 'https://i.ibb.co/bgFMhr2B/Maplite-4096.webp',  // 4096×2335
+    url: 'https://i.ibb.co/bgFMhr2B/Maplite-4096.webp', // 4096×2335
   },
   small: {
     type: 'image',
@@ -9,7 +9,7 @@ export const mapSources = {
   },
   large: {
     type: 'image',
-    url: 'https://i.ibb.co/gMCpcFd8/Map-FULL.webp',  // 14594×8322
+    url: 'https://i.ibb.co/gMCpcFd8/Map-FULL.webp', // 14594×8322
   },
 } as const;
 

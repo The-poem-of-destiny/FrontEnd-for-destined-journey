@@ -574,13 +574,13 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                     ) : (
                       <span className={styles.attributeValueGroup}>
                         <span className={styles.attributeValue}>{value ?? 0}</span>
-                         {(player.属性点 ?? 0) >= 1 && (value ?? 0) <= 19 && (
-                           <button
-                             type="button"
-                             className={styles.attributePlusBtn}
-                             onClick={() => setPendingAttributeName(key)}
-                             disabled={isAllocatingAttribute}
-                             title="消耗 1 点自由属性点"
+                        {(player.属性点 ?? 0) >= 1 && (value ?? 0) <= 19 && (
+                          <button
+                            type="button"
+                            className={styles.attributePlusBtn}
+                            onClick={() => setPendingAttributeName(key)}
+                            disabled={isAllocatingAttribute}
+                            title="消耗 1 点自由属性点"
                           >
                             <i className="fa-solid fa-plus" />
                           </button>

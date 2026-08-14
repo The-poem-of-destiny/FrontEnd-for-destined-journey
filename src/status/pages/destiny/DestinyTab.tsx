@@ -238,7 +238,9 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     const keyword = partnerSearchKeyword.trim().toLowerCase();
     if (keyword) {
       entries = entries.filter(([name, partner]) => {
-        const identity = Array.isArray(partner.身份) ? partner.身份.join(' ') : (partner.身份 ?? '');
+        const identity = Array.isArray(partner.身份)
+          ? partner.身份.join(' ')
+          : (partner.身份 ?? '');
         const occupation = Array.isArray(partner.职业)
           ? partner.职业.join(' ')
           : (partner.职业 ?? '');
@@ -655,7 +657,9 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
       partner.种族,
       Array.isArray(partner.职业) ? partner.职业.join(' / ') : partner.职业,
     ]).join(' · ');
-    const meta = _.compact([partner.等级 ? `Lv.${partner.等级}` : '', partner.生命层级]).join(' · ');
+    const meta = _.compact([partner.等级 ? `Lv.${partner.等级}` : '', partner.生命层级]).join(
+      ' · ',
+    );
 
     return _.compact([identity, meta]).join('\n') || '暂无定位';
   };
