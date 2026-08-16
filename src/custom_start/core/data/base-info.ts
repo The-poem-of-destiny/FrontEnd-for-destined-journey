@@ -66,7 +66,7 @@ const checkDevModeByName = (name: string): boolean => {
 export const generateInitialPoints = (characterName?: string): number => {
   // 开发者模式：如果角色名包含特定暗号，返回高点数
   if (characterName && checkDevModeByName(characterName)) {
-    return 888888;
+    return 666666;
   }
 
   const random = Math.random();
