@@ -169,12 +169,9 @@ export async function writeCharacterToMvu(
     冒险者等级: '未评级',
     属性点: Math.max(0, maxAp - usedAp),
     属性: calculateFinalAttributes(character),
-    生命值上限: 0,
-    生命值: 0,
-    法力值上限: 0,
-    法力值: 0,
-    体力值上限: 0,
-    体力值: 0,
+    生命值: { 当前: 0, 上限: { _基础: 0, 额外: 0 } },
+    法力值: { 当前: 0, 上限: { _基础: 0, 额外: 0 } },
+    体力值: { 当前: 0, 上限: { _基础: 0, 额外: 0 } },
     状态效果: {},
     金钱: Math.max(0, Math.round(character.money)),
     背包: toNamedRecord(items, toInventoryVariable),
@@ -220,10 +217,13 @@ export function generateAIPrompt(
   );
   lines.push('- 世界.时间');
   lines.push('- 世界.地点');
-  lines.push('- 主角.生命值上限 / 主角.生命值');
-  lines.push('- 主角.法力值上限 / 主角.法力值');
-  lines.push('- 主角.体力值上限 / 主角.体力值');
+  lines.push('- 主角.生命值.当前 / 主角.生命值.上限._基础 / 主角.生命值.上限.额外');
+  lines.push('- 主角.法力值.当前 / 主角.法力值.上限._基础 / 主角.法力值.上限.额外');
+  lines.push('- 主角.体力值.当前 / 主角.体力值.上限._基础 / 主角.体力值.上限.额外');
   lines.push('- 主角.装备.*.位置');
+  lines.push(
+    '资源上限: 上限._基础 依据等级/属性/生命层级重算（只读来源），上限.额外 记录装备/状态/临时增益，当前 不得超过 _基础 + 额外。',
+  );
 
   // 初始开局剧情
   if (background) {
