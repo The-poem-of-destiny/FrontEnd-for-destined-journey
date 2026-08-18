@@ -61,7 +61,16 @@
 
 .deleteButton {
   @include delete-button-danger;
+  width: 26px;
+  min-width: 26px;
+  height: 26px;
+  min-height: 26px;
   margin-left: 0;
+  font-size: 11px;
+}
+
+.hideButton {
+  @include hide-button;
 }
 
 .itemMeta {
@@ -253,6 +262,56 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.internalAssets {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.internalAssetEntry {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  border-radius: $border-radius-sm;
+  background: color-mix(in srgb, var(--theme-surface-muted) 45%, transparent);
+}
+
+.internalAssetHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.internalAssetName {
+  color: var(--theme-text-primary);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.internalAssetQty {
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+  flex: 0 0 auto;
+}
+
+.internalAssetSpace {
+  color: var(--theme-text-muted);
+  font-size: 11px;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.internalAssetDesc {
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-line;
+  word-break: break-word;
 }
 
 .effectRow {

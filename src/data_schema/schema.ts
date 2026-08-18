@@ -8,6 +8,23 @@ import {
   TaskSchema,
 } from './utils';
 
+const internalAsset = z
+  .record(
+    z.string(),
+    z
+      .object({
+        品质: z.string().prefault(''),
+        标签: z.array(z.string()).prefault([]).transform(_.uniq),
+        数量: z.coerce.number().prefault(0),
+        效果: z.record(z.string(), z.string()).prefault({}),
+        描述: z.string().prefault(''),
+        总占用空间: z.string().prefault(''),
+      })
+      .prefault({}),
+  )
+  .prefault({});
+
+// 资产的类型必须复用，不得按同一类型继续细分；资产状态随获得、失去、交易、改造、变更和结算同步更新
 const assets = z
   .record(
     z.string(),
@@ -15,10 +32,13 @@ const assets = z
       .object({
         品质: z.string().prefault(''),
         类型: z.string().prefault(''),
-        结算: z.string().prefault(''),
         标签: z.array(z.string()).prefault([]).transform(_.uniq),
-        效果: z.record(z.string(), z.string()).prefault({}),
+        总空间: z.string().prefault(''),
+        结算: z.string().prefault(''),
         描述: z.string().prefault(''),
+        位置: z.string().prefault(''),
+        内部资产: internalAsset,
+        _隐藏: z.boolean().prefault(false),
       })
       .prefault({}),
   )
@@ -94,6 +114,7 @@ const partners = z
       .object({
         ...IdentitySchema.shape,
         在场: z.boolean().prefault(false),
+        _隐藏: z.boolean().prefault(false),
         标签: z.array(z.string()).prefault([]).transform(_.uniq),
         性格: z.string().prefault(''),
         喜爱: z.string().prefault(''),
@@ -118,6 +139,7 @@ const partners = z
         _.pick(data, [
           // 状态信息
           '在场',
+          '_隐藏',
           // 用户管理标签
           '标签',
           // 基础信息

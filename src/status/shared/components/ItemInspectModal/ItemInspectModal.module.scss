@@ -72,6 +72,13 @@
   border-radius: 999px;
 }
 
+.headerActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
 .body {
   flex: 1;
   min-height: 0;

@@ -168,6 +168,35 @@
   }
 }
 
+/// 隐藏/恢复按钮（状态色：未隐藏=红，已隐藏=绿）
+/// 用于: ItemDetail, ItemsTab, DestinyTab 的隐藏键
+@mixin hide-button($size: 26px) {
+  @include delete-button-base($size);
+  width: $size;
+  min-width: $size;
+  height: $size;
+  min-height: $size;
+  margin-left: 0;
+  font-size: 11px;
+  opacity: 1;
+  color: var(--theme-error);
+
+  &:hover {
+    color: var(--theme-error);
+    background: var(--theme-tab-hover-bg);
+    border-color: color-mix(in srgb, var(--theme-error) 40%, transparent);
+  }
+
+  &.isHidden {
+    color: var(--theme-success);
+
+    &:hover {
+      color: var(--theme-success);
+      border-color: color-mix(in srgb, var(--theme-success) 40%, transparent);
+    }
+  }
+}
+
 /// 带背景的项目条
 /// 用于: effectItem, newsItem, attributesItem, filterBar
 @mixin item-bar($padding: $spacing-xs $spacing-sm) {

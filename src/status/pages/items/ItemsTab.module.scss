@@ -81,21 +81,20 @@
   color: var(--theme-text-primary);
   font-size: 12px;
   font-weight: 600;
+}
 
-  > span {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+.itemsDetailName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  > span:last-child {
-    flex: 0 0 auto;
-    color: var(--theme-text-muted);
-    font-size: 11px;
-    font-weight: 500;
-    @include uppercase-text(0.4px);
-  }
+.itemsDetailActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
 }
 
 .itemsDetailBody {
@@ -463,6 +462,41 @@
   margin-left: 0;
   padding: 0;
   font-size: 11px;
+}
+
+.itemHideButton {
+  @include hide-button;
+}
+
+.hiddenGroup {
+  margin-top: 2px;
+}
+
+.hiddenGroupToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  background: transparent;
+  border: 1px dashed color-mix(in srgb, var(--theme-card-border) 60%, transparent);
+  border-radius: $border-radius-sm;
+  color: var(--theme-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--theme-text-secondary);
+    background: var(--theme-tab-hover-bg);
+  }
+
+  i {
+    font-size: 10px;
+  }
+}
+
+.hiddenGroupBody {
+  margin-top: 2px;
 }
 
 .itemCount,

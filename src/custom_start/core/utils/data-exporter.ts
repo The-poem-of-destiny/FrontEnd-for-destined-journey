@@ -55,9 +55,23 @@ const toInventoryVariable = (item: Item) => ({
   数量: Math.max(1, Math.round(item.quantity || 1)),
 });
 
+// 目录资产的效果键逐条映射为 内部资产（数量 1，效果保留原文），避免 schema 剥掉顶层 效果 造成数据丢失
 const toAssetVariable = (asset: Asset) => ({
-  ...toBaseItemVariable(asset),
+  品质: getRarityName(asset.rarity),
+  类型: asset.type || '',
+  标签: _.uniq(asset.tag || []),
+  总空间: '',
   结算: asset.settlement || '',
+  描述: asset.description || '',
+  位置: '',
+  内部资产: _.mapValues(cleanRecord(asset.effect), (text, key) => ({
+    品质: '',
+    标签: [],
+    数量: 1,
+    效果: { [key]: text },
+    描述: '',
+    总占用空间: '',
+  })),
 });
 
 const toSkillVariable = (skill: MvuSkillSource) => ({
