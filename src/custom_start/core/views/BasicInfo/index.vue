@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+import StartLocationMap from '../../components/StartLocationMap.vue';
 import {
   FormCascader,
   FormInput,
@@ -51,6 +52,14 @@ const levelTierName = computed(() => {
   const tierName = getLevelTierName(level);
 
   return tierName;
+});
+
+const displayStartLocation = computed(() => {
+  if (character.value.startLocation === '自定义') {
+    return character.value.customStartLocation || '自定义地点';
+  }
+
+  return character.value.startLocation;
 });
 </script>
 
@@ -159,6 +168,10 @@ const levelTierName = computed(() => {
             placeholder="请输入自定义起始地点"
           />
         </div>
+      </div>
+
+      <div class="start-map-row">
+        <StartLocationMap :selected-location="displayStartLocation" />
       </div>
 
       <!-- 属性分配面板 -->
@@ -313,6 +326,10 @@ const levelTierName = computed(() => {
       margin-left: 2px;
     }
   }
+}
+
+.start-map-row {
+  margin-bottom: var(--spacing-lg);
 }
 
 .level-input-group {
@@ -528,6 +545,10 @@ const levelTierName = computed(() => {
 
 // 响应式设计
 @media (max-width: 768px) {
+  .start-map-row {
+    margin-bottom: var(--spacing-md);
+  }
+
   .form-row {
     grid-template-columns: 1fr;
     gap: var(--spacing-sm);
