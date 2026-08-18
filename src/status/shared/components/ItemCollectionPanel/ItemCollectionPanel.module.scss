@@ -1,0 +1,343 @@
+@use '../../styles/variables' as *;
+@use '../../styles/mixins' as *;
+
+// 单类别物品集合面板 —— 与持有物页共用视觉（搜索/筛选/列表行/隐藏/删除/详情弹窗）
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  min-height: 34px;
+  margin: 8px 0;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-card-bg) 62%, transparent);
+  color: var(--theme-text-muted);
+  font-size: 12px;
+
+  i {
+    flex: 0 0 auto;
+    font-size: 12px;
+  }
+}
+
+.searchInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--theme-text-primary);
+  font-size: 12px;
+
+  &::placeholder {
+    color: var(--theme-text-muted);
+  }
+}
+
+.searchClear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition:
+    background $transition-fast,
+    color $transition-fast;
+
+  &:hover {
+    background: color-mix(in srgb, var(--theme-card-border) 60%, transparent);
+    color: var(--theme-text-primary);
+  }
+}
+
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  flex: 0 0 auto;
+  padding: 4px 0 7px;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border) 70%, transparent);
+  background: transparent;
+}
+
+.filterBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: calc(#{$border-radius-md} - 4px);
+  background: transparent;
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    background-color $transition-fast,
+    border-color $transition-fast,
+    color $transition-fast;
+  @include uppercase-text(0.4px);
+
+  &:hover {
+    color: var(--theme-text-primary);
+  }
+}
+
+.filterCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: auto;
+  padding: 0;
+  color: inherit;
+  font-size: 10px;
+  opacity: 0.82;
+}
+
+.filterBtn.isActive {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  color: var(--theme-text-primary);
+  font-weight: 700;
+
+  &::after {
+    position: absolute;
+    right: 10px;
+    bottom: 1px;
+    left: 10px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+    content: '';
+  }
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.itemRow {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $spacing-sm;
+  width: 100%;
+  min-height: 42px;
+  padding: 7px 10px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-image: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--theme-card-border) 60%, transparent) 0%,
+      color-mix(in srgb, var(--theme-card-border) 44%, transparent) 64%,
+      transparent 100%
+    )
+    1;
+  border-radius: 0;
+  background: transparent;
+  color: var(--theme-text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color $transition-fast,
+    border-color $transition-fast,
+    box-shadow $transition-fast;
+
+  &:hover {
+    background: color-mix(in srgb, var(--theme-card-bg) 60%, transparent);
+  }
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--theme-primary-bg) 52%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.itemQualityMark {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+  color: var(--theme-text-muted);
+}
+
+.itemRowMain {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemRowTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.itemRowName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.itemRowType {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--theme-text-muted);
+  font-size: 10px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemRowTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.itemRowTag {
+  min-width: 0;
+  overflow: hidden;
+  padding: 1px 5px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 68%, transparent);
+  border-radius: $border-radius-sm;
+  background: color-mix(in srgb, var(--theme-surface-muted) 42%, transparent);
+  color: var(--theme-text-muted);
+  font-size: 10px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemRowActions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.itemRowSuffix {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.itemDeleteButton {
+  @include delete-button-danger;
+  width: 26px;
+  min-width: 26px;
+  height: 26px;
+  min-height: 26px;
+  margin-left: 0;
+  padding: 0;
+  font-size: 11px;
+}
+
+.itemHideButton {
+  @include hide-button;
+}
+
+.hiddenGroup {
+  margin-top: 2px;
+}
+
+.hiddenGroupToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  background: transparent;
+  border: 1px dashed color-mix(in srgb, var(--theme-card-border) 60%, transparent);
+  border-radius: $border-radius-sm;
+  color: var(--theme-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--theme-text-secondary);
+    background: var(--theme-tab-hover-bg);
+  }
+
+  i {
+    font-size: 10px;
+  }
+}
+
+.hiddenGroupBody {
+  margin-top: 2px;
+}
+
+.itemCount,
+.itemSlot,
+.itemCost {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+  word-break: break-word;
+}
+
+// 详情弹窗标题行操作组
+.panelActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.emptyHint {
+  @include empty-hint($spacing-lg);
+}
+
+@media (max-width: 540px) {
+  .filterBar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .filterBtn {
+    flex: 0 0 auto;
+  }
+
+  .itemRow {
+    min-height: 40px;
+    padding: 7px 8px;
+  }
+}
+
+@include quality-colors;
