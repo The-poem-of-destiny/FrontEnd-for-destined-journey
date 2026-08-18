@@ -82,9 +82,9 @@
         <span v-if="isAgreed" class="check-mark">✓</span>
       </span>
       <span class="agreement-text">
-        我已同意<a class="agreement-link" @click.stop.prevent="showAgreementModal = true"
-          >最终用户许可协议</a
-        >
+        我已同意<a class="agreement-link" @click.stop.prevent="showAgreementModal = true">{{
+          agreement.title
+        }}</a>
       </span>
     </div>
 
@@ -98,79 +98,18 @@
     <transition name="fade">
       <div v-if="showAgreementModal" class="modal-overlay" @click.self="showAgreementModal = false">
         <div class="modal-content agreement-modal">
-          <h3 class="modal-title">最终用户许可协议</h3>
+          <h3 class="modal-title">{{ agreement.title }}</h3>
+          <div class="agreement-version">协议版本：{{ agreement.version }}</div>
           <div class="modal-scroll-body">
-            <h4>一、总则</h4>
-            <p>
-              欢迎使用「命定之诗与黄昏之歌」（以下简称"本项目"）。本项目是一款基于 SillyTavern
-              平台的互动叙事/角色扮演创作内容集合，包含但不限于角色卡、世界书、前端界面及相关脚本工具。
-            </p>
-            <p>
-              在使用本项目前，请您仔细阅读并充分理解本协议的各项条款。当您点击"同意"或以其他方式确认接受本协议时，即视为您已阅读、理解并同意受本协议的约束。
-            </p>
-            <p>本项目免费提供。</p>
-            <h4>二、知识产权</h4>
-            <ul>
-              <li>
-                本项目中的<strong>原创文本、角色设定、世界观设计、美术素材及代码</strong>等内容的知识产权归属于本项目制作团队。
-              </li>
-              <li>本项目可能包含第三方开源组件或素材，其各自遵循相应的开源许可协议。</li>
-              <li>您不得将本项目的任何内容用于<strong>任何商业用途</strong>。</li>
-            </ul>
-
-            <h4>三、使用规范</h4>
-            <ul>
-              <li>本项目仅供<strong>个人学习、娱乐和非商业性质的交流</strong>使用。</li>
-              <li>
-                您不得对本项目进行反编译、逆向工程或以任何方式试图提取源代码（已公开部分除外）。
-              </li>
-              <li>您不得将本项目内容进行二次分发、转售或制作衍生商品。</li>
-              <li>您不得在墙内社区、QQ群传播、讨论相关内容。</li>
-              <li>
-                在公开场合分享您使用本项目的体验或成果时，请<strong>注明出处</strong>并尊重制作团队的劳动成果。
-              </li>
-            </ul>
-
-            <h4>四、免责声明</h4>
-            <ul>
-              <li>
-                本项目按<strong>"现状"</strong>提供，制作团队不对其适用性、完整性或无错误性作任何明示或暗示的保证。
-              </li>
-              <li>
-                因用户自身环境配置、网络状况或不当操作导致的任何问题，制作团队<strong>不承担责任</strong>。
-              </li>
-              <li>
-                本项目生成的文本内容由 AI 模型产出，制作团队对 AI
-                生成的具体内容<strong>不承担审核义务与法律责任</strong>。
-              </li>
-              <li>用户应自行判断 AI 生成内容的合理性与适当性，并对自己的使用行为负责。</li>
-            </ul>
-
-            <h4>五、隐私与数据</h4>
-            <ul>
-              <li>
-                本项目运行于用户本地环境，<strong>不会主动收集、上传或存储</strong>您的任何个人数据。
-              </li>
-              <li>
-                与 AI 服务的通信由您自行配置的 API 完成，相关数据处理遵循对应
-                AI服务提供商的隐私政策。
-              </li>
-            </ul>
-
-            <h4>六、协议变更</h4>
-            <p>
-              制作团队保留随时修改本协议的权利。协议变更后，继续使用本项目即视为您接受修改后的协议内容。重大变更将通过更新公告等方式通知用户。
-            </p>
-
-            <h4>七、其他</h4>
-            <ul>
-              <li>本协议的解释权归本项目制作团队所有。</li>
-              <li>若本协议中的任何条款被认定为无效或不可执行，其余条款仍然有效。</li>
-              <li>如有任何疑问，请通过项目官方渠道联系制作团队。</li>
-              <li>
-                依据您行为的严重性，制作组可以自行决定您死后是否转世到战锤40000世界，永世为帝皇奉献自己的价值。
-              </li>
-            </ul>
+            <section v-for="section in agreement.sections" :key="section.title">
+              <h4>{{ section.title }}</h4>
+              <p v-for="paragraph in section.paragraphs || []" :key="paragraph">
+                {{ paragraph }}
+              </p>
+              <ul v-if="section.items?.length">
+                <li v-for="item in section.items" :key="item">{{ item }}</li>
+              </ul>
+            </section>
           </div>
           <div class="modal-actions">
             <button class="modal-btn modal-btn-close" @click="showAgreementModal = false">
@@ -207,13 +146,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { initialEnvStatus, performFullEnvCheck } from '../services/envCheck';
+import type { AgreementDocument } from '../services/agreement';
 
-const emit = defineEmits(['agreed', 'envCheckComplete']);
+const props = defineProps<{
+  agreement: AgreementDocument;
+}>();
 
-// 是否为回访用户（曾同意过协议）
-const previouslyAgreed = inject<boolean>('previouslyAgreed', false);
+const emit = defineEmits<{
+  agreed: [version: string];
+  envCheckComplete: [result: typeof initialEnvStatus];
+}>();
 
 const flavorTexts = [
   '黄昏将至，旅人，你的笔墨已备好',
@@ -239,7 +183,7 @@ const envStatus = ref({ ...initialEnvStatus });
 const envPassed = ref(false);
 
 // 用户协议相关
-const isAgreed = ref(previouslyAgreed ? true : false);
+const isAgreed = ref(false);
 const showAgreementModal = ref(false);
 
 /** 重新检查3次仍未通过时，允许跳过 */
@@ -280,9 +224,8 @@ function handleRecheck() {
 function confirmSkip() {
   showSkipConfirm.value = false;
   envPassed.value = true;
-  // 回访用户跳过检查后直接自动跳转（需确认协议已同意）
   if (isAgreed.value) {
-    emit('agreed');
+    emit('agreed', props.agreement.version);
   }
 }
 
@@ -292,7 +235,7 @@ function toggleAgreed() {
 
 function handleContinue() {
   if (canContinue.value) {
-    emit('agreed');
+    emit('agreed', props.agreement.version);
   }
 }
 
@@ -305,13 +248,6 @@ watch(
     }
   },
 );
-
-// 回访用户：环境通过后自动跳转
-watch(envPassed, passed => {
-  if (passed && previouslyAgreed && isAgreed.value) {
-    emit('agreed');
-  }
-});
 
 onMounted(() => {
   performCheck();
@@ -594,6 +530,13 @@ onUnmounted(() => {
 
 .agreement-modal {
   max-width: 600px;
+}
+
+.agreement-version {
+  margin: -10px 0 14px;
+  color: var(--link-color);
+  font-size: 0.82em;
+  text-align: center;
 }
 
 .modal-title {

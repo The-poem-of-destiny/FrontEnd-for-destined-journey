@@ -9,6 +9,7 @@
 ```
 public/assets/data/
 ├── README.md                # 本说明文档
+├── agreement.json           # 最终用户许可协议及独立协议版本
 ├── baseInfo.json            # 基础信息数据（性别、种族、身份、初始地点）
 ├── equipments.json          # 装备数据
 ├── items.json               # 道具数据
@@ -19,6 +20,12 @@ public/assets/data/
 ├── predefined-partner-gallery.json  # 预定义伙伴图片
 └── coreClassification.json  # 核心分类数据（排行榜/分组）
 ```
+
+## 用户协议
+
+`agreement.json` 由首页在线加载。修改协议内容时必须同步递增顶层的 `version`；用户已同意的版本与线上版本一致时，首页不会再次展示协议页面。
+
+协议数据由 `title` 和 `sections` 组成。每个 section 可以包含 `paragraphs`、`items`，分别显示为段落和列表。
 
 ## JSON5 特性
 

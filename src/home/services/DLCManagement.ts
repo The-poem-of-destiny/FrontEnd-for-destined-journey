@@ -45,17 +45,17 @@ export const initialDLCState = {
 // 正则表达式
 // ========================
 
-/** 匹配所有 DLC 条目 - 以 [DLC] 开头 */
-const DLC_PATTERN = /^\[DLC\]/;
+/** 匹配所有 DLC 条目 - 名称任意位置包含 [DLC] */
+const DLC_PATTERN = /\[DLC\]/;
 
-/** 提取类别 - [DLC][角色|事件|扩展] */
-const DLC_CATEGORY_PATTERN = /^\[DLC\]\[(角色|事件|扩展)\]/;
+/** 从名称任意位置提取类别 - [DLC][角色|事件|扩展] */
+const DLC_CATEGORY_PATTERN = /\[DLC\]\[(角色|事件|扩展)\]/;
 
-/** 提取分组Key - [DLC][类别][名称]（不含关系标记） */
-const DLC_KEY_PATTERN = /^(\[DLC\]\[(?:角色|事件|扩展)\]\[[^\]]+\])/;
+/** 从名称任意位置提取分组Key - [DLC][类别][名称]（不含关系标记） */
+const DLC_KEY_PATTERN = /(\[DLC\]\[(?:角色|事件|扩展)\]\[[^\]]+\])/;
 
 /** 提取显示名称 - [DLC][类别][名称] 中的名称 */
-const DLC_LABEL_PATTERN = /^\[DLC\]\[(?:角色|事件|扩展)\]\[([^\]]+)\]/;
+const DLC_LABEL_PATTERN = /\[DLC\]\[(?:角色|事件|扩展)\]\[([^\]]+)\]/;
 
 /** 互斥目标 [!xxx] */
 const EXCLUSION_PATTERN = /\[!([^\]]+)\]/g;
@@ -93,7 +93,7 @@ export function sortDLCOptions(options: DLCOption[]): DLCOption[] {
 
 /**
  * 从条目名称中提取分组 Key
- * @param entryName 如 "[DLC][角色][薇薇拉]薇薇拉-本体(Author)"
+ * @param entryName 如 "薇薇拉-本体[DLC][角色][薇薇拉](Author)"
  * @returns 如 "[DLC][角色][薇薇拉]"，不匹配则返回 null
  */
 function extractDLCKey(entryName: string): string | null {
@@ -103,7 +103,7 @@ function extractDLCKey(entryName: string): string | null {
 
 /**
  * 从条目名称中提取类别
- * @param entryName 如 "[DLC][角色][薇薇拉]..."
+ * @param entryName 如 "任意前缀[DLC][角色][薇薇拉]..."
  * @returns 如 "角色"，不匹配则返回 null
  */
 function extractDLCCategory(entryName: string): DLCCategory | null {
