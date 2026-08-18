@@ -119,7 +119,8 @@ const sortedItems = computed(() =>
   parsedItems.value
     .map((item, originalIndex) => ({ item, originalIndex }))
     .sort((a, b) => {
-      const requirementOrder = Number(!meetsRequirements(a.item)) - Number(!meetsRequirements(b.item));
+      const requirementOrder =
+        Number(!meetsRequirements(a.item)) - Number(!meetsRequirements(b.item));
       return requirementOrder || a.originalIndex - b.originalIndex;
     })
     .map(({ item }) => item),
