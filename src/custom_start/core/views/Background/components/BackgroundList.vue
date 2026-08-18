@@ -114,6 +114,17 @@ const isCustomBackground = (item: Background) => item.name === '【自定义开�
 // 解析后的背景数据
 const parsedItems = ref<Background[]>([]);
 
+// 将符合当前角色条件的开局置顶，同组内保持原始顺序
+const sortedItems = computed(() =>
+  parsedItems.value
+    .map((item, originalIndex) => ({ item, originalIndex }))
+    .sort((a, b) => {
+      const requirementOrder = Number(!meetsRequirements(a.item)) - Number(!meetsRequirements(b.item));
+      return requirementOrder || a.originalIndex - b.originalIndex;
+    })
+    .map(({ item }) => item),
+);
+
 // 解析所有背景
 const itemsKey = ref('');
 
@@ -138,7 +149,7 @@ watch(
   <div class="background-list">
     <div v-if="parsedItems.length === 0" class="empty-message">该分类暂无初始剧情</div>
     <div
-      v-for="item in parsedItems"
+      v-for="item in sortedItems"
       :key="item.name"
       class="background-card selectable-card"
       :class="{
