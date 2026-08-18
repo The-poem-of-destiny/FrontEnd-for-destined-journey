@@ -1,6 +1,9 @@
 @use '../../shared/styles/variables' as *;
 @use '../../shared/styles/mixins' as *;
 
+// 默认头像使用的书法字体（LongZhuTi）
+@import url('https://fontsapi.zeoseven.com/861/main/result.css');
+
 $destiny-partner-workspace-height: clamp(420px, 56vh, 780px);
 $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 
@@ -72,9 +75,15 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   width: 100%;
   min-width: 0;
 
-  > .deletePartnerBtn {
+  > .partnerTitleActions {
+    position: absolute;
     top: 50%;
     transform: translateY(-50%);
+    right: $spacing-sm;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 1;
   }
 }
 
@@ -108,42 +117,6 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   gap: $spacing-xs;
   min-width: 0;
   flex-wrap: wrap;
-}
-
-.partnerAvatarInlineButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  flex: 0 0 auto;
-  min-height: 24px;
-  padding: 0 8px;
-  border: 1px dashed color-mix(in srgb, var(--theme-card-border) 78%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--theme-card-bg) 72%, transparent);
-  color: var(--theme-text-secondary);
-  font-size: 11px;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background $transition-fast,
-    border-color $transition-fast,
-    color $transition-fast;
-
-  &:hover {
-    background: color-mix(in srgb, var(--theme-card-bg) 84%, transparent);
-    border-color: color-mix(in srgb, var(--theme-card-border) 92%, transparent);
-    color: var(--theme-text-primary);
-  }
-
-  &:focus-visible {
-    outline: none;
-    border-color: color-mix(in srgb, var(--theme-card-border) 100%, transparent);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-tab-indicator) 18%, transparent);
-  }
-
-  i {
-    font-size: 10px;
-  }
 }
 
 .partnerTitleContent {
@@ -422,14 +395,7 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   color: var(--theme-tag-present-text);
 }
 
-// 伙伴自定义标签 chips
-.partnerLabelChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  min-width: 0;
-}
-
+// 伙伴自定义标签 chip
 .partnerLabelChip {
   min-width: 0;
   overflow: hidden;
@@ -478,13 +444,15 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 .partnerMasterDetail {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  grid-template-columns: 300px minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
-  gap: $spacing-md;
   align-items: stretch;
   height: $destiny-partner-workspace-height;
   min-height: 0;
   overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 74%, transparent);
+  border-radius: $border-radius-md;
+  background: color-mix(in srgb, var(--theme-card-bg) 58%, var(--theme-content-bg) 42%);
 }
 
 .partnerList {
@@ -501,8 +469,7 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 }
 
 .partnerSummaryList {
-  @include list-container($spacing-sm);
-  padding-top: 1px;
+  border-right: 1px solid color-mix(in srgb, var(--theme-card-border) 70%, transparent);
 }
 
 .partnerSummaryListHiddenMobile {
@@ -511,102 +478,210 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   }
 }
 
-.partnerSummaryCard {
+// 列表行（对齐持有物 itemRow 视觉：扁平行 + 左强调条选中态）
+.partnerRow {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: $spacing-sm;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $spacing-sm;
+  width: 100%;
+  min-height: 76px;
   padding: $spacing-sm;
-  border-radius: $border-radius-sm;
-  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
-  background: color-mix(in srgb, var(--theme-card-bg) 86%, transparent);
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border) 42%, transparent);
+  background: transparent;
   cursor: pointer;
   transition:
-    background $transition-fast,
-    border-color $transition-fast,
-    box-shadow $transition-fast,
-    transform $transition-fast;
+    background-color $transition-fast,
+    box-shadow $transition-fast;
 
   &:hover {
-    background: color-mix(in srgb, var(--theme-card-bg) 82%, transparent);
-    border-color: color-mix(in srgb, var(--theme-card-border) 88%, transparent);
-    box-shadow: 0 6px 16px color-mix(in srgb, var(--theme-window-border) 12%, transparent);
-    transform: translateY(-1px);
+    background: color-mix(in srgb, var(--theme-card-bg) 60%, transparent);
+  }
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--theme-primary-bg) 52%, transparent);
+    outline-offset: 2px;
   }
 }
 
-.partnerSummaryCardActive {
-  background: color-mix(in srgb, var(--theme-card-bg) 80%, transparent);
-  border-color: color-mix(in srgb, var(--theme-card-border) 92%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 8%, transparent),
-    0 10px 24px color-mix(in srgb, var(--theme-window-bg) 16%, transparent);
+.partnerRowActive {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--theme-primary-bg) 24%, var(--theme-card-bg) 76%) 0%,
+    color-mix(in srgb, var(--theme-primary-bg) 11%, var(--theme-card-bg) 89%) 64%,
+    transparent 100%
+  );
+  box-shadow: inset 5px 0 0 color-mix(in srgb, var(--theme-primary-bg) 80%, transparent);
 }
 
-.partnerSummaryTopBody {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.partnerSummaryRest {
+.partnerRowMain {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: $spacing-sm;
-  min-width: 0;
-  grid-column: 1 / -1;
-  grid-row: 2;
-}
-
-.partnerSummaryHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: $spacing-sm;
-  min-width: 0;
-
-  > .deletePartnerBtn {
-    position: static;
-    top: auto;
-    right: auto;
-    margin-left: auto;
-    z-index: auto;
-    flex: 0 0 auto;
-  }
-}
-
-.partnerSummaryText {
-  font-size: 12px;
-  color: var(--theme-text-secondary);
-  line-height: 1.6;
-  white-space: pre-line;
-  word-break: break-word;
-}
-
-.partnerSummaryStatus {
+  gap: 4px;
   min-width: 0;
 }
 
-.partnerSummaryStatusRow {
+.partnerRowTitle {
   display: flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
 }
 
-.partnerSummaryStatusMore {
-  flex-shrink: 0;
-  padding: 2px 6px;
+.partnerRowName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--theme-text-primary);
+}
+
+.partnerRowTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.partnerLabelChipMore {
+  min-width: 0;
+  padding: 2px 7px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 68%, transparent);
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--theme-card-border) 70%, transparent);
-  background: color-mix(in srgb, var(--theme-card-bg) 78%, transparent);
+  background: color-mix(in srgb, var(--theme-surface-muted) 42%, transparent);
   color: var(--theme-text-muted);
   font-size: 10px;
   line-height: 1.2;
+}
+
+.partnerRowMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.partnerRowActions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: max-content;
+}
+
+// 头像容器（含 HP 圆环 / buff 圆点叠层）
+.partnerAvatarWrap {
+  position: relative;
+  flex: 0 0 auto;
+
+  &.sizeSm {
+    width: 64px;
+    height: 64px;
+  }
+
+  &.sizeMd {
+    width: 96px;
+    height: 96px;
+  }
+}
+
+.partnerDefaultAvatar {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  border: 1px dashed color-mix(in srgb, var(--theme-card-border) 82%, transparent);
+  background: color-mix(in srgb, var(--theme-card-bg) 88%, transparent);
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition:
+    border-color $transition-fast,
+    color $transition-fast,
+    background $transition-fast;
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--theme-card-border) 100%, transparent);
+    color: var(--theme-text-secondary);
+    background: color-mix(in srgb, var(--theme-card-bg) 94%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--theme-primary-bg) 52%, transparent);
+    outline-offset: 2px;
+  }
+
+  span {
+    font-family: 'LongZhuTi', 'Noto Sans SC', sans-serif;
+    font-weight: normal;
+    line-height: 1;
+  }
+}
+
+.partnerAvatarWrap.sizeSm .partnerDefaultAvatar span {
+  font-size: 22px;
+}
+
+.partnerAvatarWrap.sizeMd .partnerDefaultAvatar span {
+  font-size: 32px;
+}
+
+// 生命值小圆环：荒野之息精力轮风格，远小于头像，直接叠加在头像右下角（无背景盘）
+.partnerHpRing {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.partnerHpRingTrack {
+  stroke: color-mix(in srgb, var(--theme-card-border) 80%, transparent);
+  opacity: 0.65;
+}
+
+.partnerHpRingFill {
+  transition: stroke-dashoffset $transition-normal;
+}
+
+// buff 数量小圆点（右上角，低调）
+.partnerBuffDot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 80%, transparent);
+  background: color-mix(in srgb, var(--theme-card-bg) 96%, transparent);
+  color: var(--theme-text-muted);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .partnerDetailPanel {
@@ -617,8 +692,7 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 
 .partnerDetailHeader {
   @include list-container(8px);
-  margin-bottom: $spacing-md;
-  padding-bottom: $spacing-sm;
+  padding: 10px $spacing-md $spacing-sm;
   border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
 }
 
@@ -693,6 +767,7 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 .partnerDetails {
   @include list-container($spacing-md);
   font-size: 12px;
+  padding: $spacing-md;
 }
 
 .partnerDetailNav {
@@ -710,6 +785,7 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   min-width: 0;
   width: 100%;
   padding: 8px 12px;
@@ -738,50 +814,61 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 10%, transparent);
 }
 
-.partnerOverviewHero {
+// 状态 tab 右侧的状态数目小圈
+.partnerDetailTabCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-tab-indicator) 16%, var(--theme-card-bg) 84%);
+  color: var(--theme-text-muted);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+// 详情卡片容器
+.partnerCards {
   @include list-container($spacing-md);
 }
 
-.partnerOverviewPrimary {
+.partnerResources {
   @include list-container($spacing-sm);
 }
 
-.partnerOverviewIdentityRow {
-  display: flex;
-  align-items: stretch;
-  gap: $spacing-md;
-}
-
-.partnerOverviewAvatar {
-  flex: 0 0 auto;
-}
-
-.partnerOverviewIdentityMeta {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
+.partnerResourceEditRow {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
   gap: $spacing-sm;
   min-width: 0;
 }
 
-.partnerOverviewStats {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: $spacing-sm;
+.partnerResourceLabel {
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-align: right;
 }
 
-@media (max-width: 760px) {
-  .partnerOverviewIdentityRow {
-    align-items: flex-start;
-  }
+.partnerResourceEditors {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  min-width: 0;
 }
 
-.partnerInfoPanel {
-  padding: $spacing-sm $spacing-md;
-  border-radius: $border-radius-sm;
-  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
-  background: color-mix(in srgb, var(--theme-card-bg) 86%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 6%, transparent);
+.partnerResourceSeparator {
+  color: var(--theme-text-muted);
+  font-size: 12px;
+}
+
+.partnerResourceMax {
+  color: var(--theme-text-secondary);
+  font-size: 13px;
 }
 
 @media (max-width: 900px) {
@@ -813,7 +900,15 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
     height: $destiny-partner-workspace-height;
   }
 
+  .partnerSummaryList {
+    border-right: 0;
+  }
+
   .partnerDetailPanel {
+    display: none;
+  }
+
+  .destinyTabDetailModeMobile .partnerMasterDetail {
     display: none;
   }
 
@@ -914,10 +1009,6 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  padding: $spacing-sm $spacing-md;
-  border-radius: $border-radius-sm;
-  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
-  background: color-mix(in srgb, var(--theme-card-bg) 84%, transparent);
 }
 
 .label {
@@ -1081,19 +1172,7 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   }
 }
 
-.partnerThoughtsPreview {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--theme-card-border) 68%, transparent);
-  border-radius: $border-radius-sm;
-  background: color-mix(in srgb, var(--theme-card-bg) 72%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
-}
-
 .partnerThoughtsText {
-  flex: 1 1 auto;
   color: var(--theme-text-primary);
   line-height: 1.7;
   font-size: 13px;
@@ -1101,67 +1180,66 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   word-break: break-word;
   overflow-wrap: anywhere;
   white-space: pre-line;
-
-  display: -webkit-box;
-  line-clamp: 3;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
-.partnerThoughtsButton {
-  align-self: flex-end;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 26px;
-  padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--theme-card-bg) 86%, transparent);
-  color: var(--theme-text-secondary);
-  font-size: 11px;
-  line-height: 1;
+// 收起态：整块可点击，文本模糊遮挡 + 高度受限（避免超长心里话撑出大块）
+.partnerThoughtsCover {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 64px;
+  padding: 0;
+  border: none;
+  border-radius: $border-radius-sm;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
-  transition:
-    background $transition-fast,
-    border-color $transition-fast,
-    color $transition-fast,
-    transform $transition-fast;
 
-  &:hover {
-    background: color-mix(in srgb, var(--theme-card-bg) 94%, transparent);
-    border-color: color-mix(in srgb, var(--theme-card-border) 88%, transparent);
-    color: var(--theme-text-primary);
-    transform: translateY(-1px);
+  .partnerThoughtsText {
+    filter: blur(5px);
+    max-height: 120px;
+    overflow: hidden;
   }
 
-  &:focus-visible {
-    outline: none;
-    border-color: color-mix(in srgb, var(--theme-card-border) 100%, transparent);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-tab-indicator) 18%, transparent);
+  &:hover .partnerThoughtsText,
+  &:focus-visible .partnerThoughtsText {
+    filter: blur(4px);
+  }
+}
+
+// 居中提示（覆盖在模糊文本上，本身不响应点击）
+.partnerThoughtsHint {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--theme-text-muted);
+  pointer-events: none;
+
+  i {
+    font-size: 14px;
+    opacity: 0.85;
+  }
+
+  > span {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--theme-card-bg) 72%, transparent);
   }
 }
 
 @media (max-width: 540px) {
-  .partnerThoughtsPreview {
-    padding: 10px 12px;
-  }
-
   .partnerThoughtsText {
     font-size: 12px;
     line-height: 1.65;
-    line-clamp: 4;
-    -webkit-line-clamp: 4;
   }
-}
-
-// 通用区块标签
-.sectionLabel {
-  color: var(--theme-text-secondary);
-  margin-bottom: $spacing-xs;
-  font-size: 11px;
-  font-weight: 500;
 }
 
 // 属性
@@ -1221,109 +1299,7 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   color: var(--theme-text-primary);
 }
 
-.partnerAssetHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-xs;
-}
-
-.partnerAssetSummary {
-  color: var(--theme-text-muted);
-  font-size: 11px;
-  line-height: 1.5;
-}
-
-.partnerAssetFilterBar {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 8px;
-  margin-bottom: $spacing-sm;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 2px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.partnerAssetFilterBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
-  padding: 6px 10px;
-  border: 1px solid color-mix(in srgb, var(--theme-card-border) 68%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--theme-card-bg) 64%, transparent);
-  color: var(--theme-text-secondary);
-  font-size: 11px;
-  line-height: 1.2;
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    background $transition-fast,
-    border-color $transition-fast,
-    color $transition-fast;
-
-  &:hover {
-    background: color-mix(in srgb, var(--theme-card-bg) 80%, transparent);
-    border-color: color-mix(in srgb, var(--theme-card-border) 84%, transparent);
-    color: var(--theme-text-primary);
-  }
-}
-
-.partnerAssetFilterBtnActive {
-  background: color-mix(in srgb, var(--theme-card-bg) 84%, var(--theme-text-primary) 4%);
-  border-color: color-mix(in srgb, var(--theme-card-border) 88%, transparent);
-  color: var(--theme-text-primary);
-}
-
-.partnerAssetFilterCount {
-  color: var(--theme-text-muted);
-  font-size: 10px;
-}
-
-// 装备
-.partnerEquipment {
-  padding: $spacing-sm 0;
-  border-top: 1px dashed var(--theme-card-border);
-}
-
-.equipmentList {
-  @include list-container;
-}
-
-.equipmentSlot {
-  font-size: 11px;
-  color: var(--theme-text-muted);
-}
-
-// 技能
-.partnerSkills {
-  padding: $spacing-sm 0;
-  border-top: 1px dashed var(--theme-card-border);
-}
-
-.skillList {
-  @include list-container;
-}
-
-.skillCost {
-  font-size: 11px;
-  color: var(--theme-text-muted);
-}
-
 // 相册
-.partnerGallery {
-  padding: $spacing-sm 0;
-  border-top: 1px dashed var(--theme-card-border);
-}
-
 .partnerGalleryEmptyPanel {
   display: flex;
   flex-direction: column;
@@ -1610,11 +1586,6 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 }
 
 // 心里话
-.partnerThoughts {
-  padding-top: $spacing-sm;
-  border-top: 1px dashed var(--theme-card-border);
-}
-
 .thoughtsRow {
   @include label-value-grid;
 }
@@ -1636,11 +1607,6 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 }
 
 // 背景故事
-.partnerBackground {
-  padding-top: $spacing-sm;
-  border-top: 1px dashed var(--theme-card-border);
-}
-
 .backgroundRow {
   @include label-value-grid;
 }
@@ -1662,27 +1628,14 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 }
 
 @media (max-width: 540px) {
-  .partnerSummaryHeader {
-    gap: 6px;
+  .partnerRowActions {
+    gap: 4px;
   }
 
   .thoughtsRow,
   .backgroundRow {
     grid-template-columns: 1fr;
   }
-}
-
-// 命定之人详情中的登神长阶
-.partnerAscension {
-  margin-top: $spacing-sm;
-  padding-top: $spacing-sm;
-  border-top: 1px dashed var(--theme-card-border);
-}
-
-.ascensionLabel {
-  color: var(--theme-text-secondary);
-  margin-bottom: $spacing-sm;
-  font-size: 12px;
 }
 
 // 空提示
@@ -1693,13 +1646,60 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 // 删除命定之人按钮（编辑模式高亮显示）
 .deletePartnerBtn {
   @include delete-button-danger;
+  width: 26px;
+  min-width: 26px;
+  height: 26px;
+  min-height: 26px;
   position: absolute;
   top: 0;
   right: 0;
   margin-left: 0;
   z-index: 1;
+  font-size: 11px;
+}
+
+// 详情页右上角操作容器内：删除按钮改为静态定位，跟随 flex 布局
+.partnerTitleActions > .deletePartnerBtn {
+  position: static;
+  top: auto;
+  right: auto;
+  z-index: auto;
+}
+
+// 隐藏命定之人按钮（与删除按钮同尺寸，状态色区分）
+.hidePartnerBtn {
+  @include hide-button;
+}
+
+// 已隐藏项目折叠分组
+.hiddenGroup {
+  margin-top: 2px;
+}
+
+.hiddenGroupToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--theme-card-border) 60%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border) 60%, transparent);
+  color: var(--theme-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--theme-text-secondary);
+    background: var(--theme-tab-hover-bg);
+  }
 
   i {
-    font-size: 12px;
+    font-size: 10px;
   }
+}
+
+.hiddenGroupBody {
+  margin-top: 2px;
 }

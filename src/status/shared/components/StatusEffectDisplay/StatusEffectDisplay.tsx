@@ -168,7 +168,7 @@ export const StatusEffectDisplay: FC<StatusEffectDisplayProps> = ({
                       title="删除状态效果"
                       type="button"
                     >
-                      <i className="fa-solid fa-trash" />
+                      <i className="fa-solid fa-trash-can" />
                     </button>
                   ) : null}
                 </div>

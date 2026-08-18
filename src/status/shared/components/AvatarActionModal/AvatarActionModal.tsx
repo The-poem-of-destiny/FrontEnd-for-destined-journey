@@ -153,7 +153,7 @@ export const AvatarActionModal: FC<AvatarActionModalProps> = ({
                 void handleDelete();
               }}
             >
-              <i className="fa-solid fa-trash" />
+              <i className="fa-solid fa-trash-can" />
               <span>{deleteLabel}</span>
             </button>
           ) : null}

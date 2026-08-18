@@ -1,2 +1,2 @@
 export { ItemDetail } from './ItemDetail';
-export type { ItemData } from './ItemDetail';
+export type { ItemCategory, ItemData } from './ItemDetail';

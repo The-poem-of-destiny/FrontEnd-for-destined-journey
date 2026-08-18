@@ -1,106 +1,7 @@
-@use '../../shared/styles/variables' as *;
-@use '../../shared/styles/mixins' as *;
+@use '../../styles/variables' as *;
+@use '../../styles/mixins' as *;
 
-.itemsTab {
-  @include page-container;
-  min-height: 0;
-}
-
-.itemsTabLoading,
-.itemsTabError,
-.itemsTabEmpty {
-  @include state-container;
-}
-
-.itemsTabHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $spacing-sm;
-  min-height: 36px;
-}
-
-.itemsTabCategories {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-}
-
-.itemsWorkspace {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  height: clamp(380px, 54vh, 760px);
-  min-height: 0;
-  border: 1px solid color-mix(in srgb, var(--theme-card-border) 74%, transparent);
-  border-radius: $border-radius-md;
-  background: color-mix(in srgb, var(--theme-card-bg) 58%, var(--theme-content-bg) 42%);
-  overflow: hidden;
-}
-
-.itemsTabContent {
-  display: flex;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.itemsIndex,
-.itemsDetailBody {
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-}
-
-.itemsIndex {
-  flex: 0.86 1 260px;
-  border-right: 1px solid color-mix(in srgb, var(--theme-card-border) 70%, transparent);
-  background: transparent;
-}
-
-.itemsDetailPanel {
-  display: flex;
-  flex: 1.14 1 320px;
-  min-width: 0;
-  min-height: 0;
-  flex-direction: column;
-  background: transparent;
-  overflow: hidden;
-}
-
-.itemsDetailHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $spacing-sm;
-  padding: 10px $spacing-md;
-  border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border) 64%, transparent);
-  background: transparent;
-  color: var(--theme-text-primary);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.itemsDetailName {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.itemsDetailActions {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
-}
-
-.itemsDetailBody {
-  flex: 1;
-  padding: $spacing-md 10px $spacing-md $spacing-md;
-}
+// 单类别物品集合面板 —— 与持有物页共用视觉（搜索/筛选/列表行/隐藏/删除/详情弹窗）
 
 .searchBar {
   display: flex;
@@ -108,7 +9,7 @@
   gap: 6px;
   flex: 0 0 auto;
   min-height: 34px;
-  margin: 8px $spacing-sm 0;
+  margin: 8px 0;
   padding: 0 10px;
   border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
   border-radius: 999px;
@@ -164,7 +65,7 @@
   flex-wrap: wrap;
   gap: $spacing-xs;
   flex: 0 0 auto;
-  padding: 8px $spacing-sm 7px;
+  padding: 4px 0 7px;
   border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border) 70%, transparent);
   background: transparent;
 }
@@ -204,98 +105,6 @@
   color: inherit;
   font-size: 10px;
   opacity: 0.82;
-}
-
-.currency {
-  display: flex;
-  flex: 0 0 auto;
-  justify-content: flex-end;
-  align-items: center;
-  letter-spacing: 0.3px;
-}
-
-.currencyEdit {
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: $spacing-sm;
-}
-
-.currencyItem {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-xs;
-  font-size: 13px;
-  font-weight: 500;
-  min-width: 0;
-
-  i {
-    font-size: 14px;
-    flex-shrink: 0;
-  }
-
-  .currencyEdit & {
-    min-width: 0;
-    flex: 0 1 auto;
-  }
-}
-
-.currencyItemGold {
-  color: var(--theme-currency-gold);
-}
-
-.currencyUnit {
-  font-size: 12px;
-  font-weight: 400;
-  margin-left: 2px;
-  opacity: 0.8;
-}
-
-.categoryBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-xs;
-  min-height: 32px;
-  padding: 6px 10px;
-  border: 1px solid transparent;
-  border-radius: calc(#{$border-radius-md} - 4px);
-  background: transparent;
-  color: var(--theme-text-secondary);
-  font-size: 12px;
-  cursor: pointer;
-  transition:
-    background-color $transition-fast,
-    border-color $transition-fast,
-    color $transition-fast,
-    box-shadow $transition-fast;
-  @include uppercase-text(0.5px);
-
-  &:hover {
-    background: var(--theme-tab-hover-bg);
-    color: var(--theme-text-primary);
-  }
-}
-
-.categoryCount {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  height: auto;
-  padding: 0;
-  color: inherit;
-  font-size: 10px;
-  font-weight: 500;
-  opacity: 0.82;
-}
-
-.isActive {
-  background: color-mix(in srgb, var(--theme-primary-bg) 18%, var(--theme-card-bg) 82%);
-  border-color: color-mix(in srgb, var(--theme-primary-bg) 44%, var(--theme-card-border) 56%);
-  color: var(--theme-text-primary);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text-primary) 6%, transparent);
 }
 
 .filterBtn.isActive {
@@ -362,16 +171,6 @@
     outline: 2px solid color-mix(in srgb, var(--theme-primary-bg) 52%, transparent);
     outline-offset: 2px;
   }
-}
-
-.isSelected {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--theme-primary-bg) 24%, var(--theme-card-bg) 76%) 0%,
-    color-mix(in srgb, var(--theme-primary-bg) 11%, var(--theme-card-bg) 89%) 64%,
-    transparent 100%
-  );
-  box-shadow: inset 5px 0 0 color-mix(in srgb, var(--theme-primary-bg) 80%, transparent);
 }
 
 .itemQualityMark {
@@ -507,59 +306,15 @@
   word-break: break-word;
 }
 
-.inspectSubtitle {
+// 详情弹窗标题行操作组
+.panelActions {
   display: inline-flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
-  color: var(--theme-text-secondary);
-  font-size: 12px;
-  line-height: 1.5;
 }
 
 .emptyHint {
   @include empty-hint($spacing-lg);
-}
-
-@media (max-width: 720px) {
-  .itemsTabHeader {
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .itemsTabCategories {
-    flex: 1 1 100%;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    order: 2;
-  }
-
-  .currency {
-    order: 1;
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .itemsTabContent {
-    display: block;
-    height: auto;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .itemsWorkspace {
-    height: clamp(340px, 52vh, 620px);
-  }
-
-  .itemsIndex {
-    overflow: visible;
-    padding-right: 0;
-    border-right: 0;
-  }
-
-  .itemsDetailPanel {
-    display: none;
-  }
 }
 
 @media (max-width: 540px) {
@@ -577,10 +332,6 @@
 
   .filterBtn {
     flex: 0 0 auto;
-  }
-
-  .categoryBtn {
-    padding-inline: 8px;
   }
 
   .itemRow {

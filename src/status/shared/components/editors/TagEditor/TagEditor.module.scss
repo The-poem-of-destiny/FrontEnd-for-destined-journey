@@ -28,16 +28,10 @@
 
 .tag {
   @include badge-base(2px 6px, 11px);
-  background: var(--theme-primary-bg);
-  color: var(--theme-primary-text);
-  word-break: break-word;
-}
-
-// 浅色主题：标签 chip 用浅色底 + 深色边框，避免深色块
-:global([data-theme-mode='light']) .tag {
   background: var(--theme-card-bg);
-  border: 1px solid var(--theme-primary-bg);
+  border: 1px solid var(--theme-card-border);
   color: var(--theme-text-primary);
+  word-break: break-word;
 }
 
 .removeBtn {
@@ -47,10 +41,10 @@
   width: 14px;
   height: 14px;
   padding: 0;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
+  background: transparent;
+  border: 1px solid var(--theme-card-border);
   border-radius: 50%;
-  color: inherit;
+  color: var(--theme-text-muted);
   cursor: pointer;
   transition: background $transition-fast;
 
@@ -59,7 +53,9 @@
   }
 
   &:hover {
-    background: rgba(255, 255, 255, 0.4);
+    background: var(--theme-tab-hover-bg);
+    border-color: var(--theme-primary-bg);
+    color: var(--theme-text-primary);
   }
 }
 

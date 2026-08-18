@@ -20,14 +20,14 @@ const ParchmentTheme: Theme = {
     titleBarBg: '#2a1d14',
     titleBarText: '#f0dec2',
     titleBarIcon: '#caa06a',
-    titleBarBtnHover: 'rgba(202, 160, 106, 0.18)',
+    titleBarBtnHover: '#caa06a2e',
 
     // Tab 栏
     tabBarBg: '#241810',
     tabText: '#c9ad85',
     tabActiveText: '#f8ebd2',
     tabIndicator: '#c28b48',
-    tabHoverBg: 'rgba(194, 139, 72, 0.16)',
+    tabHoverBg: '#c28b4829',
 
     // 内容区域
     contentBg: '#221912',
@@ -42,20 +42,20 @@ const ParchmentTheme: Theme = {
     textMuted: '#a1886b',
 
     // 资源条
-    resourceHp: '#b73a2b',
-    resourceMp: '#305fa8',
-    resourceSp: '#3b7f52',
-    resourceExp: '#c08a2f',
+    resourceHp: '#c21a15',
+    resourceMp: '#3a5fcc',
+    resourceSp: '#17883f',
+    resourceExp: '#af7100',
     resourceText: '#e6d2b4',
 
     // 品质颜色
-    qualityCommon: '#e4d6bb',
-    qualityUnique: '#d6a057',
-    qualityMythic: '#D58292',
-    qualityLegendary: '#e1c067',
-    qualityEpic: '#AB8FD4',
-    qualityRare: '#6E9CD2',
-    qualityUncommon: '#5EA975',
+    qualityCommon: '#e4d1b0',
+    qualityUnique: '#5ac5af',
+    qualityMythic: '#f2464a',
+    qualityLegendary: '#f4b330',
+    qualityEpic: '#be80f4',
+    qualityRare: '#7b95dd',
+    qualityUncommon: '#64ab6d',
 
     // 交互状态
     primaryBg: '#91602c',
@@ -67,18 +67,18 @@ const ParchmentTheme: Theme = {
     errorSolidText: '#fff',
 
     // 命定系统
-    affection: '#b4586c',
-    affectionBg: 'rgba(180, 88, 108, 0.26)',
+    affection: '#d43957',
+    affectionBg: '#d4395742',
     affectionText: '#d79aa8',
-    tagPresent: 'rgba(76, 162, 96, 0.2)',
+    tagPresent: '#4ca26033',
     tagPresentText: '#7fc39a',
-    tagContract: 'rgba(186, 52, 82, 0.22)',
+    tagContract: '#ba345238',
     tagContractText: '#e19ab0',
 
     // 登神长阶
-    ascensionElement: 'rgba(63, 142, 214, 0.16)',
-    ascensionPower: 'rgba(220, 150, 40, 0.16)',
-    ascensionLaw: 'rgba(152, 80, 186, 0.16)',
+    ascensionElement: '#3f8ed629',
+    ascensionPower: '#dc962829',
+    ascensionLaw: '#9850ba29',
 
     // 货币
     currencyGold: '#f3c94f',
@@ -103,14 +103,14 @@ const CrimsonTheme: Theme = {
     titleBarBg: '#2b1418',
     titleBarText: '#f0d2d4',
     titleBarIcon: '#c98a8f',
-    titleBarBtnHover: 'rgba(201, 138, 143, 0.18)',
+    titleBarBtnHover: '#c98a8f2e',
 
     // Tab 栏
     tabBarBg: '#231115',
     tabText: '#c99aa0',
     tabActiveText: '#f7d8dc',
     tabIndicator: '#b04a54',
-    tabHoverBg: 'rgba(176, 74, 84, 0.16)',
+    tabHoverBg: '#b04a5429',
 
     // 内容区域
     contentBg: '#1f1114',
@@ -125,20 +125,20 @@ const CrimsonTheme: Theme = {
     textMuted: '#b78388',
 
     // 资源条
-    resourceHp: '#c23a3a',
-    resourceMp: '#3b4f9a',
-    resourceSp: '#3e7a55',
-    resourceExp: '#c0893c',
+    resourceHp: '#c2181c',
+    resourceMp: '#385fcc',
+    resourceSp: '#23873a',
+    resourceExp: '#b07000',
     resourceText: '#e6bfc4',
 
     // 品质颜色
-    qualityCommon: '#e6c0c4',
-    qualityUnique: '#d79a55',
-    qualityMythic: '#D27A92',
-    qualityLegendary: '#e0b35e',
-    qualityEpic: '#A689D5',
-    qualityRare: '#6796D1',
-    qualityUncommon: '#5CA475',
+    qualityCommon: '#e6d1b0',
+    qualityUnique: '#60c5a9',
+    qualityMythic: '#f24552',
+    qualityLegendary: '#f8b134',
+    qualityEpic: '#bb81f6',
+    qualityRare: '#7995dd',
+    qualityUncommon: '#6caa67',
 
     // 交互状态
     primaryBg: '#94323b',
@@ -150,18 +150,18 @@ const CrimsonTheme: Theme = {
     errorSolidText: '#0d090a',
 
     // 命定系统
-    affection: '#c04b61',
-    affectionBg: 'rgba(192, 75, 97, 0.28)',
+    affection: '#d23964',
+    affectionBg: '#d2396447',
     affectionText: '#e29aa6',
-    tagPresent: 'rgba(72, 158, 98, 0.2)',
+    tagPresent: '#489e6233',
     tagPresentText: '#82c49a',
-    tagContract: 'rgba(196, 56, 76, 0.24)',
+    tagContract: '#c4384c3d',
     tagContractText: '#e29aa2',
 
     // 登神长阶
-    ascensionElement: 'rgba(78, 128, 196, 0.16)',
-    ascensionPower: 'rgba(216, 132, 36, 0.16)',
-    ascensionLaw: 'rgba(156, 72, 112, 0.18)',
+    ascensionElement: '#4e80c429',
+    ascensionPower: '#d8842429',
+    ascensionLaw: '#9c48702e',
 
     // 货币
     currencyGold: '#f2c653',
@@ -186,14 +186,14 @@ const IndigoTheme: Theme = {
     titleBarBg: '#141d33',
     titleBarText: '#d4dff2',
     titleBarIcon: '#8aa3d4',
-    titleBarBtnHover: 'rgba(138, 163, 212, 0.18)',
+    titleBarBtnHover: '#8aa3d42e',
 
     // Tab 栏
     tabBarBg: '#111828',
     tabText: '#9aaad0',
     tabActiveText: '#e0ecff',
     tabIndicator: '#5a78c6',
-    tabHoverBg: 'rgba(90, 120, 198, 0.16)',
+    tabHoverBg: '#5a78c629',
 
     // 内容区域
     contentBg: '#121a2a',
@@ -208,20 +208,20 @@ const IndigoTheme: Theme = {
     textMuted: '#8196b9',
 
     // 资源条
-    resourceHp: '#b8423c',
-    resourceMp: '#3b6fd0',
-    resourceSp: '#3d7d64',
-    resourceExp: '#c0913a',
+    resourceHp: '#c2152f',
+    resourceMp: '#2962cc',
+    resourceSp: '#008755',
+    resourceExp: '#b66c01',
     resourceText: '#c7d4f0',
 
     // 品质颜色
-    qualityCommon: '#d5e0f2',
-    qualityUnique: '#d7a35b',
-    qualityMythic: '#CE83A2',
-    qualityLegendary: '#e1c36d',
-    qualityEpic: '#B89DFC',
-    qualityRare: '#739AD9',
-    qualityUncommon: '#64A681',
+    qualityCommon: '#ebceb2',
+    qualityUnique: '#4ec4c4',
+    qualityMythic: '#f0436e',
+    qualityLegendary: '#ffab52',
+    qualityEpic: '#ad86ff',
+    qualityRare: '#6d99dc',
+    qualityUncommon: '#42af87',
 
     // 交互状态
     primaryBg: '#3c5fb8',
@@ -233,18 +233,18 @@ const IndigoTheme: Theme = {
     errorSolidText: '#fff',
 
     // 命定系统
-    affection: '#6b58c3',
-    affectionBg: 'rgba(107, 88, 195, 0.28)',
+    affection: '#c53e92',
+    affectionBg: '#c53e9247',
     affectionText: '#a595e0',
-    tagPresent: 'rgba(74, 164, 112, 0.2)',
+    tagPresent: '#4aa47033',
     tagPresentText: '#7fc6a2',
-    tagContract: 'rgba(170, 88, 164, 0.22)',
+    tagContract: '#aa58a438',
     tagContractText: '#d2a0d0',
 
     // 登神长阶
-    ascensionElement: 'rgba(76, 146, 230, 0.18)',
-    ascensionPower: 'rgba(236, 170, 64, 0.16)',
-    ascensionLaw: 'rgba(146, 88, 202, 0.18)',
+    ascensionElement: '#4c92e62e',
+    ascensionPower: '#ecaa4029',
+    ascensionLaw: '#9258ca2e',
 
     // 货币
     currencyGold: '#f1cf6a',
@@ -269,14 +269,14 @@ const BronzeTheme: Theme = {
     titleBarBg: '#1d2115',
     titleBarText: '#f2e5bf',
     titleBarIcon: '#c8b06a',
-    titleBarBtnHover: 'rgba(200, 176, 106, 0.18)',
+    titleBarBtnHover: '#c8b06a2e',
 
     // Tab 栏
     tabBarBg: '#181c12',
     tabText: '#c1b082',
     tabActiveText: '#f9edc8',
     tabIndicator: '#9a7f2f',
-    tabHoverBg: 'rgba(154, 127, 47, 0.18)',
+    tabHoverBg: '#9a7f2f2e',
 
     // 内容区域
     contentBg: '#171a12',
@@ -291,20 +291,20 @@ const BronzeTheme: Theme = {
     textMuted: '#aa956d',
 
     // 资源条
-    resourceHp: '#b23c2f',
-    resourceMp: '#335aa2',
-    resourceSp: '#377551',
-    resourceExp: '#b98a2b',
+    resourceHp: '#c11c03',
+    resourceMp: '#0c65ca',
+    resourceSp: '#008844',
+    resourceExp: '#ac7300',
     resourceText: '#e2d2a8',
 
     // 品质颜色
-    qualityCommon: '#e3d5b2',
-    qualityUnique: '#d39b42',
-    qualityMythic: '#D68296',
-    qualityLegendary: '#e2b858',
-    qualityEpic: '#A493D8',
-    qualityRare: '#739CD3',
-    qualityUncommon: '#64A87D',
+    qualityCommon: '#e2d3b0',
+    qualityUnique: '#55c5b6',
+    qualityMythic: '#f2483a',
+    qualityLegendary: '#eeb72d',
+    qualityEpic: '#9d8eff',
+    qualityRare: '#5e9dd9',
+    qualityUncommon: '#5bad74',
 
     // 交互状态
     primaryBg: '#8d6a1f',
@@ -316,18 +316,18 @@ const BronzeTheme: Theme = {
     errorSolidText: '#fff',
 
     // 命定系统
-    affection: '#a85e44',
-    affectionBg: 'rgba(168, 94, 68, 0.26)',
+    affection: '#d53c3d',
+    affectionBg: '#d53c3d42',
     affectionText: '#d0a57d',
-    tagPresent: 'rgba(68, 148, 92, 0.2)',
+    tagPresent: '#44945c33',
     tagPresentText: '#83be98',
-    tagContract: 'rgba(178, 64, 64, 0.22)',
+    tagContract: '#b2404038',
     tagContractText: '#d59a94',
 
     // 登神长阶
-    ascensionElement: 'rgba(66, 128, 206, 0.16)',
-    ascensionPower: 'rgba(220, 160, 36, 0.18)',
-    ascensionLaw: 'rgba(146, 82, 180, 0.16)',
+    ascensionElement: '#4280ce29',
+    ascensionPower: '#dca0242e',
+    ascensionLaw: '#9252b429',
 
     // 货币
     currencyGold: '#e6c04a',
@@ -352,14 +352,14 @@ const SakuraTheme: Theme = {
     titleBarBg: '#291820',
     titleBarText: '#f1d7e2',
     titleBarIcon: '#cf8faf',
-    titleBarBtnHover: 'rgba(207, 143, 175, 0.18)',
+    titleBarBtnHover: '#cf8faf2e',
 
     // Tab 栏
     tabBarBg: '#22131b',
     tabText: '#c9a0b8',
     tabActiveText: '#f8ddeb',
     tabIndicator: '#c06a95',
-    tabHoverBg: 'rgba(192, 106, 149, 0.16)',
+    tabHoverBg: '#c06a9529',
 
     // 内容区域
     contentBg: '#1f141b',
@@ -374,20 +374,20 @@ const SakuraTheme: Theme = {
     textMuted: '#a27a90',
 
     // 资源条
-    resourceHp: '#c3516b',
-    resourceMp: '#5a6fd2',
-    resourceSp: '#4d9a76',
-    resourceExp: '#c28b52',
+    resourceHp: '#c21820',
+    resourceMp: '#3460cc',
+    resourceSp: '#278739',
+    resourceExp: '#b16f00',
     resourceText: '#e7c6d6',
 
     // 品质颜色
-    qualityCommon: '#e6cddc',
-    qualityUnique: '#d99a69',
-    qualityMythic: '#D27C9D',
-    qualityLegendary: '#e0b56a',
-    qualityEpic: '#AE88D7',
-    qualityRare: '#7796D9',
-    qualityUncommon: '#64A47E',
+    qualityCommon: '#e7d0b1',
+    qualityUnique: '#4ec4ca',
+    qualityMythic: '#f24457',
+    qualityLegendary: '#faaf36',
+    qualityEpic: '#b882f8',
+    qualityRare: '#7696dd',
+    qualityUncommon: '#6faa64',
 
     // 交互状态
     primaryBg: '#a44875',
@@ -399,18 +399,18 @@ const SakuraTheme: Theme = {
     errorSolidText: '#100a0d',
 
     // 命定系统
-    affection: '#c56a9a',
-    affectionBg: 'rgba(197, 106, 154, 0.28)',
+    affection: '#d0396d',
+    affectionBg: '#d0396d47',
     affectionText: '#e5aec8',
-    tagPresent: 'rgba(96, 176, 120, 0.2)',
+    tagPresent: '#60b07833',
     tagPresentText: '#8ac7a8',
-    tagContract: 'rgba(206, 84, 138, 0.22)',
+    tagContract: '#ce548a38',
     tagContractText: '#e4a2c0',
 
     // 登神长阶
-    ascensionElement: 'rgba(110, 150, 230, 0.16)',
-    ascensionPower: 'rgba(240, 160, 80, 0.16)',
-    ascensionLaw: 'rgba(178, 88, 206, 0.18)',
+    ascensionElement: '#6e96e629',
+    ascensionPower: '#f0a05029',
+    ascensionLaw: '#b258ce2e',
 
     // 货币
     currencyGold: '#f2c85a',
@@ -435,14 +435,14 @@ const ObsidianTheme: Theme = {
     titleBarBg: '#1a1d24',
     titleBarText: '#f3f5f8',
     titleBarIcon: '#b9c0cc',
-    titleBarBtnHover: 'rgba(255, 255, 255, 0.08)',
+    titleBarBtnHover: '#ffffff14',
 
     // Tab 栏
     tabBarBg: '#171a21',
     tabText: '#a6afbd',
     tabActiveText: '#f4f7fb',
     tabIndicator: '#8f9fff',
-    tabHoverBg: 'rgba(255, 255, 255, 0.06)',
+    tabHoverBg: '#ffffff0f',
 
     // 内容区域
     contentBg: '#12151b',
@@ -457,20 +457,20 @@ const ObsidianTheme: Theme = {
     textMuted: '#8f98a8',
 
     // 资源条
-    resourceHp: '#ff5f57',
-    resourceMp: '#5b8cff',
-    resourceSp: '#35c98a',
-    resourceExp: '#f0b84b',
+    resourceHp: '#c21627',
+    resourceMp: '#2962cc',
+    resourceSp: '#008850',
+    resourceExp: '#b36e00',
     resourceText: '#f3f5f8',
 
     // 品质颜色
-    qualityCommon: '#c9d2e0',
-    qualityUnique: '#f09f4d',
-    qualityMythic: '#E87292',
-    qualityLegendary: '#e5c166',
-    qualityEpic: '#A885F9',
-    qualityRare: '#5d97ff',
-    qualityUncommon: '#56bf7b',
+    qualityCommon: '#e8d0b1',
+    qualityUnique: '#4fc5c1',
+    qualityMythic: '#f14362',
+    qualityLegendary: '#fdae39',
+    qualityEpic: '#af85fe',
+    qualityRare: '#6d99dc',
+    qualityUncommon: '#4aae81',
 
     // 交互状态
     primaryBg: '#8f9fff',
@@ -482,18 +482,18 @@ const ObsidianTheme: Theme = {
     errorSolidText: '#10131a',
 
     // 命定系统
-    affection: '#ff6f91',
-    affectionBg: 'rgba(255, 111, 145, 0.18)',
+    affection: '#cc3b80',
+    affectionBg: '#cc3b802e',
     affectionText: '#ffb2c1',
-    tagPresent: 'rgba(53, 201, 138, 0.16)',
+    tagPresent: '#35c98a29',
     tagPresentText: '#7ce3b4',
-    tagContract: 'rgba(255, 111, 145, 0.16)',
+    tagContract: '#ff6f9129',
     tagContractText: '#ffb0c0',
 
     // 登神长阶
-    ascensionElement: 'rgba(91, 140, 255, 0.12)',
-    ascensionPower: 'rgba(240, 184, 75, 0.12)',
-    ascensionLaw: 'rgba(154, 114, 248, 0.12)',
+    ascensionElement: '#5b8cff1f',
+    ascensionPower: '#f0b84b1f',
+    ascensionLaw: '#9a72f81f',
 
     // 货币
     currencyGold: '#f5c24f',
@@ -518,14 +518,14 @@ const IvoryTheme: Theme = {
     titleBarBg: '#e4d6c4',
     titleBarText: '#443220',
     titleBarIcon: '#745738',
-    titleBarBtnHover: 'rgba(116, 87, 56, 0.12)',
+    titleBarBtnHover: '#7457381f',
 
     // Tab 栏
     tabBarBg: '#eadfce',
     tabText: '#725944',
     tabActiveText: '#372615',
     tabIndicator: '#936526',
-    tabHoverBg: 'rgba(176, 131, 67, 0.12)',
+    tabHoverBg: '#b083431f',
 
     // 内容区域
     contentBg: '#ede2d2',
@@ -540,20 +540,20 @@ const IvoryTheme: Theme = {
     textMuted: '#6f5a48',
 
     // 资源条
-    resourceHp: '#8f2f24',
-    resourceMp: '#1f4e9a',
-    resourceSp: '#1f5e3c',
-    resourceExp: '#8a5a1f',
+    resourceHp: '#d15d4d',
+    resourceMp: '#6280d4',
+    resourceSp: '#4a925c',
+    resourceExp: '#aa7a39',
     resourceText: '#f8f4ec',
 
     // 品质颜色
-    qualityCommon: '#6b6258',
-    qualityUnique: '#855716',
-    qualityMythic: '#A33852',
-    qualityLegendary: '#785A11',
-    qualityEpic: '#6e4ab4',
-    qualityRare: '#2A5FA2',
-    qualityUncommon: '#296B41',
+    qualityCommon: '#776748',
+    qualityUnique: '#15806e',
+    qualityMythic: '#d12a2b',
+    qualityLegendary: '#a65a00',
+    qualityEpic: '#833fae',
+    qualityRare: '#4a5ba0',
+    qualityUncommon: '#206d35',
 
     // 交互状态
     primaryBg: '#b58a4a',
@@ -565,18 +565,18 @@ const IvoryTheme: Theme = {
     errorSolidText: '#fff',
 
     // 命定系统
-    affection: '#b35b6d',
-    affectionBg: 'rgba(179, 91, 109, 0.18)',
+    affection: '#d63b4b',
+    affectionBg: '#d63b4b2e',
     affectionText: '#6f2d3a',
-    tagPresent: 'rgba(56, 140, 90, 0.16)',
+    tagPresent: '#388c5a29',
     tagPresentText: '#1f5a3a',
-    tagContract: 'rgba(176, 64, 92, 0.16)',
+    tagContract: '#b0405c29',
     tagContractText: '#7a2543',
 
     // 登神长阶
-    ascensionElement: 'rgba(44, 104, 176, 0.14)',
-    ascensionPower: 'rgba(198, 122, 38, 0.14)',
-    ascensionLaw: 'rgba(118, 70, 178, 0.14)',
+    ascensionElement: '#2c68b024',
+    ascensionPower: '#c67a2624',
+    ascensionLaw: '#7646b224',
 
     // 货币
     currencyGold: '#80600d',
@@ -601,14 +601,14 @@ const MistyLilacTheme: Theme = {
     titleBarBg: '#D5CCE2',
     titleBarText: '#41374C',
     titleBarIcon: '#635C6F',
-    titleBarBtnHover: 'rgba(112, 88, 166, 0.12)',
+    titleBarBtnHover: '#7058a61f',
 
     // Tab 栏
     tabBarBg: '#ECE6F2',
     tabText: '#635C6F',
     tabActiveText: '#41374C',
     tabIndicator: '#7255A8',
-    tabHoverBg: 'rgba(114, 85, 168, 0.12)',
+    tabHoverBg: '#7255a81f',
 
     // 内容区域
     contentBg: '#EFEAF5',
@@ -623,20 +623,20 @@ const MistyLilacTheme: Theme = {
     textMuted: '#544c62',
 
     // 资源条
-    resourceHp: '#b02337',
-    resourceMp: '#2559b8',
-    resourceSp: '#1f7a45',
-    resourceExp: '#a66f14',
+    resourceHp: '#d15c56',
+    resourceMp: '#5b84d5',
+    resourceSp: '#3f9569',
+    resourceExp: '#ae7a3d',
     resourceText: '#faf7ff',
 
     // 品质颜色
-    qualityCommon: '#5b5468',
-    qualityUnique: '#875A19',
-    qualityMythic: '#BA297A',
-    qualityLegendary: '#7B5D11',
-    qualityEpic: '#734EB9',
-    qualityRare: '#2563C6',
-    qualityUncommon: '#216F40',
+    qualityCommon: '#7c674b',
+    qualityUnique: '#008280',
+    qualityMythic: '#d32a48',
+    qualityLegendary: '#ad5719',
+    qualityEpic: '#7948bb',
+    qualityRare: '#3d61a1',
+    qualityUncommon: '#00704e',
 
     // 交互状态
     primaryBg: '#7A5CB3',
@@ -648,18 +648,18 @@ const MistyLilacTheme: Theme = {
     errorSolidText: '#fff',
 
     // 命定系统
-    affection: '#F05CB2',
-    affectionBg: 'rgba(240, 92, 178, 0.22)',
+    affection: '#d33e7b',
+    affectionBg: '#d33e7b38',
     affectionText: '#4a3f5c',
-    tagPresent: 'rgba(46, 153, 87, 0.16)',
+    tagPresent: '#2e995729',
     tagPresentText: '#155243',
-    tagContract: 'rgba(217, 47, 69, 0.16)',
+    tagContract: '#d92f4529',
     tagContractText: '#8e1f5e',
 
     // 登神长阶
-    ascensionElement: 'rgba(49, 115, 217, 0.14)',
-    ascensionPower: 'rgba(185, 137, 45, 0.14)',
-    ascensionLaw: 'rgba(117, 88, 171, 0.14)',
+    ascensionElement: '#3173d924',
+    ascensionPower: '#b9892d24',
+    ascensionLaw: '#7558ab24',
 
     // 货币
     currencyGold: '#886015',

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { Asset, Equipment, Item, Rarity, Skill } from '../types';
+import type { Asset, Equipment, Item, Skill } from '../types';
+import { getRarityColor, getRarityLabel } from '../utils/form-options';
 import CardActionFooter from './CardActionFooter.vue';
 
 interface Props {
@@ -30,27 +31,6 @@ const selectButtonText = computed(() => {
   if (props.disabled) return '点数不足';
   return '选择';
 });
-
-// 稀有度对应的颜色
-const rarityColors: Record<Rarity, string> = {
-  only: '#ff6f00',
-  common: '#9e9e9e',
-  uncommon: '#b88a2c',
-  rare: '#193c96',
-  epic: '#9c27b0',
-  legendary: '#9e7121',
-  mythic: '#d32f2f',
-};
-
-const rarityNames: Record<Rarity, string> = {
-  only: '唯一',
-  common: '普通',
-  uncommon: '优良',
-  rare: '稀有',
-  epic: '史诗',
-  legendary: '传说',
-  mythic: '神话',
-};
 
 const handleToggleSelect = () => {
   if (props.disabled && !props.selected) return;
@@ -97,7 +77,7 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
       'is-details-open': isDetailsOpen,
       'is-details-static': !detailsToggleable,
     }"
-    :style="{ '--rarity-color': rarityColors[item.rarity] }"
+    :style="{ '--rarity-color': getRarityColor(item.rarity) }"
     :tabindex="detailsToggleable ? 0 : undefined"
     :aria-expanded="detailsToggleable ? isDetailsOpen : undefined"
     @click="handleToggleDetails"
@@ -107,8 +87,8 @@ const formatEffectEntries = (effect?: Record<string, string>) =>
     <!-- 卡片头部 -->
     <div class="card-header">
       <div class="item-name">{{ item.name }}</div>
-      <div class="item-rarity" :style="{ color: rarityColors[item.rarity] }">
-        {{ rarityNames[item.rarity] }}
+      <div class="item-rarity" :style="{ color: getRarityColor(item.rarity) }">
+        {{ getRarityLabel(item.rarity) }}
       </div>
     </div>
 

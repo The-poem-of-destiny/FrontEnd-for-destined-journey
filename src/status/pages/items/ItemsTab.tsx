@@ -1,6 +1,6 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
-import { useEditorSettingStore } from '../../core/stores';
+import { useEditorSettingStore, useMvuDataStore } from '../../core/stores';
 import {
   buildSessionKey,
   formatMoney,
@@ -73,6 +73,7 @@ const ALL_FILTER = '全部';
  */
 const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const editEnabled = useEditorSettingStore(state => state.editEnabled);
+  const { updateField } = useMvuDataStore();
   const { deleteTarget, setDeleteTarget, handleDelete, cancelDelete, isConfirmOpen } =
     useDeleteConfirm();
 
@@ -92,6 +93,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const [selectedItem, setSelectedItem] = useState<InspectItemState>(null);
   const [inspectItem, setInspectItem] = useState<InspectItemState>(null);
   const [isCompactLayout, setIsCompactLayout] = useState(false);
+  const [hiddenGroupExpanded, setHiddenGroupExpanded] = useState(false);
   const player = data.主角;
 
   /** 获取当前类别配置 */
@@ -249,6 +251,18 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     handleDeleteItem(name);
   };
 
+  /** 切换物品隐藏状态（隐藏的项目在列表中折叠收起） */
+  const handleToggleItemHidden = async (name: string) => {
+    const item = activeCategoryItems[name];
+    const success = await updateField(
+      `${activeCategoryConfig.pathPrefix}.${name}._隐藏`,
+      !item._隐藏,
+    );
+    if (!success) {
+      toastr.error('隐藏状态切换失败');
+    }
+  };
+
   const handleCloseInspect = () => {
     setInspectItem(null);
   };
@@ -271,16 +285,10 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     }
 
     if (config.itemCategory === 'asset') {
-      if (!item.结算) return null;
-
-      const settlement = Array.from(item.结算);
-      const displaySettlement =
-        settlement.length > 4 ? `${settlement.slice(0, 4).join('')}...` : item.结算;
-      return (
-        <span className={styles.itemCost} title={item.结算}>
-          {displaySettlement}
-        </span>
-      );
+      const internalCount = Object.keys(item.内部资产 ?? {}).length;
+      return internalCount > 0 ? (
+        <span className={styles.itemCost}>内部 {internalCount}</span>
+      ) : null;
     }
 
     return item.消耗 ? <span className={styles.itemCost}>{item.消耗}</span> : null;
@@ -309,6 +317,46 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
         itemCategory={config.itemCategory}
         displayMode="modal-detail"
       />
+    );
+  };
+
+  /** 详情标题行右侧的操作按钮组（装备不支持，仅背包/技能/资产） */
+  const renderDetailHeaderActions = (
+    itemState: InspectItemState,
+    config: typeof activeCategoryConfig | null,
+    itemData: ItemData | undefined,
+  ) => {
+    if (!itemState || !config || !itemData || config.itemCategory === 'equipment') return null;
+
+    const isHidden = !!itemData._隐藏;
+
+    return (
+      <div className={styles.itemsDetailActions}>
+        <button
+          type="button"
+          className={`${styles.itemHideButton} ${isHidden ? styles.isHidden : ''}`}
+          onClick={() => {
+            void handleToggleItemHidden(itemState.name);
+          }}
+          title={isHidden ? '取消隐藏' : '隐藏'}
+        >
+          <i className={`fa-solid ${isHidden ? 'fa-circle-plus' : 'fa-circle-minus'}`} />
+        </button>
+        <button
+          type="button"
+          className={styles.itemDeleteButton}
+          onClick={() =>
+            setDeleteTarget({
+              type: config.label,
+              path: `${config.pathPrefix}.${itemState.name}`,
+              name: itemState.name,
+            })
+          }
+          title="删除"
+        >
+          <i className="fa-solid fa-trash-can" />
+        </button>
+      </div>
     );
   };
 
@@ -347,55 +395,88 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
       );
     }
 
+    const renderItemRow = ([name, item]: (typeof filteredEntries)[number]) => {
+      const isSelected = selectedItem?.categoryId === activeCategory && selectedItem.name === name;
+      const qualityClass = getQualityClass(item.品质, styles);
+      const itemTags = getItemTags(item);
+
+      return (
+        <div
+          key={name}
+          role="button"
+          tabIndex={0}
+          className={`${styles.itemRow} ${isSelected ? styles.isSelected : ''}`}
+          onClick={() => handleSelectItem(name)}
+          onKeyDown={event => handleItemRowKeyDown(event, name)}
+        >
+          <span className={`${styles.itemQualityMark} ${qualityClass}`.trim()} />
+          <span className={styles.itemRowMain}>
+            <span className={styles.itemRowTitle}>
+              <span className={`${styles.itemRowName} ${qualityClass}`.trim()}>{name}</span>
+              <span className={styles.itemRowType}>{getItemTypeLabel(item)}</span>
+            </span>
+            {itemTags.length > 0 ? (
+              <span className={styles.itemRowTags}>
+                {itemTags.map((tag, idx) => (
+                  <span key={`${tag}-${idx}`} className={styles.itemRowTag}>
+                    {tag}
+                  </span>
+                ))}
+              </span>
+            ) : null}
+          </span>
+          <span className={styles.itemRowActions}>
+            <span className={styles.itemRowSuffix}>{getTitleSuffix(activeCategoryConfig, item)}</span>
+                {editEnabled && activeCategoryConfig.itemCategory !== 'equipment' && (
+                  <button
+                    type="button"
+                    className={`${styles.itemHideButton} ${item._隐藏 ? styles.isHidden : ''}`}
+                    onClick={event => {
+                      event.stopPropagation();
+                      void handleToggleItemHidden(name);
+                    }}
+                    title={item._隐藏 ? '取消隐藏' : '隐藏'}
+                  >
+                    <i className={`fa-solid ${item._隐藏 ? 'fa-circle-plus' : 'fa-circle-minus'}`} />
+                  </button>
+                )}
+            {editEnabled && (
+              <button
+                type="button"
+                className={styles.itemDeleteButton}
+                onClick={event => handleDeleteItemClick(event, name)}
+                title="删除"
+              >
+                <i className="fa-solid fa-trash-can" />
+              </button>
+            )}
+          </span>
+        </div>
+      );
+    };
+
+    const visibleEntries = filteredEntries.filter(([, item]) => !item._隐藏);
+    const hiddenEntries = filteredEntries.filter(([, item]) => item._隐藏);
+
     return (
       <div className={styles.itemList}>
-        {filteredEntries.map(([name, item]) => {
-          const isSelected =
-            selectedItem?.categoryId === activeCategory && selectedItem.name === name;
-          const qualityClass = getQualityClass(item.品质, styles);
-          const itemTags = getItemTags(item);
-
-          return (
-            <div
-              key={name}
-              role="button"
-              tabIndex={0}
-              className={`${styles.itemRow} ${isSelected ? styles.isSelected : ''}`}
-              onClick={() => handleSelectItem(name)}
-              onKeyDown={event => handleItemRowKeyDown(event, name)}
+        {visibleEntries.map(renderItemRow)}
+        {hiddenEntries.length > 0 && (
+          <div className={styles.hiddenGroup}>
+            <button
+              type="button"
+              className={styles.hiddenGroupToggle}
+              onClick={() => setHiddenGroupExpanded(expanded => !expanded)}
+              aria-expanded={hiddenGroupExpanded}
             >
-              <span className={`${styles.itemQualityMark} ${qualityClass}`.trim()} />
-              <span className={styles.itemRowMain}>
-                <span className={styles.itemRowTitle}>
-                  <span className={`${styles.itemRowName} ${qualityClass}`.trim()}>{name}</span>
-                  <span className={styles.itemRowType}>{getItemTypeLabel(item)}</span>
-                </span>
-                {itemTags.length > 0 ? (
-                  <span className={styles.itemRowTags}>
-                    {itemTags.map((tag, idx) => (
-                      <span key={`${tag}-${idx}`} className={styles.itemRowTag}>
-                        {tag}
-                      </span>
-                    ))}
-                  </span>
-                ) : null}
-              </span>
-              <span className={styles.itemRowActions}>
-                <span className={styles.itemRowSuffix}>
-                  {getTitleSuffix(activeCategoryConfig, item)}
-                </span>
-                <button
-                  type="button"
-                  className={styles.itemDeleteButton}
-                  onClick={event => handleDeleteItemClick(event, name)}
-                  title="删除"
-                >
-                  <i className="fa-solid fa-trash-can" />
-                </button>
-              </span>
-            </div>
-          );
-        })}
+              <i
+                className={`fa-solid ${hiddenGroupExpanded ? 'fa-chevron-down' : 'fa-chevron-right'}`}
+              />
+              <span>已隐藏（{hiddenEntries.length}）</span>
+            </button>
+            {hiddenGroupExpanded && <div className={styles.hiddenGroupBody}>{hiddenEntries.map(renderItemRow)}</div>}
+          </div>
+        )}
       </div>
     );
   };
@@ -523,8 +604,10 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
           <div className={styles.itemsIndex}>{renderCategoryContent()}</div>
           <aside className={styles.itemsDetailPanel}>
             <div className={styles.itemsDetailHeader}>
-              <span>{selectedItem?.name ?? '持有物详情'}</span>
-              <span>{activeCategoryConfig.label}</span>
+              <span className={styles.itemsDetailName}>{selectedItem?.name ?? '持有物详情'}</span>
+              {selectedItem
+                ? renderDetailHeaderActions(selectedItem, selectedCategoryConfig, selectedItemData)
+                : null}
             </div>
             <div className={styles.itemsDetailBody}>
               {renderDetail(selectedItem, selectedCategoryConfig, selectedItemData)}
@@ -537,10 +620,10 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
       <ItemInspectModal
         open={!!inspectItem}
         title={inspectItem?.name ?? ''}
-        subtitle={
-          inspectCategoryConfig ? (
-            <span className={styles.inspectSubtitle}>{inspectCategoryConfig.label}</span>
-          ) : null
+        headerActions={
+          inspectItem
+            ? renderDetailHeaderActions(inspectItem, inspectCategoryConfig, inspectedItemData)
+            : null
         }
         onClose={handleCloseInspect}
       >

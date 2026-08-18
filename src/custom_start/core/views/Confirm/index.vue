@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useCharacterStore, useCustomContentStore } from '../../store';
 import type { Partner } from '../../types';
+import { getRarityColor } from '../../utils/form-options';
 
 const characterStore = useCharacterStore();
 const customContentStore = useCustomContentStore();
@@ -41,17 +42,6 @@ const displayLocation = computed(() => {
     ? characterStore.character.customStartLocation || '自定义'
     : characterStore.character.startLocation;
 });
-
-// 品质颜色映射
-const rarityColorMap: Record<string, string> = {
-  common: '#9e9e9e',
-  uncommon: '#b88a2c',
-  rare: '#2196f3',
-  epic: '#9c27b0',
-  legendary: '#ff9800',
-  mythic: '#e91e63',
-  only: '#ff0000',
-};
 
 const formatStairwayMap = (map?: Record<string, Record<string, string>>) => {
   return Object.entries(map || {}).map(([name, effects]) => ({
@@ -181,7 +171,7 @@ const getStairwayView = (partner: Partner) => {
             >
               <p class="item-title">
                 <strong>{{ index + 1 }}. </strong>
-                <span :style="{ color: rarityColorMap[item.rarity] }">{{ item.name }}</span>
+                <span :style="{ color: getRarityColor(item.rarity) }">{{ item.name }}</span>
                 <span class="item-cost">[{{ item.cost }} 点]</span>
               </p>
               <p class="item-meta">
@@ -217,7 +207,7 @@ const getStairwayView = (partner: Partner) => {
             >
               <p class="item-title">
                 <strong>{{ index + 1 }}. </strong>
-                <span :style="{ color: rarityColorMap[item.rarity] }">{{ item.name }}</span>
+                <span :style="{ color: getRarityColor(item.rarity) }">{{ item.name }}</span>
                 <span v-if="item.quantity" class="item-quantity">× {{ item.quantity }}</span>
                 <span class="item-cost">[{{ item.cost }} 点]</span>
               </p>
@@ -254,7 +244,7 @@ const getStairwayView = (partner: Partner) => {
             >
               <p class="item-title">
                 <strong>{{ index + 1 }}. </strong>
-                <span :style="{ color: rarityColorMap[asset.rarity] }">{{ asset.name }}</span>
+                <span :style="{ color: getRarityColor(asset.rarity) }">{{ asset.name }}</span>
                 <span class="item-cost">[{{ asset.cost }} 点]</span>
               </p>
               <p class="item-meta">
@@ -291,7 +281,7 @@ const getStairwayView = (partner: Partner) => {
             >
               <p class="item-title">
                 <strong>{{ index + 1 }}. </strong>
-                <span :style="{ color: rarityColorMap[skill.rarity] }">{{ skill.name }}</span>
+                <span :style="{ color: getRarityColor(skill.rarity) }">{{ skill.name }}</span>
                 <span class="item-cost">[{{ skill.cost }} 点]</span>
               </p>
               <p class="item-meta">

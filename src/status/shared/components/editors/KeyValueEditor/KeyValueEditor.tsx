@@ -158,7 +158,7 @@ export const KeyValueEditor: FC<KeyValueEditorProps> = ({
                         onClick={() => handleRemove(key)}
                         title="删除"
                       >
-                        <i className="fa-solid fa-trash" />
+                        <i className="fa-solid fa-trash-can" />
                       </button>
                     )}
                   </>

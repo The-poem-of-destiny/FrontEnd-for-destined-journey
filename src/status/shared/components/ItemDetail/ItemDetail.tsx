@@ -27,6 +27,19 @@ export interface ItemData {
   消耗?: string;
   数量?: number;
   结算?: string;
+  总空间?: string;
+  _隐藏?: boolean;
+  内部资产?: Record<
+    string,
+    {
+      品质?: string;
+      标签?: string[];
+      数量?: number;
+      效果?: Record<string, string>;
+      描述?: string;
+      总占用空间?: string;
+    }
+  >;
 }
 
 /** 物品类别 */
@@ -48,6 +61,10 @@ interface ItemDetailProps {
   pathPrefix?: string;
   /** 删除回调（点击删除按钮时触发，由父组件处理确认弹窗） */
   onDelete?: () => void;
+  /** 是否隐藏（已折叠收起的项目） */
+  hidden?: boolean;
+  /** 切换隐藏状态回调 */
+  onToggleHide?: () => void;
   /** 物品类别，用于区分显示不同的字段 */
   itemCategory?: ItemCategory;
   /** 展示模式 */
@@ -68,6 +85,8 @@ export const ItemDetail: FC<ItemDetailProps> = ({
   editEnabled = false,
   pathPrefix,
   onDelete,
+  hidden = false,
+  onToggleHide,
   itemCategory = 'item',
   displayMode = 'panel-card',
   onInspect,
@@ -77,13 +96,24 @@ export const ItemDetail: FC<ItemDetailProps> = ({
     onDelete?.();
   };
 
+  const handleToggleHideClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onToggleHide?.();
+  };
+
   const qualityClass = getQualityClass(data.品质, styles);
   const metaItems = [data.类型 ? { key: 'type', label: '类型', value: data.类型 } : null].filter(
     Boolean,
   ) as Array<{ key: string; label: string; value: string }>;
 
   const effectEntries = _.entries(data.效果 ?? {});
-  const effectNames = effectEntries.map(([key]) => key);
+  const internalEffectEntries =
+    itemCategory === 'asset'
+      ? _.flatMap(data.内部资产 ?? {}, internal =>
+          _.map(internal.效果 ?? {}, (value, key) => [key, value] as [string, string]),
+        )
+      : [];
+  const effectNames = [...effectEntries, ...internalEffectEntries].map(([key]) => key);
   const summaryEffectNames = effectNames.slice(0, 3);
   const remainingEffectCount = Math.max(effectNames.length - summaryEffectNames.length, 0);
 
@@ -98,6 +128,21 @@ export const ItemDetail: FC<ItemDetailProps> = ({
         title="删除"
       >
         <i className="fa-solid fa-trash-can" />
+      </button>
+    );
+  };
+
+  const renderHideButton = () => {
+    if (!onToggleHide) return null;
+
+    return (
+      <button
+        type="button"
+        className={`${styles.hideButton} ${hidden ? styles.isHidden : ''}`}
+        onClick={handleToggleHideClick}
+        title={hidden ? '取消隐藏' : '隐藏'}
+      >
+        <i className={`fa-solid ${hidden ? 'fa-circle-plus' : 'fa-circle-minus'}`} />
       </button>
     );
   };
@@ -147,7 +192,10 @@ export const ItemDetail: FC<ItemDetailProps> = ({
         <span className={`${styles.itemName} ${qualityClass}`.trim()}>{name}</span>
         {titleSuffix ? <span className={styles.itemTitleSuffix}>{titleSuffix}</span> : null}
       </div>
-      <div className={styles.itemTitleActions}>{renderDeleteButton()}</div>
+      <div className={styles.itemTitleActions}>
+        {renderHideButton()}
+        {renderDeleteButton()}
+      </div>
     </div>
   );
 
@@ -245,6 +293,13 @@ export const ItemDetail: FC<ItemDetailProps> = ({
         </div>
       )}
 
+      {(itemCategory === 'asset' && (data.总空间 || editEnabled)) && (
+        <div className={styles.itemFieldRow}>
+          <span className={styles.fieldLabel}>总空间</span>
+          {renderEditableOrText('总空间', data.总空间 ?? '', 'text')}
+        </div>
+      )}
+
       {itemCategory === 'item' && (displayMode === 'modal-detail' || editEnabled) ? (
         <div className={styles.itemFieldRow}>
           <span className={styles.fieldLabel}>数量</span>
@@ -290,6 +345,38 @@ export const ItemDetail: FC<ItemDetailProps> = ({
           </div>
         </div>
       )}
+
+      {itemCategory === 'asset' && !_.isEmpty(data.内部资产) ? (
+        <div className={styles.itemBlock}>
+          <div className={styles.itemBlockTitle}>内部资产</div>
+          <div className={styles.internalAssets}>
+            {_.entries(data.内部资产).map(([name, internal]) => (
+              <div key={name} className={styles.internalAssetEntry}>
+                <div className={styles.internalAssetHeader}>
+                  <span className={styles.internalAssetName}>{name}</span>
+                  {internal.数量 ? (
+                    <span className={styles.internalAssetQty}>×{internal.数量}</span>
+                  ) : null}
+                  {internal.总占用空间 ? (
+                    <span className={styles.internalAssetSpace}>{internal.总占用空间}</span>
+                  ) : null}
+                </div>
+                {internal.描述 ? (
+                  <div className={styles.internalAssetDesc}>{internal.描述}</div>
+                ) : null}
+                {!_.isEmpty(internal.效果)
+                  ? _.entries(internal.效果).map(([key, value]) => (
+                      <div key={key} className={styles.effectRow}>
+                        <span className={styles.effectKey}>{key}</span>
+                        <span className={styles.effectValue}>{value}</span>
+                      </div>
+                    ))
+                  : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 

@@ -7,7 +7,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,css,scss,html,vue}\"",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "dump": "tsx dump_schema.ts"
+    "dump": "tsx dump_schema.ts",
+    "theme-studio": "tsx tools/theme-studio/build.ts"
   },
   "browserslist": [
     "defaults and partially supports es6-module"
@@ -119,5 +120,5 @@
       "vue-demi"
     ]
   },
-  "version": "1.9.4"
+  "version": "1.9.5"
 }

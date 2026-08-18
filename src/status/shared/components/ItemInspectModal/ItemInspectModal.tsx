@@ -8,6 +8,8 @@ export interface ItemInspectModalProps {
   title: string;
   /** 副标题 */
   subtitle?: ReactNode;
+  /** 标题行右侧的附加操作（如隐藏/删除按钮） */
+  headerActions?: ReactNode;
   /** 内容 */
   children: ReactNode;
   /** 关闭回调 */
@@ -26,6 +28,7 @@ export const ItemInspectModal: FC<ItemInspectModalProps> = ({
   open,
   title,
   subtitle,
+  headerActions,
   children,
   onClose,
   closeOnOverlay = true,
@@ -69,6 +72,7 @@ export const ItemInspectModal: FC<ItemInspectModalProps> = ({
             <div className={styles.title}>{title}</div>
             {subtitle ? <div className={styles.subtitle}>{subtitle}</div> : null}
           </div>
+          {headerActions ? <div className={styles.headerActions}>{headerActions}</div> : null}
           <button type="button" className={styles.closeButton} onClick={onClose} title="关闭详情">
             <i className="fa-solid fa-xmark" />
           </button>

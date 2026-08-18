@@ -56,26 +56,23 @@ const ProfileInfoFields = BasicInfoFields.filter(
   field => !['生命层级', '等级', '冒险者等级'].includes(field.key),
 );
 
-// 资源条配置
+// 资源条配置（上限 = 上限._基础 + 上限.额外，_基础 只读，额外 可编辑）
 const ResourceFields = [
   {
     label: 'HP',
-    currentKey: '生命值',
-    maxKey: '生命值上限',
+    key: '生命值',
     type: 'hp' as const,
     icon: 'game-icons:heart-plus',
   },
   {
     label: 'MP',
-    currentKey: '法力值',
-    maxKey: '法力值上限',
+    key: '法力值',
     type: 'mp' as const,
     icon: 'game-icons:water-drop',
   },
   {
     label: 'SP',
-    currentKey: '体力值',
-    maxKey: '体力值上限',
+    key: '体力值',
     type: 'sp' as const,
     icon: 'game-icons:focused-lightning',
   },
@@ -290,11 +287,13 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   };
 
   /**
-   * 渲染资源值（编辑模式下可调整当前值和上限）
+   * 渲染资源值（编辑模式下可调整当前值和上限.额外，上限._基础 只读）
    */
   const renderResourceField = (field: (typeof ResourceFields)[number]) => {
-    const current = _.get(player, field.currentKey, 0);
-    const max = _.get(player, field.maxKey, 0);
+    const current = _.get(player, `${field.key}.当前`, 0);
+    const base = _.get(player, `${field.key}.上限._基础`, 0);
+    const extra = _.get(player, `${field.key}.上限.额外`, 0);
+    const max = Math.max(0, base + extra);
 
     if (!editEnabled) {
       return (
@@ -314,15 +313,19 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
         <span className={styles.resourceLabel}>{field.label}</span>
         <div className={styles.resourceEditors}>
           <EditableField
-            path={`主角.${field.currentKey}`}
+            path={`主角.${field.key}.当前`}
             value={current}
             type="number"
             numberConfig={{ min: 0, max: max, step: 1 }}
           />
           <span className={styles.resourceSeparator}>/</span>
+          <span className={styles.expMax} title="上限._基础（只读，仅随等级/属性/层级重算）">
+            {base}
+          </span>
+          <span className={styles.resourceSeparator}>+</span>
           <EditableField
-            path={`主角.${field.maxKey}`}
-            value={max}
+            path={`主角.${field.key}.上限.额外`}
+            value={extra}
             type="number"
             numberConfig={{ min: 0, step: 1 }}
           />
