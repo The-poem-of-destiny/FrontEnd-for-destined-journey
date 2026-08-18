@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import OpenSeadragon, { ImageTileSource } from 'openseadragon';
+import OpenSeadragon from 'openseadragon';
 
 interface Props {
   selectedLocation?: string;
@@ -126,7 +126,9 @@ const loadMap = async (sourceKey: MapSourceKey) => {
 
     currentViewer.addHandler('open', handleOpen);
     currentViewer.open({
-      tileSource: new ImageTileSource({ url: objectUrl }),
+      // CDN 的 ESM 包只暴露默认导出，构造器需要从默认导出的命名空间读取。
+      // eslint-disable-next-line import-x/no-named-as-default-member
+      tileSource: new OpenSeadragon.ImageTileSource({ url: objectUrl }),
     });
   } catch (error) {
     window.clearTimeout(timeoutId);
