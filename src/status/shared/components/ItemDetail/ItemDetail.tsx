@@ -293,7 +293,7 @@ export const ItemDetail: FC<ItemDetailProps> = ({
         </div>
       )}
 
-      {(itemCategory === 'asset' && (data.总空间 || editEnabled)) && (
+      {itemCategory === 'asset' && (data.总空间 || editEnabled) && (
         <div className={styles.itemFieldRow}>
           <span className={styles.fieldLabel}>总空间</span>
           {renderEditableOrText('总空间', data.总空间 ?? '', 'text')}

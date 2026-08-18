@@ -1,12 +1,4 @@
-import {
-  ChangeEvent,
-  FC,
-  KeyboardEvent,
-  MouseEvent,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { ChangeEvent, FC, KeyboardEvent, MouseEvent, useEffect, useMemo, useState } from 'react';
 import { useDeleteConfirm } from '../../core/hooks';
 import { useEditorSettingStore, useMvuDataStore } from '../../core/stores';
 import {
@@ -89,7 +81,6 @@ const PartnerResourceFields = [
     icon: 'game-icons:focused-lightning',
   },
 ] as const;
-
 
 const PartnerListCategories: Array<{
   key: PartnerListCategory;
@@ -244,7 +235,9 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     const keyword = partnerSearchKeyword.trim().toLowerCase();
     if (keyword) {
       entries = entries.filter(([name, partner]) => {
-        const identity = Array.isArray(partner.身份) ? partner.身份.join(' ') : (partner.身份 ?? '');
+        const identity = Array.isArray(partner.身份)
+          ? partner.身份.join(' ')
+          : (partner.身份 ?? '');
         const occupation = Array.isArray(partner.职业)
           ? partner.职业.join(' ')
           : (partner.职业 ?? '');

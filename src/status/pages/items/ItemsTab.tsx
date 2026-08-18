@@ -426,20 +426,22 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
             ) : null}
           </span>
           <span className={styles.itemRowActions}>
-            <span className={styles.itemRowSuffix}>{getTitleSuffix(activeCategoryConfig, item)}</span>
-                {editEnabled && activeCategoryConfig.itemCategory !== 'equipment' && (
-                  <button
-                    type="button"
-                    className={`${styles.itemHideButton} ${item._隐藏 ? styles.isHidden : ''}`}
-                    onClick={event => {
-                      event.stopPropagation();
-                      void handleToggleItemHidden(name);
-                    }}
-                    title={item._隐藏 ? '取消隐藏' : '隐藏'}
-                  >
-                    <i className={`fa-solid ${item._隐藏 ? 'fa-circle-plus' : 'fa-circle-minus'}`} />
-                  </button>
-                )}
+            <span className={styles.itemRowSuffix}>
+              {getTitleSuffix(activeCategoryConfig, item)}
+            </span>
+            {editEnabled && activeCategoryConfig.itemCategory !== 'equipment' && (
+              <button
+                type="button"
+                className={`${styles.itemHideButton} ${item._隐藏 ? styles.isHidden : ''}`}
+                onClick={event => {
+                  event.stopPropagation();
+                  void handleToggleItemHidden(name);
+                }}
+                title={item._隐藏 ? '取消隐藏' : '隐藏'}
+              >
+                <i className={`fa-solid ${item._隐藏 ? 'fa-circle-plus' : 'fa-circle-minus'}`} />
+              </button>
+            )}
             {editEnabled && (
               <button
                 type="button"
@@ -474,7 +476,9 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
               />
               <span>已隐藏（{hiddenEntries.length}）</span>
             </button>
-            {hiddenGroupExpanded && <div className={styles.hiddenGroupBody}>{hiddenEntries.map(renderItemRow)}</div>}
+            {hiddenGroupExpanded && (
+              <div className={styles.hiddenGroupBody}>{hiddenEntries.map(renderItemRow)}</div>
+            )}
           </div>
         )}
       </div>
