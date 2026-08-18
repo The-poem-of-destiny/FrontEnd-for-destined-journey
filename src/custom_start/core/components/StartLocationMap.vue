@@ -230,9 +230,7 @@ onBeforeUnmount(() => {
             {{ source.label }}
           </button>
         </div>
-        <button type="button" class="original-button" @click="openOriginalMap">
-          查看原图
-        </button>
+        <button type="button" class="original-button" @click="openOriginalMap">查看原图</button>
       </div>
     </div>
 
@@ -372,9 +370,7 @@ onBeforeUnmount(() => {
   position: relative;
   height: clamp(320px, 48vh, 580px);
   min-height: 320px;
-  background:
-    radial-gradient(circle at center, rgba(212, 175, 55, 0.08), transparent 58%),
-    #28241f;
+  background: radial-gradient(circle at center, rgba(212, 175, 55, 0.08), transparent 58%), #28241f;
   overflow: hidden;
 }
 
