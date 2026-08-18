@@ -1,15 +1,15 @@
 export const mapSources = {
   low: {
     type: 'image',
-    url: 'https://i.ibb.co/bgFMhr2B/Maplite-4096.webp', // 4096×2335
+    url: 'https://i.ibb.co/8DvC7kvw/Map-2774-P.avif', // 4864×2774
   },
   small: {
     type: 'image',
-    url: 'https://i.ibb.co/CKLKQQ4B/Maplite.webp', // 8340×4756
+    url: 'https://i.ibb.co/PzQyMggc/Map-5944-P.avif', // 10424×5944
   },
   large: {
     type: 'image',
-    url: 'https://i.ibb.co/gMCpcFd8/Map-FULL.webp', // 14594×8322
+    url: 'https://i.ibb.co/yFDhWCjM/Map-8322-P.avif', // 14594×8322
   },
 } as const;
 
