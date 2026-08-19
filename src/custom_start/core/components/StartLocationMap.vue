@@ -16,17 +16,17 @@ const mapSources: Array<{ key: MapSourceKey; label: string; url: string }> = [
   {
     key: 'low',
     label: '流畅',
-    url: 'https://i.ibb.co/bgFMhr2B/Maplite-4096.webp',
+    url: 'https://i.ibb.co/8DvC7kvw/Map-2774-P.avif',
   },
   {
     key: 'small',
     label: '高清',
-    url: 'https://i.ibb.co/CKLKQQ4B/Maplite.webp',
+    url: 'https://i.ibb.co/8DvC7kvw/Map-2774-P.avif',
   },
   {
     key: 'large',
     label: '超清',
-    url: 'https://i.ibb.co/gMCpcFd8/Map-FULL.webp',
+    url: 'https://i.ibb.co/PzQyMggc/Map-5944-P.avif',
   },
 ];
 
