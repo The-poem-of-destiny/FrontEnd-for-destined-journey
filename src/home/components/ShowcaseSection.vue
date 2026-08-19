@@ -93,7 +93,6 @@ const specialThanks = [
   '白鸟弥音',
   'Aoo',
   '青砚',
-  'Elfa',
   '肆祀一一',
   '秋天的咸鱼',
 ];
