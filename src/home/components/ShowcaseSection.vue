@@ -6,7 +6,9 @@
       <div class="author-badges">
         <span v-for="author in teamMembers" :key="author" class="author-badge">{{ author }}</span>
       </div>
-      <div class="credits-special"><strong>特别鸣谢：</strong>{{ specialThanks.join(' ') }}</div>
+      <div class="credits-special">
+        <strong>合作者/特别鸣谢：</strong>{{ specialThanks.join(' ') }}
+      </div>
     </div>
 
     <!-- 合并后的信息面板 -->
@@ -78,12 +80,9 @@
 </template>
 
 <script setup>
-const teamMembers = [
-  'Rhys_z_瑞',
-  'Yoyo514',
-  '快乐柠萌茶',
-  'Hilo(404/403)',
-  '十七',
+const teamMembers = ['Rhys_z_瑞', 'Yoyo514', '快乐柠萌茶', 'Hilo(404/403)', '十七'];
+
+const specialThanks = [
   '三饺初华',
   '镜梦幻',
   '风见幽泠',
@@ -91,13 +90,13 @@ const teamMembers = [
   '北游',
   '仰望星空',
   'K1nn',
-  'AkabaneSaki',
+  '白鸟弥音',
   'Aoo',
   '青砚',
   'Elfa',
+  '肆祀一一',
+  '秋天的咸鱼',
 ];
-
-const specialThanks = ['FL已放弃治疗', 'tongtny123', '肆祀一一', '大乐', 'Kitaikuyo', '秋天的咸鱼'];
 </script>
 
 <style scoped>
