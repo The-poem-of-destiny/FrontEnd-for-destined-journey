@@ -1,4 +1,11 @@
-import type { Rarity } from '../types';
+import type { CustomInjectionSettings, Rarity } from '../types';
+
+// 保持旧版行为：已选内容默认直接写入 MVU 变量
+export const DEFAULT_CUSTOM_INJECTION_SETTINGS: CustomInjectionSettings = {
+  equipment: true,
+  item: true,
+  asset: true,
+};
 
 // 稀有度映射
 export const RARITY_MAP: Record<string, string> = {

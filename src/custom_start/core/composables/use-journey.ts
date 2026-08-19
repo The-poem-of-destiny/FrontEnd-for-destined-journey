@@ -9,7 +9,7 @@ import { generateAIPrompt, writeCharacterToMvu } from '../utils/data-exporter';
 
 interface UseJourneyReturn {
   /** 执行踏上旅程 */
-  executeJourney: () => Promise<void>;
+  executeJourney: (triggerAI?: boolean) => Promise<void>;
 }
 
 /**
@@ -20,14 +20,23 @@ export function useJourney(): UseJourneyReturn {
   const customContentStore = useCustomContentStore();
   const { character } = storeToRefs(characterStore);
 
-  const executeJourney = async () => {
+  const executeJourney = async (triggerAI: boolean = true) => {
     try {
+      const injectionSettings = customContentStore.customInjectionSettings;
+      const deferredCustomContent = {
+        equipments: !injectionSettings.equipment ? characterStore.selectedEquipments : [],
+        items: !injectionSettings.item ? characterStore.selectedItems : [],
+        assets: !injectionSettings.asset ? characterStore.selectedAssets : [],
+      };
+
       // 1. 写入 MVU 变量
       await writeCharacterToMvu(
         character.value,
-        characterStore.selectedEquipments,
-        characterStore.selectedItems,
-        characterStore.selectedAssets,
+        characterStore.selectedEquipments.filter(
+          item => !deferredCustomContent.equipments.includes(item),
+        ),
+        characterStore.selectedItems.filter(item => !deferredCustomContent.items.includes(item)),
+        characterStore.selectedAssets.filter(item => !deferredCustomContent.assets.includes(item)),
         characterStore.selectedSkills,
         characterStore.selectedPartners,
       );
@@ -38,6 +47,7 @@ export function useJourney(): UseJourneyReturn {
         character.value,
         characterStore.selectedBackground,
         customContentStore.customBackgroundDescription,
+        deferredCustomContent,
       );
       console.log('✅ AI 提示词已生成：\n', aiPrompt);
 
@@ -46,8 +56,12 @@ export function useJourney(): UseJourneyReturn {
 
       console.log('✅ 角色信息已发送给 AI');
 
-      // 4. 触发 AI 回复
-      await triggerSlash('/trigger');
+      // 4. 触发 AI 回复（仅生成文本时不触发）
+      if (triggerAI) {
+        await triggerSlash('/trigger');
+      } else {
+        console.log('ℹ️ 仅生成文本，未触发 AI 回复');
+      }
     } catch (error) {
       console.error('❌ 踏上旅程时发生错误：', error);
     }

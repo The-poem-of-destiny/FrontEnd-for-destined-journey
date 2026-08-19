@@ -33,6 +33,12 @@ type MvuSkillSource = MvuItemSource & {
   consume?: string;
 };
 
+export interface DeferredCustomContent {
+  equipments?: Equipment[];
+  items?: Item[];
+  assets?: Asset[];
+}
+
 const getRarityName = (rarity?: string) => _.get(RARITY_MAP, rarity || '', rarity || '普通');
 
 const cleanRecord = (record?: Record<string, string>) => _.pickBy(record || {}, value => !!value);
@@ -89,6 +95,40 @@ const toNamedRecord = <T extends { name?: string }, V>(
       .map(item => [item.name as string, mapper(item)])
       .value(),
   );
+
+const formatEffect = (effect?: Record<string, string>) => {
+  const entries = Object.entries(cleanRecord(effect));
+  return entries.length > 0
+    ? entries.map(([name, description]) => `${name}：${description}`).join('；')
+    : '由 AI 根据描述生成';
+};
+
+const appendDeferredItems = (
+  lines: string[],
+  title: string,
+  targetPath: string,
+  items: Array<Equipment | Item | Asset>,
+) => {
+  if (items.length === 0) return;
+
+  lines.push(`【${title}】`);
+  items.forEach((item, index) => {
+    lines.push(`${index + 1}. ${item.name}`);
+    lines.push(`- 写入路径: 主角.${targetPath}.${item.name}`);
+    lines.push(`- 类型: ${item.type || '由 AI 根据描述确定'}`);
+    lines.push(`- 品质: ${getRarityName(item.rarity)}`);
+    lines.push(`- 标签: ${item.tag?.join('、') || '无'}`);
+    if ('quantity' in item) {
+      lines.push(`- 数量: ${Math.max(1, Math.round(item.quantity || 1))}`);
+    }
+    if ('settlement' in item) {
+      lines.push(`- 结算: ${item.settlement || '无'}`);
+    }
+    lines.push(`- 效果: ${formatEffect(item.effect)}`);
+    lines.push(`- 描述: ${item.description || '无'}`);
+  });
+  lines.push('');
+};
 
 const getCharacterDisplayValues = (character: CharacterConfig) => ({
   race: character.race === '自定义' ? character.customRace : character.race,
@@ -180,7 +220,6 @@ export async function writeCharacterToMvu(
     等级: character.level,
     累计经验值: 0,
     升级所需经验: character.level >= 25 ? 'MAX' : 120,
-    冒险者等级: '未评级',
     属性点: Math.max(0, maxAp - usedAp),
     属性: calculateFinalAttributes(character),
     生命值: { 当前: 0, 上限: { _基础: 0, 额外: 0 } },
@@ -208,17 +247,29 @@ export function generateAIPrompt(
   character: CharacterConfig,
   background: Background | null,
   customBackgroundDescription?: string,
+  deferredCustomContent: DeferredCustomContent = {},
 ): string {
   const lines: string[] = [];
+  const deferredEquipments = deferredCustomContent.equipments || [];
+  const deferredItems = deferredCustomContent.items || [];
+  const deferredAssets = deferredCustomContent.assets || [];
+  const hasDeferredContent =
+    deferredEquipments.length + deferredItems.length + deferredAssets.length > 0;
   const displayGender = character.gender === '自定义' ? character.customGender : character.gender;
   const displayLocation =
     character.startLocation === '自定义' ? character.customStartLocation : character.startLocation;
 
   lines.push('【剧情生成上下文】');
   lines.push(
-    '角色、属性、金钱、装备、背包、资产、技能、伙伴等结构化数据已写入 <status_current_variables>。',
+    hasDeferredContent
+      ? '角色、属性、金钱等结构化数据已写入 <status_current_variables>；下方列出的已选内容尚未写入。'
+      : '角色、属性、金钱、装备、背包、资产、技能、伙伴等结构化数据已写入 <status_current_variables>。',
   );
-  lines.push('以下只提供 schema 外字段和需要创作的开局上下文。');
+  lines.push(
+    hasDeferredContent
+      ? '以下提供 schema 外字段、需要创作的开局上下文，以及未直接注入的已选内容。'
+      : '以下只提供 schema 外字段和需要创作的开局上下文。',
+  );
   lines.push('');
   lines.push(`姓名: ${character.name || '未命名'}`);
   lines.push(`性别: ${displayGender || '未设置'}`);
@@ -239,6 +290,18 @@ export function generateAIPrompt(
     '资源上限: 上限._基础 依据等级/属性/生命层级重算（只读来源），上限.额外 记录装备/状态/临时增益，当前 不得超过 _基础 + 额外。',
   );
 
+  if (hasDeferredContent) {
+    lines.push('');
+    lines.push('【需要 AI 生成并写入变量的已选内容】');
+    lines.push(
+      '以下条目因用户关闭了直接注入而尚未写入变量。请依据给定设定和当前世界观生成、调整为符合 schema 的数据，并在第一轮回复中通过变量更新写入指定路径；名称必须作为键名，不得遗漏，也不要只在剧情正文中提及。',
+    );
+    lines.push('');
+    appendDeferredItems(lines, '待生成道具', '背包', deferredItems);
+    appendDeferredItems(lines, '待生成装备', '装备', deferredEquipments);
+    appendDeferredItems(lines, '待生成资产', '资产', deferredAssets);
+  }
+
   // 初始开局剧情
   if (background) {
     lines.push('');
@@ -257,5 +320,5 @@ export function generateAIPrompt(
 根据<status_current_variables>和以上内容，生成一个符合描述和情景的初始剧情！
 （注意：生成初始剧情时，先检查上述内容是否完整，如不完整，必须参考相关设定进行完善。）`;
 
-  return `\`\`\`text\n${content}\n\`\`\`\n\n${instructions}`;
+  return `${content}\n\n${instructions}`;
 }

@@ -48,12 +48,11 @@ const BasicInfoFields: BasicInfoFieldConfig[] = [
   { key: '身份', label: '身份', type: 'tags', editable: true, defaultValue: [] },
   { key: '生命层级', label: '生命层级', type: 'text', editable: false, defaultValue: '第一层级' },
   { key: '等级', label: '等级', type: 'number', editable: false, defaultValue: 1, prefix: 'Lv.' },
-  { key: '冒险者等级', label: '冒险者等级', type: 'text', editable: true, defaultValue: '未评级' },
 ];
 
 // 角色档案字段，排除冗余字段
 const ProfileInfoFields = BasicInfoFields.filter(
-  field => !['生命层级', '等级', '冒险者等级'].includes(field.key),
+  field => !['生命层级', '等级'].includes(field.key),
 );
 
 // 资源条配置（上限 = 上限._基础 + 上限.额外，_基础 只读，额外 可编辑）
@@ -461,20 +460,6 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                   <div className={styles.heroTitleRow}>
                     <span className={styles.heroLevel}>Lv.{player.等级 ?? 1}</span>
                     <span className={styles.heroTier}>{player.生命层级 || '未记录生命层级'}</span>
-                  </div>
-                  <div className={styles.heroSubtitle}>
-                    {editEnabled ? (
-                      <>
-                        <span className={styles.heroSubtitleLabel}>冒险者评级：</span>
-                        <EditableField
-                          path="主角.冒险者等级"
-                          value={player.冒险者等级 || '未评级'}
-                          type="text"
-                        />
-                      </>
-                    ) : (
-                      <span>冒险者评级：{player.冒险者等级 || '未评级'}</span>
-                    )}
                   </div>
                 </div>
               </div>

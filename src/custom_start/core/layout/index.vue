@@ -4,7 +4,7 @@ import { onMounted } from 'vue';
 import PresetModal from '../components/PresetModal.vue';
 import { useJourney, usePoints, usePresetModal, useStepNavigation } from '../composables';
 import { STEP_CONFIGS } from '../router/route-constants';
-import { useCharacterStore } from '../store';
+import { useCharacterStore, useCustomContentStore } from '../store';
 import { findMatchingPreset } from '../utils/preset-manager';
 import { scrollToIframe } from '../utils/scroll';
 
@@ -16,6 +16,7 @@ import Steps from './component/Steps.vue';
 
 // 使用 composables
 const characterStore = useCharacterStore();
+const customContentStore = useCustomContentStore();
 const {
   currentStep,
   canGoPrevious,
@@ -64,7 +65,10 @@ const handlePresetSavedThenJourney = () => {
 // 下一步/踏上旅程
 const handleNext = async () => {
   if (isLastStep.value) {
-    const matchingPresetName = findMatchingPreset(characterStore);
+    const matchingPresetName = findMatchingPreset(
+      characterStore,
+      customContentStore.customInjectionSettings,
+    );
     if (matchingPresetName) {
       toastr.info(`当前配置与预设「${matchingPresetName}」相同，直接开始旅程`);
       executeJourney();
@@ -88,6 +92,11 @@ const handleSavePreset = () => {
 const handleSkipSave = () => {
   showSaveConfirm.value = false;
   executeJourney();
+};
+
+const handleTextOnlyJourney = () => {
+  showSaveConfirm.value = false;
+  executeJourney(false);
 };
 
 const handleCancelJourney = () => {
@@ -143,6 +152,7 @@ const nextButtonText = computed(() => {
       :visible="showSaveConfirm"
       @save="handleSavePreset"
       @skip="handleSkipSave"
+      @text-only="handleTextOnlyJourney"
       @cancel="handleCancelJourney"
     />
   </div>

@@ -1,5 +1,15 @@
 import { klona } from 'klona';
-import type { Asset, Background, CharacterConfig, Equipment, Item, Partner, Skill } from '../types';
+import { DEFAULT_CUSTOM_INJECTION_SETTINGS } from '../data/constants';
+import type {
+  Asset,
+  Background,
+  CharacterConfig,
+  CustomInjectionSettings,
+  Equipment,
+  Item,
+  Partner,
+  Skill,
+} from '../types';
 
 /**
  * 预设数据结构
@@ -25,6 +35,8 @@ export interface CharacterPreset {
   partners: Partner[];
   /** 选择的背景 */
   background: Background | null;
+  /** 已选内容的开局写入方式（旧预设缺省时均为直接注入） */
+  customInjectionSettings?: CustomInjectionSettings;
 }
 
 /**
@@ -203,6 +215,7 @@ export function createPresetFromStore(
     selectedPartners: Partner[];
     selectedBackground: Background | null;
   },
+  customInjectionSettings: CustomInjectionSettings = DEFAULT_CUSTOM_INJECTION_SETTINGS,
 ): CharacterPreset {
   const now = Date.now();
 
@@ -217,6 +230,7 @@ export function createPresetFromStore(
     skills: klona(characterStore.selectedSkills),
     partners: klona(characterStore.selectedPartners),
     background: klona(characterStore.selectedBackground),
+    customInjectionSettings: klona(customInjectionSettings),
   };
 }
 
@@ -374,6 +388,7 @@ export function isStoreMatchingPreset(
     selectedPartners: Partner[];
     selectedBackground: Background | null;
   },
+  customInjectionSettings: CustomInjectionSettings = DEFAULT_CUSTOM_INJECTION_SETTINGS,
 ): boolean {
   // 比较角色基本信息（排除时间戳等动态字段）
   const charToCompare = _.omit(characterStore.character, DynamicFields);
@@ -388,6 +403,10 @@ export function isStoreMatchingPreset(
     _.isEqual(characterStore.selectedSkills, preset.skills),
     _.isEqual(characterStore.selectedPartners, preset.partners),
     _.isEqual(characterStore.selectedBackground, preset.background),
+    _.isEqual(
+      customInjectionSettings,
+      preset.customInjectionSettings ?? DEFAULT_CUSTOM_INJECTION_SETTINGS,
+    ),
   ]);
 }
 
@@ -397,17 +416,22 @@ export function isStoreMatchingPreset(
  * @param characterStore 角色 store 实例
  * @returns 匹配的预设名称，如果没有匹配则返回 null
  */
-export function findMatchingPreset(characterStore: {
-  character: Omit<CharacterConfig, 'attributes'>;
-  selectedEquipments: Equipment[];
-  selectedItems: Item[];
-  selectedAssets: Asset[];
-  selectedSkills: Skill[];
-  selectedPartners: Partner[];
-  selectedBackground: Background | null;
-}): string | null {
+export function findMatchingPreset(
+  characterStore: {
+    character: Omit<CharacterConfig, 'attributes'>;
+    selectedEquipments: Equipment[];
+    selectedItems: Item[];
+    selectedAssets: Asset[];
+    selectedSkills: Skill[];
+    selectedPartners: Partner[];
+    selectedBackground: Background | null;
+  },
+  customInjectionSettings: CustomInjectionSettings = DEFAULT_CUSTOM_INJECTION_SETTINGS,
+): string | null {
   const presets = listPresets();
-  const matchingPreset = _.find(presets, preset => isStoreMatchingPreset(preset, characterStore));
+  const matchingPreset = _.find(presets, preset =>
+    isStoreMatchingPreset(preset, characterStore, customInjectionSettings),
+  );
   return matchingPreset?.name ?? null;
 }
 

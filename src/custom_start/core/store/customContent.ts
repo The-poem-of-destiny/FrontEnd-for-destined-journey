@@ -1,7 +1,8 @@
 import { klona } from 'klona';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { Rarity } from '../types';
+import { DEFAULT_CUSTOM_INJECTION_SETTINGS } from '../data/constants';
+import type { CustomInjectionSettings, Rarity } from '../types';
 import type { Attributes } from '../views/Background/components/AttributeEditor.vue';
 import type { EquipmentItem } from '../views/Background/components/EquipmentEditor.vue';
 import type { SkillItem } from '../views/Background/components/SkillEditor.vue';
@@ -15,6 +16,13 @@ export const useCustomContentStore = defineStore('customContent', () => {
    * 自定义开局剧情描述
    */
   const customBackgroundDescription = ref('');
+
+  /**
+   * 已选装备、道具、资产是否在开局时直接写入变量
+   */
+  const customInjectionSettings = ref<CustomInjectionSettings>({
+    ...DEFAULT_CUSTOM_INJECTION_SETTINGS,
+  });
 
   /**
    * 自定义物品编辑标识
@@ -31,6 +39,20 @@ export const useCustomContentStore = defineStore('customContent', () => {
    */
   const updateCustomBackgroundDescription = (value: string) => {
     customBackgroundDescription.value = value;
+  };
+
+  const updateCustomInjectionSetting = (
+    category: keyof CustomInjectionSettings,
+    value: boolean,
+  ) => {
+    customInjectionSettings.value[category] = value;
+  };
+
+  const setCustomInjectionSettings = (value?: Partial<CustomInjectionSettings>) => {
+    customInjectionSettings.value = {
+      ...DEFAULT_CUSTOM_INJECTION_SETTINGS,
+      ...value,
+    };
   };
 
   /**
@@ -189,6 +211,7 @@ export const useCustomContentStore = defineStore('customContent', () => {
    */
   const resetAll = () => {
     customBackgroundDescription.value = '';
+    setCustomInjectionSettings();
     resetCustomItemForm();
     resetCustomPartnerForm();
     editingCustomItemName.value = '';
@@ -199,6 +222,9 @@ export const useCustomContentStore = defineStore('customContent', () => {
     // 自定义开局描述
     customBackgroundDescription,
     updateCustomBackgroundDescription,
+    customInjectionSettings,
+    updateCustomInjectionSetting,
+    setCustomInjectionSettings,
 
     // 自定义物品编辑标识
     editingCustomItemName,

@@ -77,7 +77,11 @@ const handleSavePreset = () => {
     return;
   }
 
-  const preset = createPresetFromStore(name, characterStore);
+  const preset = createPresetFromStore(
+    name,
+    characterStore,
+    customContentStore.customInjectionSettings,
+  );
   const exists = isPresetNameExists(name);
 
   if (exists) {
@@ -111,6 +115,7 @@ const handleLoadPreset = (preset: CharacterPreset) => {
   const isCustomBackground = preset.background?.name === '【自定义开局】';
   const description = isCustomBackground ? (preset.background?.description ?? '') : '';
   customContentStore.updateCustomBackgroundDescription(description);
+  customContentStore.setCustomInjectionSettings(preset.customInjectionSettings);
   emit('loaded', preset);
   emit('close');
 };

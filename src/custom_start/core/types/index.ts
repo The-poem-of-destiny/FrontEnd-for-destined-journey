@@ -24,6 +24,13 @@ export type Equipment = Omit<Item, 'quantity'> & {
   position?: string;
 };
 
+// 已选装备、道具、资产的开局写入方式
+export interface CustomInjectionSettings {
+  equipment: boolean;
+  item: boolean;
+  asset: boolean;
+}
+
 // 技能类型
 export type Skill = Omit<Item, 'quantity'> & {
   consume?: string;

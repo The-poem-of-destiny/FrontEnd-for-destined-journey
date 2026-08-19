@@ -8,6 +8,7 @@ defineProps<Props>();
 const emit = defineEmits<{
   save: [];
   skip: [];
+  textOnly: [];
   cancel: [];
 }>();
 </script>
@@ -32,6 +33,10 @@ const emit = defineEmits<{
           <button class="confirm-button skip" @click="emit('skip')">
             <i class="fa-solid fa-forward"></i>
             不保存
+          </button>
+          <button class="confirm-button text-only" @click="emit('textOnly')">
+            <i class="fa-solid fa-file-lines"></i>
+            只生成文本，不触发AI回复
           </button>
           <button class="confirm-button cancel" @click="emit('cancel')">
             <i class="fa-solid fa-xmark"></i>
@@ -64,7 +69,7 @@ const emit = defineEmits<{
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-color);
   width: 90%;
-  max-width: 400px;
+  max-width: 560px;
   overflow: hidden;
 }
 
@@ -113,6 +118,7 @@ const emit = defineEmits<{
 
 .confirm-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
   justify-content: center;
@@ -149,6 +155,17 @@ const emit = defineEmits<{
     background: linear-gradient(135deg, var(--success-color) 0%, #1b5e20 100%);
     color: white;
     border-color: var(--success-color);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+
+  &.text-only {
+    background: linear-gradient(135deg, #4a6fa5 0%, #2c4a76 100%);
+    color: white;
+    border-color: #4a6fa5;
 
     &:hover {
       transform: translateY(-1px);

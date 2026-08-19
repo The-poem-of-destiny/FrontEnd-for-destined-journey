@@ -1,11 +1,25 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useCharacterStore, useCustomContentStore } from '../../store';
-import type { Partner } from '../../types';
+import type { CustomInjectionSettings, Partner } from '../../types';
 import { getRarityColor } from '../../utils/form-options';
 
 const characterStore = useCharacterStore();
 const customContentStore = useCustomContentStore();
+
+const injectionOptions: Array<{
+  key: keyof CustomInjectionSettings;
+  label: string;
+}> = [
+  { key: 'item', label: '已选道具' },
+  { key: 'equipment', label: '已选装备' },
+  { key: 'asset', label: '已选资产' },
+];
+
+const toggleInjection = (category: keyof CustomInjectionSettings) => {
+  const currentValue = customContentStore.customInjectionSettings[category];
+  customContentStore.updateCustomInjectionSetting(category, !currentValue);
+};
 
 // 计算总消耗点数
 const totalConsumed = computed(() => characterStore.consumedPoints);
@@ -470,6 +484,37 @@ const getStairwayView = (partner: Partner) => {
           <p v-else class="empty-text">未选择初始开局剧情</p>
         </section>
 
+        <!-- 自定义内容写入方式 -->
+        <section class="doc-section injection-section">
+          <h3 class="section-title">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+            <span>自定义内容写入方式</span>
+          </h3>
+          <div class="injection-buttons">
+            <button
+              v-for="option in injectionOptions"
+              :key="option.key"
+              type="button"
+              class="injection-button"
+              :class="{ active: customContentStore.customInjectionSettings[option.key] }"
+              :aria-pressed="customContentStore.customInjectionSettings[option.key]"
+              @click="toggleInjection(option.key)"
+            >
+              <span>{{ option.label }}</span>
+              <span class="injection-state">
+                {{
+                  customContentStore.customInjectionSettings[option.key]
+                    ? '直接注入'
+                    : '交给 AI 生成'
+                }}
+              </span>
+            </button>
+          </div>
+          <p class="injection-hint">
+            关闭直接注入后，对应类别的全部已选内容不会预写变量，而会随开局文本发送给 AI 生成并更新。
+          </p>
+        </section>
+
         <!-- 提示信息 -->
         <div v-if="remainingPoints !== 0" class="final-notice">
           <div v-if="remainingPoints < 0" class="notice warning">
@@ -738,6 +783,56 @@ const getStairwayView = (partner: Partner) => {
   font-style: italic;
 }
 
+.injection-section {
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.06) 0%, transparent 100%);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.injection-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.injection-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--spacing-sm);
+  color: var(--text-color);
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+
+  &:hover {
+    border-color: var(--accent-color);
+  }
+
+  &.active {
+    color: var(--title-color);
+    background: rgba(212, 175, 55, 0.12);
+    border-color: var(--accent-color);
+    box-shadow: inset 0 0 0 1px var(--accent-color);
+  }
+}
+
+.injection-state {
+  color: var(--text-light);
+  font-size: 0.78rem;
+}
+
+.injection-hint {
+  margin: var(--spacing-sm) 0 0;
+  color: var(--text-light);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
 // 最终提示
 .final-notice {
   margin-top: var(--spacing-lg);
@@ -802,6 +897,10 @@ const getStairwayView = (partner: Partner) => {
 
   .section-title {
     font-size: 1.05rem;
+  }
+
+  .injection-buttons {
+    grid-template-columns: 1fr;
   }
 
   .final-notice {

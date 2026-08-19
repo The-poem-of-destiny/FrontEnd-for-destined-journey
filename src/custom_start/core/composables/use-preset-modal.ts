@@ -1,7 +1,7 @@
 /**
  * 预设弹窗管理 Composable
  */
-import { useCharacterStore } from '../store';
+import { useCharacterStore, useCustomContentStore } from '../store';
 import { findMatchingPreset, hasPresets } from '../utils/preset-manager';
 
 type PresetModalMode = 'manage' | 'load';
@@ -28,6 +28,7 @@ interface UsePresetModalReturn {
  */
 export function usePresetModal(): UsePresetModalReturn {
   const characterStore = useCharacterStore();
+  const customContentStore = useCustomContentStore();
   const showModal = ref(false);
   const modalMode = ref<PresetModalMode>('manage');
 
@@ -52,7 +53,7 @@ export function usePresetModal(): UsePresetModalReturn {
   };
 
   const checkMatchingPreset = (): string | null => {
-    return findMatchingPreset(characterStore);
+    return findMatchingPreset(characterStore, customContentStore.customInjectionSettings);
   };
 
   return {

@@ -52,7 +52,6 @@ const player = z
     ...IdentitySchema.shape,
     累计经验值: z.coerce.number().prefault(0),
     升级所需经验: z.union([z.coerce.number().prefault(120), z.literal('MAX')]),
-    冒险者等级: z.string().prefault('未评级'),
     生命值: ResourceSchema,
     法力值: ResourceSchema,
     体力值: ResourceSchema,
@@ -82,7 +81,6 @@ const player = z
       '等级',
       '累计经验值',
       '升级所需经验',
-      '冒险者等级',
       // 属性点（在属性前面）
       '属性点',
       // 属性
