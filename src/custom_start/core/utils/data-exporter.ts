@@ -37,6 +37,8 @@ export interface DeferredCustomContent {
   equipments?: Equipment[];
   items?: Item[];
   assets?: Asset[];
+  skills?: Skill[];
+  partners?: Partner[];
 }
 
 const getRarityName = (rarity?: string) => _.get(RARITY_MAP, rarity || '', rarity || '普通');
@@ -130,6 +132,23 @@ const appendDeferredItems = (
   lines.push('');
 };
 
+const appendDeferredSkills = (lines: string[], skills: Skill[]) => {
+  if (skills.length === 0) return;
+
+  lines.push('【待生成技能】');
+  skills.forEach((skill, index) => {
+    lines.push(`${index + 1}. ${skill.name}`);
+    lines.push(`- 写入路径: 主角.技能.${skill.name}`);
+    lines.push(`- 类型: ${skill.type || '由 AI 根据描述确定'}`);
+    lines.push(`- 品质: ${getRarityName(skill.rarity)}`);
+    lines.push(`- 标签: ${skill.tag?.join('、') || '无'}`);
+    lines.push(`- 消耗: ${skill.consume || '无'}`);
+    lines.push(`- 效果: ${formatEffect(skill.effect)}`);
+    lines.push(`- 描述: ${skill.description || '无'}`);
+  });
+  lines.push('');
+};
+
 const getCharacterDisplayValues = (character: CharacterConfig) => ({
   race: character.race === '自定义' ? character.customRace : character.race,
   identity: character.identity === '自定义' ? character.customIdentity : character.identity,
@@ -190,6 +209,19 @@ const toPartnerVariable = (partner: Partner) => ({
   心里话: partner.comment || '',
   背景故事: partner.backgroundInfo || '',
 });
+
+const appendDeferredPartners = (lines: string[], partners: Partner[]) => {
+  if (partners.length === 0) return;
+
+  lines.push('【待生成伙伴列表】');
+  partners.forEach((partner, index) => {
+    lines.push(`${index + 1}. ${partner.name}`);
+    lines.push(`- 写入路径: 关系列表.${partner.name}`);
+    lines.push('- 伙伴设定（按此内容生成并写入）:');
+    lines.push(JSON.stringify(toPartnerVariable(partner), null, 2));
+  });
+  lines.push('');
+};
 
 /**
  * 将角色数据写入到 MVU 变量中
@@ -253,8 +285,15 @@ export function generateAIPrompt(
   const deferredEquipments = deferredCustomContent.equipments || [];
   const deferredItems = deferredCustomContent.items || [];
   const deferredAssets = deferredCustomContent.assets || [];
+  const deferredSkills = deferredCustomContent.skills || [];
+  const deferredPartners = deferredCustomContent.partners || [];
   const hasDeferredContent =
-    deferredEquipments.length + deferredItems.length + deferredAssets.length > 0;
+    deferredEquipments.length +
+      deferredItems.length +
+      deferredAssets.length +
+      deferredSkills.length +
+      deferredPartners.length >
+    0;
   const displayGender = character.gender === '自定义' ? character.customGender : character.gender;
   const displayLocation =
     character.startLocation === '自定义' ? character.customStartLocation : character.startLocation;
@@ -300,6 +339,8 @@ export function generateAIPrompt(
     appendDeferredItems(lines, '待生成道具', '背包', deferredItems);
     appendDeferredItems(lines, '待生成装备', '装备', deferredEquipments);
     appendDeferredItems(lines, '待生成资产', '资产', deferredAssets);
+    appendDeferredSkills(lines, deferredSkills);
+    appendDeferredPartners(lines, deferredPartners);
   }
 
   // 初始开局剧情

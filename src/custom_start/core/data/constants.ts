@@ -5,6 +5,8 @@ export const DEFAULT_CUSTOM_INJECTION_SETTINGS: CustomInjectionSettings = {
   equipment: true,
   item: true,
   asset: true,
+  skill: true,
+  partner: true,
 };
 
 // 稀有度映射

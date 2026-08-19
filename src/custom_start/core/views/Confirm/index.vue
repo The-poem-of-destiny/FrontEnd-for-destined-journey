@@ -14,6 +14,8 @@ const injectionOptions: Array<{
   { key: 'item', label: '已选道具' },
   { key: 'equipment', label: '已选装备' },
   { key: 'asset', label: '已选资产' },
+  { key: 'skill', label: '已选技能' },
+  { key: 'partner', label: '伙伴列表' },
 ];
 
 const toggleInjection = (category: keyof CustomInjectionSettings) => {
@@ -792,7 +794,7 @@ const getStairwayView = (partner: Partner) => {
 
 .injection-buttons {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: var(--spacing-sm);
 }
 

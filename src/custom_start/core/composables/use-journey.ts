@@ -27,6 +27,8 @@ export function useJourney(): UseJourneyReturn {
         equipments: !injectionSettings.equipment ? characterStore.selectedEquipments : [],
         items: !injectionSettings.item ? characterStore.selectedItems : [],
         assets: !injectionSettings.asset ? characterStore.selectedAssets : [],
+        skills: !injectionSettings.skill ? characterStore.selectedSkills : [],
+        partners: !injectionSettings.partner ? characterStore.selectedPartners : [],
       };
 
       // 1. 写入 MVU 变量
@@ -37,8 +39,10 @@ export function useJourney(): UseJourneyReturn {
         ),
         characterStore.selectedItems.filter(item => !deferredCustomContent.items.includes(item)),
         characterStore.selectedAssets.filter(item => !deferredCustomContent.assets.includes(item)),
-        characterStore.selectedSkills,
-        characterStore.selectedPartners,
+        characterStore.selectedSkills.filter(item => !deferredCustomContent.skills.includes(item)),
+        characterStore.selectedPartners.filter(
+          item => !deferredCustomContent.partners.includes(item),
+        ),
       );
       console.log('✅ 角色数据已写入 MVU 变量');
 

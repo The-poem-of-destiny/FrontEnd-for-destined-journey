@@ -18,7 +18,7 @@ export const useCustomContentStore = defineStore('customContent', () => {
   const customBackgroundDescription = ref('');
 
   /**
-   * 已选装备、道具、资产是否在开局时直接写入变量
+   * 已选装备、道具、资产、技能、伙伴是否在开局时直接写入变量
    */
   const customInjectionSettings = ref<CustomInjectionSettings>({
     ...DEFAULT_CUSTOM_INJECTION_SETTINGS,

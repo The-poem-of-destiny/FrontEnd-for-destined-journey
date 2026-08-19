@@ -35,7 +35,7 @@ export interface CharacterPreset {
   partners: Partner[];
   /** 选择的背景 */
   background: Background | null;
-  /** 已选内容的开局写入方式（旧预设缺省时均为直接注入） */
+  /** 已选内容的开局写入方式（旧预设缺少的类别默认直接注入） */
   customInjectionSettings?: CustomInjectionSettings;
 }
 
@@ -403,10 +403,10 @@ export function isStoreMatchingPreset(
     _.isEqual(characterStore.selectedSkills, preset.skills),
     _.isEqual(characterStore.selectedPartners, preset.partners),
     _.isEqual(characterStore.selectedBackground, preset.background),
-    _.isEqual(
-      customInjectionSettings,
-      preset.customInjectionSettings ?? DEFAULT_CUSTOM_INJECTION_SETTINGS,
-    ),
+    _.isEqual(customInjectionSettings, {
+      ...DEFAULT_CUSTOM_INJECTION_SETTINGS,
+      ...preset.customInjectionSettings,
+    }),
   ]);
 }
 
