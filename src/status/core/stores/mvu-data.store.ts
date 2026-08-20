@@ -17,6 +17,8 @@ interface MvuDataState {
 interface MvuDataActions {
   /** 刷新数据 (Read) */
   refresh: () => void;
+  /** 切换伙伴在场状态；从离场变为在场时恢复三项资源 */
+  setPartnerPresence: (partnerName: string, present: boolean) => Promise<boolean>;
   /** 更新指定路径的值 */
   updateField: (path: string, value: unknown) => Promise<boolean>;
   /** 删除指定路径的值 */
@@ -80,6 +82,39 @@ export const useMvuDataStore = create<MvuDataStore>()(
           state.error = e instanceof Error ? e.message : '未知错误';
           state.loading = false;
         });
+      }
+    },
+
+    setPartnerPresence: async (partnerName: string, present: boolean): Promise<boolean> => {
+      try {
+        await waitGlobalInitialized('Mvu');
+        const mvuData = Mvu.getMvuData({
+          type: 'message',
+          message_id: getCurrentMessageId(),
+        });
+        const partnerPath = `stat_data.关系列表.${partnerName}`;
+        const wasPresent = Boolean(_.get(mvuData, `${partnerPath}.在场`, false));
+
+        _.set(mvuData, `${partnerPath}.在场`, present);
+        if (!wasPresent && present) {
+          for (const resource of ['生命值', '法力值', '体力值']) {
+            const resourcePath = `${partnerPath}.${resource}`;
+            const base = Number(_.get(mvuData, `${resourcePath}.上限._基础`, 0));
+            const extra = Number(_.get(mvuData, `${resourcePath}.上限.额外`, 0));
+            _.set(mvuData, `${resourcePath}.当前`, Math.max(0, base + extra));
+          }
+        }
+
+        await Mvu.replaceMvuData(mvuData, {
+          type: 'message',
+          message_id: getCurrentMessageId(),
+        });
+
+        get().refresh();
+        return true;
+      } catch (e) {
+        console.error('[StatusBar] 切换伙伴在场状态失败:', e);
+        return false;
       }
     },
 
