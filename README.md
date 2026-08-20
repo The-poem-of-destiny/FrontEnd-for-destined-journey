@@ -21,6 +21,10 @@ yoyo514，Hilo
 
 **点击 [这里](./public/assets/data/README.md) 查看文档**
 
+## 特殊机制
+
+特殊机制说明见：[特殊机制](./docs/game-mechanics.md)
+
 ## 环境
 
 - Node.js >= 22

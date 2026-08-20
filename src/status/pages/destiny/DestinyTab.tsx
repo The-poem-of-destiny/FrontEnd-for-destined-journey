@@ -133,7 +133,7 @@ const PartnerAssetSections: PartnerAssetSectionConfig[] = [
  */
 const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const editEnabled = useEditorSettingStore(state => state.editEnabled);
-  const { updateField } = useMvuDataStore();
+  const { setPartnerPresence, updateField } = useMvuDataStore();
   const { deleteTarget, setDeleteTarget, handleDelete, cancelDelete, isConfirmOpen } =
     useDeleteConfirm();
   const destinyPoints = data.命运点数;
@@ -497,7 +497,7 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   /** 切换伙伴在场状态（快捷操作，不依赖编辑模式） */
   const handleTogglePresence = async (partnerName: string, partner: PartnerRecord) => {
     const next = !partner.在场;
-    const success = await updateField(`关系列表.${partnerName}.在场`, next);
+    const success = await setPartnerPresence(partnerName, next);
     if (success) {
       toastr.success(next ? `「${partnerName}」已切换为在场` : `「${partnerName}」已切换为离场`);
     } else {
