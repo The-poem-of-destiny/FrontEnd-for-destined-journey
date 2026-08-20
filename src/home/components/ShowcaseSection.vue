@@ -2,13 +2,11 @@
   <div class="showcase-section">
     <!-- 制作人员展示区 -->
     <div class="credits-container">
-      <div class="credits-title">❖ 制作团队 ❖</div>
+      <div class="credits-title">❖ 制作团队/合作者 ❖</div>
       <div class="author-badges">
         <span v-for="author in teamMembers" :key="author" class="author-badge">{{ author }}</span>
       </div>
-      <div class="credits-special">
-        <strong>合作者/特别鸣谢：</strong>{{ specialThanks.join(' ') }}
-      </div>
+      <div class="credits-special"><strong>特别鸣谢：</strong>{{ specialThanks.join(' ') }}</div>
     </div>
 
     <!-- 合并后的信息面板 -->
@@ -80,12 +78,14 @@
 </template>
 
 <script setup>
-const teamMembers = ['Rhys_z_瑞', 'Yoyo514', '快乐柠萌茶', 'Hilo(404/403)', '十七'];
-
-const specialThanks = [
+const teamMembers = [
+  'Rhys_z_瑞',
+  'Yoyo514',
+  '快乐柠萌茶',
+  'Hilo(404/403)',
+  '十七',
   '三饺初华',
   '镜梦幻',
-  '风见幽泠',
   'lili',
   '北游',
   '仰望星空',
@@ -93,9 +93,12 @@ const specialThanks = [
   '白鸟弥音',
   'Aoo',
   '青砚',
-  '肆祀一一',
-  '秋天的咸鱼',
+  `Allomerus`,
+  `jy`,
+  `Richardooo`,
 ];
+
+const specialThanks = ['风见幽泠', '肆祀一一', '秋天的咸鱼'];
 </script>
 
 <style scoped>
