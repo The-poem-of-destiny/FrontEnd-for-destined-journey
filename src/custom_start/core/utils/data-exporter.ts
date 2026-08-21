@@ -63,23 +63,16 @@ const toInventoryVariable = (item: Item) => ({
   数量: Math.max(1, Math.round(item.quantity || 1)),
 });
 
-// 目录资产的效果键逐条映射为 内部资产（数量 1，效果保留原文），避免 schema 剥掉顶层 效果 造成数据丢失
 const toAssetVariable = (asset: Asset) => ({
-  品质: getRarityName(asset.rarity),
-  类型: asset.type || '',
-  标签: _.uniq(asset.tag || []),
-  总空间: '',
-  结算: asset.settlement || '',
-  描述: asset.description || '',
-  位置: '',
-  内部资产: _.mapValues(cleanRecord(asset.effect), (text, key) => ({
-    品质: '',
-    标签: [],
-    数量: 1,
-    效果: { [key]: text },
-    描述: '',
-    总占用空间: '',
-  })),
+  品质: asset.品质,
+  类型: asset.类型,
+  标签: _.uniq(asset.标签),
+  总空间: asset.总空间,
+  结算: asset.结算,
+  描述: asset.描述,
+  位置: asset.位置,
+  内部资产: asset.内部资产,
+  _隐藏: asset._隐藏,
 });
 
 const toSkillVariable = (skill: MvuSkillSource) => ({
@@ -98,6 +91,11 @@ const toNamedRecord = <T extends { name?: string }, V>(
       .value(),
   );
 
+const toNamedAssetRecord = (assets: Asset[]) =>
+  _.fromPairs(
+    assets.filter(asset => !!asset.名称).map(asset => [asset.名称, toAssetVariable(asset)]),
+  );
+
 const formatEffect = (effect?: Record<string, string>) => {
   const entries = Object.entries(cleanRecord(effect));
   return entries.length > 0
@@ -109,7 +107,7 @@ const appendDeferredItems = (
   lines: string[],
   title: string,
   targetPath: string,
-  items: Array<Equipment | Item | Asset>,
+  items: Array<Equipment | Item>,
 ) => {
   if (items.length === 0) return;
 
@@ -123,11 +121,26 @@ const appendDeferredItems = (
     if ('quantity' in item) {
       lines.push(`- 数量: ${Math.max(1, Math.round(item.quantity || 1))}`);
     }
-    if ('settlement' in item) {
-      lines.push(`- 结算: ${item.settlement || '无'}`);
-    }
     lines.push(`- 效果: ${formatEffect(item.effect)}`);
     lines.push(`- 描述: ${item.description || '无'}`);
+  });
+  lines.push('');
+};
+
+const appendDeferredAssets = (lines: string[], assets: Asset[]) => {
+  if (assets.length === 0) return;
+
+  lines.push('【待生成资产】');
+  assets.forEach((asset, index) => {
+    const effects = _.flatMap(asset.内部资产, internal => Object.values(internal.效果)).join('；');
+    lines.push(`${index + 1}. ${asset.名称}`);
+    lines.push(`- 写入路径: 主角.资产.${asset.名称}`);
+    lines.push(`- 类型: ${asset.类型 || '由 AI 根据描述确定'}`);
+    lines.push(`- 品质: ${asset.品质 || '普通'}`);
+    lines.push(`- 标签: ${asset.标签?.join('、') || '无'}`);
+    lines.push(`- 结算: ${asset.结算 || '无'}`);
+    lines.push(`- 效果: ${effects || '由 AI 根据描述生成'}`);
+    lines.push(`- 描述: ${asset.描述 || '无'}`);
   });
   lines.push('');
 };
@@ -161,7 +174,7 @@ const calculateFinalAttributes = (character: CharacterConfig): Attributes => {
       attr,
       character.basePoints[attr] + tierBonus + character.attributePoints[attr],
     ]),
-  ) as Attributes;
+  ) as unknown as Attributes;
 };
 
 const toAscensionVariable = (stairway?: Partner['stairway']) => ({
@@ -260,7 +273,7 @@ export async function writeCharacterToMvu(
     状态效果: {},
     金钱: Math.max(0, Math.round(character.money)),
     背包: toNamedRecord(items, toInventoryVariable),
-    资产: toNamedRecord(assets, toAssetVariable),
+    资产: toNamedAssetRecord(assets),
     装备: toNamedRecord(equipments, toEquipmentVariable),
     技能: toNamedRecord(skills, toSkillVariable),
     登神长阶: toAscensionVariable(),
@@ -338,7 +351,7 @@ export function generateAIPrompt(
     lines.push('');
     appendDeferredItems(lines, '待生成道具', '背包', deferredItems);
     appendDeferredItems(lines, '待生成装备', '装备', deferredEquipments);
-    appendDeferredItems(lines, '待生成资产', '资产', deferredAssets);
+    appendDeferredAssets(lines, deferredAssets);
     appendDeferredSkills(lines, deferredSkills);
     appendDeferredPartners(lines, deferredPartners);
   }
