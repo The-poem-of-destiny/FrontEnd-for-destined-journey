@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useMediaQuery } from '@vueuse/core';
+import AssetCard from '../../../components/AssetCard.vue';
 import ItemCard from '../../../components/ItemCard.vue';
 import { useActiveCard, useSelectableList } from '../../../composables';
 import { useStorePoints } from '../../../composables/use-store-points';
@@ -58,18 +59,30 @@ watch(
       <div class="empty-text">该分类下暂无物品</div>
     </div>
     <div v-else class="item-grid">
-      <ItemCard
-        v-for="item in items"
-        :key="item.name"
-        :item="item"
-        :selected="isSelected(item)"
-        :disabled="isDisabled(item)"
-        :details-open="isDetailsOpen(item.name)"
-        :details-toggleable="!detailsAlwaysOpen"
-        @select="handleSelect"
-        @deselect="handleDeselect"
-        @toggle-details="handleToggleDetails"
-      />
+      <template v-for="item in items" :key="item.name">
+        <AssetCard
+          v-if="'内部资产' in item"
+          :asset="item"
+          :selected="isSelected(item)"
+          :disabled="isDisabled(item)"
+          :details-open="isDetailsOpen(item.name)"
+          :details-toggleable="!detailsAlwaysOpen"
+          @select="handleSelect"
+          @deselect="handleDeselect"
+          @toggle-details="handleToggleDetails"
+        />
+        <ItemCard
+          v-else
+          :item="item"
+          :selected="isSelected(item)"
+          :disabled="isDisabled(item)"
+          :details-open="isDetailsOpen(item.name)"
+          :details-toggleable="!detailsAlwaysOpen"
+          @select="handleSelect"
+          @deselect="handleDeselect"
+          @toggle-details="handleToggleDetails"
+        />
+      </template>
     </div>
   </div>
 </template>
