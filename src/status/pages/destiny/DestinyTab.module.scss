@@ -191,24 +191,30 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 
 .partnerCategoryBar {
   display: flex;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  flex-wrap: nowrap;
   gap: $spacing-xs;
   padding-top: 1px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
 }
 
 .partnerCategoryBtn {
   display: inline-flex;
+  flex: 1 1 auto;
   align-items: center;
   justify-content: center;
   gap: 6px;
   min-height: 36px;
-  padding: 8px 12px;
+  min-width: 4.5rem;
+  padding: 8px clamp(8px, 1.6vw, 24px);
   border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--theme-card-bg) 68%, transparent);
   color: var(--theme-text-secondary);
   font-size: 12px;
   line-height: 1.2;
+  text-align: center;
   white-space: nowrap;
   cursor: pointer;
   transition:

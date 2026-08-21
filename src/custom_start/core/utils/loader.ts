@@ -93,5 +93,6 @@ export function mergeData<T>(
 ): Record<string, T[]> {
   return _.mergeWith({}, builtinData, customData, (objValue, srcValue) => {
     if (_.isArray(objValue)) return [...objValue, ...srcValue];
-  });
+    return undefined;
+  }) as Record<string, T[]>;
 }

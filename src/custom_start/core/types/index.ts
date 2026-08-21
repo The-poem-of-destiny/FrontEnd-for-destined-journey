@@ -14,10 +14,31 @@ export interface Item {
   isCustom?: boolean; // 标识是否为自定义数据
 }
 
-// 资产类型
-export type Asset = Omit<Item, 'quantity'> & {
-  settlement?: string;
-};
+// 资产类型。名称和点数是选择器目录元数据，其余字段直接对应 data_schema/schema.ts。
+export interface Asset {
+  名称: string;
+  点数: number;
+  品质: string;
+  类型: string;
+  标签: string[];
+  总空间: string;
+  结算: string;
+  描述: string;
+  位置: string;
+  内部资产: Record<
+    string,
+    {
+      品质: string;
+      标签: string[];
+      数量: number;
+      效果: Record<string, string>;
+      描述: string;
+      总占用空间: string;
+    }
+  >;
+  _隐藏: boolean;
+  isCustom?: boolean;
+}
 
 // 装备类型
 export type Equipment = Omit<Item, 'quantity'> & {
