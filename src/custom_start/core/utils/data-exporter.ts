@@ -64,7 +64,7 @@ const toInventoryVariable = (item: Item) => ({
 });
 
 const toAssetVariable = (asset: Asset) => ({
-    品质: getRarityName(asset.rarity),
+  品质: getRarityName(asset.rarity),
   类型: asset.类型,
   标签: _.uniq(asset.标签),
   总空间: asset.总空间,
