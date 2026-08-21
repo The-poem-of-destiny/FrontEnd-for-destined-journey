@@ -264,20 +264,22 @@ const getStairwayView = (partner: Partner) => {
                 <span class="item-cost">[{{ asset.cost }} 点]</span>
               </p>
               <p class="item-meta">
-                类型：{{ asset.type }}
-                <span v-if="asset.settlement"> | 结算：{{ asset.settlement }}</span>
-                <span v-if="asset.tag && asset.tag.length > 0">
-                  | 标签：{{ asset.tag.join('、') }}</span
+                类型：{{ asset.类型 }}
+                <span v-if="asset.结算"> | 结算：{{ asset.结算 }}</span>
+                <span v-if="asset.标签 && asset.标签.length > 0">
+                  | 标签：{{ asset.标签.join('、') }}</span
                 >
               </p>
-              <p v-if="Object.keys(asset.effect || {}).length > 0" class="item-desc">
+              <p v-if="Object.keys(asset.内部资产 || {}).length > 0" class="item-desc">
                 效果：
-                <span v-for="(value, key) in asset.effect" :key="key" class="effect-inline">
-                  {{ key }}：{{ value }}
-                </span>
+                <template v-for="internal in Object.values(asset.内部资产 || {})" :key="internal">
+                  <span v-for="(value, key) in internal.效果" :key="key" class="effect-inline">
+                    {{ key }}：{{ value }}
+                  </span>
+                </template>
               </p>
               <p v-else class="item-desc">效果：无</p>
-              <p v-if="asset.description" class="item-flavor">{{ asset.description }}</p>
+              <p v-if="asset.描述" class="item-flavor">{{ asset.描述 }}</p>
             </div>
           </div>
           <p v-else class="empty-text">未选择资产</p>

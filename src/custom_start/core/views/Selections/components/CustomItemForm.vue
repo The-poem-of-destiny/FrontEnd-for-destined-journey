@@ -131,19 +131,28 @@ const fillFormByItem = (
   item: Asset | Equipment | Item | Skill,
   type: 'equipment' | 'item' | 'asset' | 'skill',
 ) => {
+  const isAsset = type === 'asset';
+  const asset = isAsset ? (item as Asset) : null;
   customContentStore.setCustomItemForm({
     categoryType: type,
-    customItemType: item.type || '',
-    itemName: item.name || '',
+    customItemType: asset?.类型 || item.type || '',
+    itemName: asset?.name || item.name || '',
     itemRarity: item.rarity as Rarity,
-    itemTag: item.tag ? [...item.tag] : [],
-    itemEffect: item.effect ? { ...item.effect } : {},
-    itemDescription: item.description || '',
+    itemTag: asset ? [...asset.标签] : item.tag ? [...item.tag] : [],
+    itemEffect: asset
+      ? _.flatMap(asset.内部资产, internal => Object.entries(internal.效果 || {})).reduce(
+          (result, [key, value]) => ({ ...result, [key]: value }),
+          {},
+        )
+      : item.effect
+        ? { ...item.effect }
+        : {},
+    itemDescription: asset?.描述 || item.description || '',
     itemConsume: type === 'skill' ? (item as Skill).consume || '' : '',
-    itemSettlement: type === 'asset' ? (item as Asset).settlement || '' : '',
+    itemSettlement: asset?.结算 || '',
     itemQuantity: type === 'item' ? (item as Item).quantity || 1 : 1,
   });
-  customContentStore.updateEditingCustomItemName(item.name || '');
+  customContentStore.updateEditingCustomItemName(asset?.name || item.name || '');
   isExpanded.value = true;
 };
 
@@ -210,8 +219,25 @@ const confirmAdd = () => {
     } as Item;
   } else if (categoryType.value === 'asset') {
     newItem = {
-      ...baseItem,
-      settlement: itemSettlement.value.trim() || '',
+      name: baseItem.name,
+      cost: baseItem.cost,
+      rarity: itemRarity.value,
+      类型: baseItem.type,
+      标签: baseItem.tag,
+      总空间: '',
+      结算: itemSettlement.value.trim() || '',
+      描述: baseItem.description,
+      位置: '',
+      内部资产: _.mapValues(itemEffect.value, (value, key) => ({
+        品质: '',
+        标签: [],
+        数量: 1,
+        效果: { [key]: value },
+        描述: '',
+        总占用空间: '',
+      })),
+      _隐藏: false,
+      isCustom: true,
     } as Asset;
   } else {
     newItem = baseItem as Equipment;

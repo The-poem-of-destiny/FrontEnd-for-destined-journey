@@ -64,7 +64,7 @@ const toInventoryVariable = (item: Item) => ({
 });
 
 const toAssetVariable = (asset: Asset) => ({
-  品质: asset.品质,
+    品质: getRarityName(asset.rarity),
   类型: asset.类型,
   标签: _.uniq(asset.标签),
   总空间: asset.总空间,
@@ -93,7 +93,7 @@ const toNamedRecord = <T extends { name?: string }, V>(
 
 const toNamedAssetRecord = (assets: Asset[]) =>
   _.fromPairs(
-    assets.filter(asset => !!asset.名称).map(asset => [asset.名称, toAssetVariable(asset)]),
+    assets.filter(asset => !!asset.name).map(asset => [asset.name, toAssetVariable(asset)]),
   );
 
 const formatEffect = (effect?: Record<string, string>) => {
@@ -133,10 +133,10 @@ const appendDeferredAssets = (lines: string[], assets: Asset[]) => {
   lines.push('【待生成资产】');
   assets.forEach((asset, index) => {
     const effects = _.flatMap(asset.内部资产, internal => Object.values(internal.效果)).join('；');
-    lines.push(`${index + 1}. ${asset.名称}`);
-    lines.push(`- 写入路径: 主角.资产.${asset.名称}`);
+    lines.push(`${index + 1}. ${asset.name}`);
+    lines.push(`- 写入路径: 主角.资产.${asset.name}`);
     lines.push(`- 类型: ${asset.类型 || '由 AI 根据描述确定'}`);
-    lines.push(`- 品质: ${asset.品质 || '普通'}`);
+    lines.push(`- 品质: ${getRarityName(asset.rarity)}`);
     lines.push(`- 标签: ${asset.标签?.join('、') || '无'}`);
     lines.push(`- 结算: ${asset.结算 || '无'}`);
     lines.push(`- 效果: ${effects || '由 AI 根据描述生成'}`);

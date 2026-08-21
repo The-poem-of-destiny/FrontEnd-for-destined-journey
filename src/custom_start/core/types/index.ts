@@ -14,11 +14,11 @@ export interface Item {
   isCustom?: boolean; // 标识是否为自定义数据
 }
 
-// 资产类型。名称和点数是选择器目录元数据，其余字段直接对应 data_schema/schema.ts。
+// 资产类型。name/cost/rarity 是选择器目录元数据，其余字段直接对应 data_schema/schema.ts。
 export interface Asset {
-  名称: string;
-  点数: number;
-  品质: string;
+  name: string;
+  cost: number;
+  rarity: Rarity;
   类型: string;
   标签: string[];
   总空间: string;
