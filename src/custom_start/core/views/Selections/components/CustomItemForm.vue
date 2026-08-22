@@ -196,11 +196,7 @@ const fillFormByItem = (
     itemName: asset?.name || item.name || '',
     itemRarity: item.rarity as Rarity,
     itemTag: asset ? [...asset.标签] : item.tag ? [...item.tag] : [],
-    itemEffect: asset
-      ? {}
-      : item.effect
-        ? { ...item.effect }
-        : {},
+    itemEffect: asset ? {} : item.effect ? { ...item.effect } : {},
     itemDescription: asset?.描述 || item.description || '',
     itemConsume: type === 'skill' ? (item as Skill).consume || '' : '',
     itemSettlement: asset?.结算 || '',
@@ -448,7 +444,11 @@ const confirmAdd = () => {
 
             <div class="form-row">
               <FormLabel label="名称" required />
-              <FormInput v-model="internal.name" placeholder="例如：主楼、动力核心、营业区域" :maxlength="50" />
+              <FormInput
+                v-model="internal.name"
+                placeholder="例如：主楼、动力核心、营业区域"
+                :maxlength="50"
+              />
             </div>
 
             <div class="form-row">
@@ -489,7 +489,11 @@ const confirmAdd = () => {
 
             <div class="form-row">
               <FormLabel label="描述" />
-              <FormTextarea v-model="internal.描述" placeholder="描述内部资产的环境、用途或协议内容..." :rows="2" />
+              <FormTextarea
+                v-model="internal.描述"
+                placeholder="描述内部资产的环境、用途或协议内容..."
+                :rows="2"
+              />
             </div>
           </div>
 
@@ -901,7 +905,7 @@ const confirmAdd = () => {
       font-size: 0.8rem;
     }
 
-  .form-actions {
+    .form-actions {
       flex-direction: column;
       gap: var(--spacing-sm);
     }

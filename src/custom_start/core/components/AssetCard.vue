@@ -26,9 +26,7 @@ const emit = defineEmits<{
   (event: 'toggle-details', asset: Asset): void;
 }>();
 
-const displayAsset = computed(() =>
-  resolvePlayerPlaceholders(props.asset, props.playerName),
-);
+const displayAsset = computed(() => resolvePlayerPlaceholders(props.asset, props.playerName));
 
 const selectButtonText = computed(() => {
   if (props.selected) return '取消选择';
@@ -65,25 +63,51 @@ const toggleSelect = () => {
     </div>
 
     <div class="card-body themed-scrollbar">
-      <div class="asset-info"><span class="info-label">类型:</span><span>{{ displayAsset.类型 }}</span></div>
+      <div class="asset-info">
+        <span class="info-label">类型:</span><span>{{ displayAsset.类型 }}</span>
+      </div>
       <div v-if="displayAsset.标签?.length" class="asset-info">
         <span class="info-label">标签:</span>
-        <div class="tag-list"><span v-for="tag in displayAsset.标签" :key="tag" class="tag-chip">{{ tag }}</span></div>
+        <div class="tag-list">
+          <span v-for="tag in displayAsset.标签" :key="tag" class="tag-chip">{{ tag }}</span>
+        </div>
       </div>
-      <div v-if="displayAsset.总空间" class="asset-info"><span class="info-label">总空间:</span><span>{{ displayAsset.总空间 }}</span></div>
-      <div v-if="displayAsset.位置" class="asset-info"><span class="info-label">位置:</span><span>{{ displayAsset.位置 }}</span></div>
-      <div v-if="displayAsset.结算" class="asset-info"><span class="info-label">结算:</span><span>{{ displayAsset.结算 }}</span></div>
+      <div v-if="displayAsset.总空间" class="asset-info">
+        <span class="info-label">总空间:</span><span>{{ displayAsset.总空间 }}</span>
+      </div>
+      <div v-if="displayAsset.位置" class="asset-info">
+        <span class="info-label">位置:</span><span>{{ displayAsset.位置 }}</span>
+      </div>
+      <div v-if="displayAsset.结算" class="asset-info">
+        <span class="info-label">结算:</span><span>{{ displayAsset.结算 }}</span>
+      </div>
       <div v-if="displayAsset.描述" class="asset-description">{{ displayAsset.描述 }}</div>
       <div v-if="Object.keys(displayAsset.内部资产 ?? {}).length" class="asset-internals">
         <div class="internals-label">内部资产:</div>
-        <div v-for="([name, internal]) in Object.entries(displayAsset.内部资产 ?? {})" :key="name" class="asset-internal">
+        <div
+          v-for="[name, internal] in Object.entries(displayAsset.内部资产 ?? {})"
+          :key="name"
+          class="asset-internal"
+        >
           <div class="internal-title">
-            <strong>{{ name }}<span v-if="internal.数量 > 1"> ×{{ internal.数量 }}</span></strong>
-            <span v-if="internal.品质" class="internal-rarity">{{ getRarityLabel(internal.品质 as Asset['rarity']) }}</span>
+            <strong
+              >{{ name }}<span v-if="internal.数量 > 1"> ×{{ internal.数量 }}</span></strong
+            >
+            <span v-if="internal.品质" class="internal-rarity">{{
+              getRarityLabel(internal.品质 as Asset['rarity'])
+            }}</span>
           </div>
-          <div v-if="internal.标签?.length" class="internal-tags">{{ internal.标签.join('、') }}</div>
-          <div v-if="internal.总占用空间" class="internal-space">占用：{{ internal.总占用空间 }}</div>
-          <div v-for="([key, value]) in Object.entries(internal.效果 || {})" :key="key" class="internal-effect">
+          <div v-if="internal.标签?.length" class="internal-tags">
+            {{ internal.标签.join('、') }}
+          </div>
+          <div v-if="internal.总占用空间" class="internal-space">
+            占用：{{ internal.总占用空间 }}
+          </div>
+          <div
+            v-for="[key, value] in Object.entries(internal.效果 || {})"
+            :key="key"
+            class="internal-effect"
+          >
             <span class="effect-key">{{ key }}:</span><span>{{ value }}</span>
           </div>
           <div v-if="internal.描述" class="internal-description">{{ internal.描述 }}</div>

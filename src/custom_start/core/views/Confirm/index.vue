@@ -260,11 +260,7 @@ const getStairwayView = (partner: Partner) => {
             <span>资产 ({{ displayAssets.length }})</span>
           </h3>
           <div v-if="displayAssets.length > 0" class="doc-text">
-            <div
-              v-for="(asset, index) in displayAssets"
-              :key="asset.name"
-              class="item-entry"
-            >
+            <div v-for="(asset, index) in displayAssets" :key="asset.name" class="item-entry">
               <p class="item-title">
                 <strong>{{ index + 1 }}. </strong>
                 <span :style="{ color: getRarityColor(asset.rarity) }">{{ asset.name }}</span>
