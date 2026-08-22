@@ -291,9 +291,9 @@ const isCategoryDisabled = (category: string) => props.disabledCategories.includ
   }
 
   .content-area {
-    height: min(48vh, 380px);
+    height: min(70vh, 760px);
     min-height: 260px;
-    max-height: min(48vh, 380px);
+    max-height: min(70vh, 760px);
   }
 
   .category-selection-layout.use-mobile-select {
@@ -348,9 +348,9 @@ const isCategoryDisabled = (category: string) => props.disabledCategories.includ
   }
 
   .content-area {
-    height: min(42vh, 320px);
+    height: min(74vh, 640px);
     min-height: 240px;
-    max-height: min(42vh, 320px);
+    max-height: min(74vh, 640px);
   }
 }
 </style>
