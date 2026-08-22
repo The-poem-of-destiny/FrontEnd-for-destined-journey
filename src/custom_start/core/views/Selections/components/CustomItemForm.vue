@@ -10,8 +10,13 @@ import {
   FormTextarea,
 } from '../../../components/Form';
 import { useCustomContentStore } from '../../../store/customContent';
-import type { Asset, Equipment, Item, Rarity, Skill } from '../../../types';
-import { calculateCostByPosition, getCostRange } from '../../../utils/cost-calculator';
+import type { Asset, CustomInternalAsset, Equipment, Item, Rarity, Skill } from '../../../types';
+import {
+  calculateAssetCostByPosition,
+  calculateCostByPosition,
+  getAssetCostRange,
+  getCostRange,
+} from '../../../utils/cost-calculator';
 import { CATEGORY_OPTIONS, RARITY_OPTIONS } from '../../../utils/form-options';
 
 interface Emits {
@@ -92,6 +97,41 @@ const itemSettlement = computed({
   set: (value: string) => customContentStore.updateCustomItemForm('itemSettlement', value),
 });
 
+const itemSpace = computed({
+  get: () => customContentStore.customItemForm.itemSpace,
+  set: (value: string) => customContentStore.updateCustomItemForm('itemSpace', value),
+});
+
+const itemLocation = computed({
+  get: () => customContentStore.customItemForm.itemLocation,
+  set: (value: string) => customContentStore.updateCustomItemForm('itemLocation', value),
+});
+
+const internalAssets = computed({
+  get: () => customContentStore.customItemForm.internalAssets,
+  set: (value: Array<CustomInternalAsset & { name: string }>) =>
+    customContentStore.updateCustomItemForm('internalAssets', value),
+});
+
+const addInternalAsset = () => {
+  internalAssets.value = [
+    ...internalAssets.value,
+    {
+      name: '',
+      品质: itemRarity.value,
+      标签: [],
+      数量: 1,
+      效果: {},
+      描述: '',
+      总占用空间: '',
+    },
+  ];
+};
+
+const removeInternalAsset = (index: number) => {
+  internalAssets.value = internalAssets.value.filter((_, i) => i !== index);
+};
+
 const itemQuantity = computed({
   get: () => customContentStore.customItemForm.itemQuantity,
   set: (value: number) => customContentStore.updateCustomItemForm('itemQuantity', value),
@@ -104,16 +144,33 @@ const categoryOptions = CATEGORY_OPTIONS;
 // 根据品质计算点数（使用 0.5-1 之间的随机位置）
 const calculatedCost = computed(() => {
   const randomPosition = 0.5 + Math.random() * 0.5;
-  return calculateCostByPosition(itemRarity.value, randomPosition);
+  return categoryType.value === 'asset'
+    ? calculateAssetCostByPosition(itemRarity.value, randomPosition)
+    : calculateCostByPosition(itemRarity.value, randomPosition);
 });
 
 // 点数范围提示
 const costRangeText = computed(() => {
-  return getCostRange(itemRarity.value);
+  return categoryType.value === 'asset'
+    ? getAssetCostRange(itemRarity.value)
+    : getCostRange(itemRarity.value);
 });
 
 // 表单验证
 const isValid = computed(() => {
+  if (categoryType.value === 'asset') {
+    const internalNames = internalAssets.value
+      .map(internal => internal.name.trim())
+      .filter(Boolean);
+
+    return (
+      itemName.value.trim() !== '' &&
+      customItemType.value.trim() !== '' &&
+      internalNames.length > 0 &&
+      new Set(internalNames).size === internalNames.length
+    );
+  }
+
   return (
     itemName.value.trim() !== '' &&
     customItemType.value.trim() !== '' &&
@@ -140,16 +197,26 @@ const fillFormByItem = (
     itemRarity: item.rarity as Rarity,
     itemTag: asset ? [...asset.标签] : item.tag ? [...item.tag] : [],
     itemEffect: asset
-      ? _.flatMap(asset.内部资产, internal => Object.entries(internal.效果 || {})).reduce(
-          (result, [key, value]) => ({ ...result, [key]: value }),
-          {},
-        )
+      ? {}
       : item.effect
         ? { ...item.effect }
         : {},
     itemDescription: asset?.描述 || item.description || '',
     itemConsume: type === 'skill' ? (item as Skill).consume || '' : '',
     itemSettlement: asset?.结算 || '',
+    itemSpace: asset?.总空间 || '',
+    itemLocation: asset?.位置 || '',
+    internalAssets: asset
+      ? Object.entries(asset.内部资产 || {}).map(([name, internal]) => ({
+          name,
+          品质: internal.品质 || '',
+          标签: internal.标签 ? [...internal.标签] : [],
+          数量: internal.数量 || 1,
+          效果: internal.效果 ? { ...internal.效果 } : {},
+          描述: internal.描述 || '',
+          总占用空间: internal.总占用空间 || '',
+        }))
+      : [],
     itemQuantity: type === 'item' ? (item as Item).quantity || 1 : 1,
   });
   customContentStore.updateEditingCustomItemName(asset?.name || item.name || '');
@@ -198,7 +265,7 @@ const confirmAdd = () => {
     type: customItemType.value.trim(),
     tag: itemTag.value,
     rarity: itemRarity.value,
-    effect: itemEffect.value,
+    effect: categoryType.value === 'asset' ? {} : itemEffect.value,
     description: itemDescription.value.trim() || '自定义物品',
     isCustom: true, // 标记为自定义数据
   };
@@ -224,18 +291,25 @@ const confirmAdd = () => {
       rarity: itemRarity.value,
       类型: baseItem.type,
       标签: baseItem.tag,
-      总空间: '',
+      总空间: itemSpace.value.trim(),
       结算: itemSettlement.value.trim() || '',
       描述: baseItem.description,
-      位置: '',
-      内部资产: _.mapValues(itemEffect.value, (value, key) => ({
-        品质: '',
-        标签: [],
-        数量: 1,
-        效果: { [key]: value },
-        描述: '',
-        总占用空间: '',
-      })),
+      位置: itemLocation.value.trim(),
+      内部资产: Object.fromEntries(
+        internalAssets.value
+          .filter(internal => internal.name.trim())
+          .map(internal => [
+            internal.name.trim(),
+            {
+              品质: internal.品质,
+              标签: [...internal.标签],
+              数量: Math.max(1, Math.round(internal.数量)),
+              效果: { ...internal.效果 },
+              描述: internal.描述.trim(),
+              总占用空间: internal.总占用空间.trim(),
+            },
+          ]),
+      ),
       _隐藏: false,
       isCustom: true,
     } as Asset;
@@ -343,8 +417,90 @@ const confirmAdd = () => {
         <FormInput v-model="itemSettlement" placeholder="例如：每月收取 100 金币" />
       </div>
 
-      <!-- 效果 -->
-      <div class="form-row">
+      <div v-if="categoryType === 'asset'" class="form-row">
+        <FormLabel label="总空间" />
+        <FormInput v-model="itemSpace" placeholder="例如：1层: 客厅、厨房;面积:80m²" />
+      </div>
+
+      <div v-if="categoryType === 'asset'" class="form-row">
+        <FormLabel label="位置" />
+        <FormInput v-model="itemLocation" placeholder="例如：诺瓦·瓦伦蒂亚城-中城区" />
+      </div>
+
+      <template v-if="categoryType === 'asset'">
+        <div class="internal-assets-editor">
+          <div class="internal-assets-header">
+            <span class="internal-assets-title">内部资产</span>
+            <button type="button" class="btn-add-internal" @click="addInternalAsset">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              添加内部资产
+            </button>
+          </div>
+
+          <div v-for="(internal, index) in internalAssets" :key="index" class="internal-asset-card">
+            <div class="internal-card-header">
+              <span class="internal-card-index">内部资产 {{ index + 1 }}</span>
+              <button type="button" class="internal-remove-btn" @click="removeInternalAsset(index)">
+                <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                删除
+              </button>
+            </div>
+
+            <div class="form-row">
+              <FormLabel label="名称" required />
+              <FormInput v-model="internal.name" placeholder="例如：主楼、动力核心、营业区域" :maxlength="50" />
+            </div>
+
+            <div class="form-row">
+              <FormLabel label="品质" />
+              <FormSelect v-model="internal.品质" :options="RARITY_OPTIONS" />
+            </div>
+
+            <div class="form-row">
+              <FormLabel label="标签" />
+              <FormArrayInput
+                v-model="internal.标签"
+                placeholder="例如：类型:住宅、位置:1层、状态:可用"
+                add-button-text="添加标签"
+                empty-text="暂无内部资产标签"
+              />
+            </div>
+
+            <div class="form-row">
+              <FormLabel label="数量" />
+              <FormNumber v-model="internal.数量" :min="1" :max="99" placeholder="请输入数量" />
+            </div>
+
+            <div class="form-row">
+              <FormLabel label="效果" />
+              <FormKeyValueInput
+                v-model="internal.效果"
+                placeholder-key="效果名"
+                placeholder-value="效果内容"
+                add-button-text="添加效果"
+                empty-text="暂无效果条目，点击下方按钮添加"
+              />
+            </div>
+
+            <div class="form-row">
+              <FormLabel label="占用空间" />
+              <FormInput v-model="internal.总占用空间" placeholder="例如：约120m²" />
+            </div>
+
+            <div class="form-row">
+              <FormLabel label="描述" />
+              <FormTextarea v-model="internal.描述" placeholder="描述内部资产的环境、用途或协议内容..." :rows="2" />
+            </div>
+          </div>
+
+          <div v-if="internalAssets.length === 0" class="internal-assets-empty">
+            尚未添加内部资产，点击上方按钮添加
+          </div>
+        </div>
+      </template>
+
+      <!-- 效果（非资产分类） -->
+      <div v-if="categoryType !== 'asset'" class="form-row">
         <FormLabel label="效果" required />
         <FormKeyValueInput
           v-model="itemEffect"
@@ -611,6 +767,94 @@ const confirmAdd = () => {
       cursor: not-allowed;
     }
   }
+
+  .internal-assets-editor {
+    margin-bottom: var(--spacing-md);
+
+    .internal-assets-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .internal-assets-title {
+      font-weight: 600;
+      color: var(--title-color);
+    }
+
+    .btn-add-internal {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: var(--card-bg);
+      color: var(--text-color);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      &:hover:not(:disabled) {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+      }
+    }
+
+    .internal-asset-card {
+      padding: var(--spacing-sm);
+      margin-bottom: var(--spacing-sm);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: rgba(0, 0, 0, 0.04);
+
+      .internal-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--spacing-sm);
+        padding-bottom: var(--spacing-xs);
+        border-bottom: 1px dashed var(--border-color-light);
+      }
+
+      .internal-card-index {
+        font-weight: 600;
+        color: var(--text-light);
+        font-size: 0.9rem;
+      }
+
+      .internal-remove-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        background: var(--card-bg);
+        color: var(--text-light);
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+
+        &:hover:not(:disabled) {
+          border-color: var(--error-color);
+          color: var(--error-color);
+          background: rgba(211, 47, 47, 0.05);
+        }
+      }
+    }
+
+    .internal-assets-empty {
+      padding: var(--spacing-md);
+      border: 1px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      text-align: center;
+      color: var(--text-light);
+      font-size: 0.85rem;
+      font-style: italic;
+    }
+  }
 }
 
 // 响应式设计
@@ -657,7 +901,7 @@ const confirmAdd = () => {
       font-size: 0.8rem;
     }
 
-    .form-actions {
+  .form-actions {
       flex-direction: column;
       gap: var(--spacing-sm);
     }

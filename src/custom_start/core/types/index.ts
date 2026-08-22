@@ -40,6 +40,8 @@ export interface Asset {
   isCustom?: boolean;
 }
 
+export type CustomInternalAsset = Asset['内部资产'][string];
+
 // 装备类型
 export type Equipment = Omit<Item, 'quantity'> & {
   position?: string;

@@ -15,6 +15,7 @@ import type {
   Partner,
   Skill,
 } from '../types';
+import { resolvePlayerPlaceholders } from './asset';
 
 type MvuItemSource = {
   name?: string;
@@ -63,17 +64,25 @@ const toInventoryVariable = (item: Item) => ({
   数量: Math.max(1, Math.round(item.quantity || 1)),
 });
 
-const toAssetVariable = (asset: Asset) => ({
-  品质: getRarityName(asset.rarity),
-  类型: asset.类型,
-  标签: _.uniq(asset.标签),
-  总空间: asset.总空间,
-  结算: asset.结算,
-  描述: asset.描述,
-  位置: asset.位置,
-  内部资产: asset.内部资产,
-  _隐藏: asset._隐藏,
-});
+const toAssetVariable = (source: Asset, playerName = '') => {
+  const asset = resolvePlayerPlaceholders(source, playerName);
+  return {
+    品质: getRarityName(asset.rarity),
+    类型: asset.类型,
+    标签: _.uniq(asset.标签),
+    总空间: asset.总空间,
+    结算: asset.结算,
+    描述: asset.描述,
+    位置: asset.位置,
+    内部资产: _.mapValues(asset.内部资产, internal => ({
+      ...internal,
+      品质: getRarityName(internal.品质),
+      标签: _.uniq(internal.标签),
+      效果: cleanRecord(internal.效果),
+    })),
+    _隐藏: asset._隐藏,
+  };
+};
 
 const toSkillVariable = (skill: MvuSkillSource) => ({
   ...toBaseItemVariable(skill),
@@ -91,9 +100,11 @@ const toNamedRecord = <T extends { name?: string }, V>(
       .value(),
   );
 
-const toNamedAssetRecord = (assets: Asset[]) =>
+const toNamedAssetRecord = (assets: Asset[], playerName = '') =>
   _.fromPairs(
-    assets.filter(asset => !!asset.name).map(asset => [asset.name, toAssetVariable(asset)]),
+    assets
+      .filter(asset => !!asset.name)
+      .map(asset => [asset.name, toAssetVariable(asset, playerName)]),
   );
 
 const formatEffect = (effect?: Record<string, string>) => {
@@ -127,20 +138,15 @@ const appendDeferredItems = (
   lines.push('');
 };
 
-const appendDeferredAssets = (lines: string[], assets: Asset[]) => {
+const appendDeferredAssets = (lines: string[], assets: Asset[], playerName = '') => {
   if (assets.length === 0) return;
 
   lines.push('【待生成资产】');
   assets.forEach((asset, index) => {
-    const effects = _.flatMap(asset.内部资产, internal => Object.values(internal.效果)).join('；');
     lines.push(`${index + 1}. ${asset.name}`);
     lines.push(`- 写入路径: 主角.资产.${asset.name}`);
-    lines.push(`- 类型: ${asset.类型 || '由 AI 根据描述确定'}`);
-    lines.push(`- 品质: ${getRarityName(asset.rarity)}`);
-    lines.push(`- 标签: ${asset.标签?.join('、') || '无'}`);
-    lines.push(`- 结算: ${asset.结算 || '无'}`);
-    lines.push(`- 效果: ${effects || '由 AI 根据描述生成'}`);
-    lines.push(`- 描述: ${asset.描述 || '无'}`);
+    lines.push('- 资产 schema 数据:');
+    lines.push(JSON.stringify(toAssetVariable(asset, playerName), null, 2));
   });
   lines.push('');
 };
@@ -273,7 +279,7 @@ export async function writeCharacterToMvu(
     状态效果: {},
     金钱: Math.max(0, Math.round(character.money)),
     背包: toNamedRecord(items, toInventoryVariable),
-    资产: toNamedAssetRecord(assets),
+    资产: toNamedAssetRecord(assets, character.name),
     装备: toNamedRecord(equipments, toEquipmentVariable),
     技能: toNamedRecord(skills, toSkillVariable),
     登神长阶: toAscensionVariable(),
@@ -351,7 +357,7 @@ export function generateAIPrompt(
     lines.push('');
     appendDeferredItems(lines, '待生成道具', '背包', deferredItems);
     appendDeferredItems(lines, '待生成装备', '装备', deferredEquipments);
-    appendDeferredAssets(lines, deferredAssets);
+    appendDeferredAssets(lines, deferredAssets, character.name);
     appendDeferredSkills(lines, deferredSkills);
     appendDeferredPartners(lines, deferredPartners);
   }

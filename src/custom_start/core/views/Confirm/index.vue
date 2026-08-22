@@ -2,10 +2,17 @@
 import { computed } from 'vue';
 import { useCharacterStore, useCustomContentStore } from '../../store';
 import type { CustomInjectionSettings, Partner } from '../../types';
+import { resolvePlayerPlaceholders } from '../../utils/asset';
 import { getRarityColor } from '../../utils/form-options';
 
 const characterStore = useCharacterStore();
 const customContentStore = useCustomContentStore();
+
+const displayAssets = computed(() =>
+  characterStore.selectedAssets.map(asset =>
+    resolvePlayerPlaceholders(asset, characterStore.character.name),
+  ),
+);
 
 const injectionOptions: Array<{
   key: keyof CustomInjectionSettings;
@@ -250,11 +257,11 @@ const getStairwayView = (partner: Partner) => {
         <section class="doc-section">
           <h3 class="section-title">
             <i class="fa-solid fa-building-columns" aria-hidden="true"></i>
-            <span>资产 ({{ characterStore.selectedAssets.length }})</span>
+            <span>资产 ({{ displayAssets.length }})</span>
           </h3>
-          <div v-if="characterStore.selectedAssets.length > 0" class="doc-text">
+          <div v-if="displayAssets.length > 0" class="doc-text">
             <div
-              v-for="(asset, index) in characterStore.selectedAssets"
+              v-for="(asset, index) in displayAssets"
               :key="asset.name"
               class="item-entry"
             >
@@ -270,14 +277,13 @@ const getStairwayView = (partner: Partner) => {
                   | 标签：{{ asset.标签.join('、') }}</span
                 >
               </p>
-              <p v-if="Object.keys(asset.内部资产 || {}).length > 0" class="item-desc">
-                效果：
-                <template v-for="internal in Object.values(asset.内部资产 || {})" :key="internal">
-                  <span v-for="(value, key) in internal.效果" :key="key" class="effect-inline">
-                    {{ key }}：{{ value }}
-                  </span>
-                </template>
-              </p>
+              <div v-if="Object.keys(asset.内部资产 || {}).length > 0" class="item-desc">
+                <div v-for="(internal, name) in asset.内部资产" :key="name">
+                  <strong>{{ name }}</strong>
+                  <span v-if="internal.总占用空间"> | 占用：{{ internal.总占用空间 }}</span>
+                  <span v-if="internal.描述"> | {{ internal.描述 }}</span>
+                </div>
+              </div>
               <p v-else class="item-desc">效果：无</p>
               <p v-if="asset.描述" class="item-flavor">{{ asset.描述 }}</p>
             </div>

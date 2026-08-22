@@ -9,6 +9,7 @@ import type { Asset, Equipment, Item, Skill } from '../../../types';
 interface Props {
   items: (Asset | Equipment | Item | Skill)[];
   selectedItems: (Asset | Equipment | Item | Skill)[];
+  playerName?: string;
 }
 
 interface Emits {
@@ -67,6 +68,7 @@ watch(
           :disabled="isDisabled(item)"
           :details-open="isDetailsOpen(item.name)"
           :details-toggleable="!detailsAlwaysOpen"
+          :player-name="playerName"
           @select="handleSelect"
           @deselect="handleDeselect"
           @toggle-details="handleToggleDetails"
