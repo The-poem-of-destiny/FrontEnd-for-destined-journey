@@ -302,6 +302,7 @@ const handleEditCustomItem = (
             <ItemList
               :items="currentItems"
               :selected-items="currentSelectedItems"
+              :player-name="characterStore.character.name"
               @select="handleSelectItem"
               @deselect="handleDeselectItem"
             />

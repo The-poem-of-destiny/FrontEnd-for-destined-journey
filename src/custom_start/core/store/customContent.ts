@@ -2,7 +2,7 @@ import { klona } from 'klona';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { DEFAULT_CUSTOM_INJECTION_SETTINGS } from '../data/constants';
-import type { CustomInjectionSettings, Rarity } from '../types';
+import type { CustomInjectionSettings, CustomInternalAsset, Rarity } from '../types';
 import type { Attributes } from '../views/Background/components/AttributeEditor.vue';
 import type { EquipmentItem } from '../views/Background/components/EquipmentEditor.vue';
 import type { SkillItem } from '../views/Background/components/SkillEditor.vue';
@@ -68,6 +68,9 @@ export const useCustomContentStore = defineStore('customContent', () => {
     itemDescription: '',
     itemConsume: '',
     itemSettlement: '',
+    itemSpace: '',
+    itemLocation: '',
+    internalAssets: [] as Array<CustomInternalAsset & { name: string }>,
     itemQuantity: 1,
   });
 
@@ -109,6 +112,9 @@ export const useCustomContentStore = defineStore('customContent', () => {
       itemDescription: '',
       itemConsume: '',
       itemSettlement: '',
+      itemSpace: '',
+      itemLocation: '',
+      internalAssets: [],
       itemQuantity: 1,
     };
     editingCustomItemName.value = '';
