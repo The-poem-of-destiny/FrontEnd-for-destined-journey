@@ -8,6 +8,8 @@ import {
   TaskSchema,
 } from './utils';
 
+const { 身份: _playerIdentity, ...PlayerIdentitySchema } = IdentitySchema.shape;
+
 const internalAsset = z
   .record(
     z.string(),
@@ -49,7 +51,7 @@ const assets = z
  */
 const player = z
   .object({
-    ...IdentitySchema.shape,
+    ...PlayerIdentitySchema,
     累计经验值: z.coerce.number().prefault(0),
     升级所需经验: z.union([z.coerce.number().prefault(120), z.literal('MAX')]),
     生命值: ResourceSchema,
@@ -74,7 +76,6 @@ const player = z
     return _.pick(processed, [
       // 基础信息
       '种族',
-      '身份',
       '职业',
       '生命层级',
       // 等级系统

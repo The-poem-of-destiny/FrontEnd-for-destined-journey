@@ -183,6 +183,35 @@ const calculateFinalAttributes = (character: CharacterConfig): Attributes => {
   ) as unknown as Attributes;
 };
 
+const RESOURCE_MULTIPLIERS = [
+  [25, 100, 160],
+  [21, 40, 80],
+  [17, 20, 35],
+  [13, 10, 15],
+  [9, 4, 6],
+  [5, 2, 2.5],
+  [1, 1, 1],
+] as const;
+
+// Mirrors Automated-script-for-destined-journey/src/services/resource-calculator.ts.
+// Keep both implementations and its resource-calculator tests in sync when changing this formula.
+const calculateInitialResources = (level: number, attributes: Attributes) => {
+  const [, hpMultiplier, mpSpMultiplier] =
+    RESOURCE_MULTIPLIERS.find(([minimumLevel]) => level >= minimumLevel) ??
+    RESOURCE_MULTIPLIERS.at(-1)!;
+  const { 力量, 敏捷, 体质, 智力, 精神 } = attributes;
+  const totalAttributes = 力量 + 敏捷 + 体质 + 智力 + 精神;
+  const hp = Math.round(体质 * 100 * hpMultiplier + totalAttributes);
+  const mp = Math.round((智力 + 精神) * 50 * mpSpMultiplier);
+  const sp = Math.round((力量 + 敏捷) * 50 * mpSpMultiplier);
+
+  return {
+    生命值: { 当前: hp, 上限: { _基础: hp, 额外: 0 } },
+    法力值: { 当前: mp, 上限: { _基础: mp, 额外: 0 } },
+    体力值: { 当前: sp, 上限: { _基础: sp, 额外: 0 } },
+  };
+};
+
 const toAscensionVariable = (stairway?: Partner['stairway']) => ({
   是否开启: Boolean(stairway?.isOpen),
   要素: stairway?.elements ?? {},
@@ -191,13 +220,13 @@ const toAscensionVariable = (stairway?: Partner['stairway']) => ({
   神位: stairway?.godlyRank ?? '',
   神国: stairway?.godKingdom
     ? {
-        名称: stairway.godKingdom.name || '',
-        描述: stairway.godKingdom.description || '',
-      }
+      名称: stairway.godKingdom.name || '',
+      描述: stairway.godKingdom.description || '',
+    }
     : {
-        名称: '',
-        描述: '',
-      },
+      名称: '',
+      描述: '',
+    },
 });
 
 const toPartnerVariable = (partner: Partner) => ({
@@ -260,22 +289,21 @@ export async function writeCharacterToMvu(
   const displayValues = getCharacterDisplayValues(character);
   const maxAp = calculateAPByLevel(character.level);
   const usedAp = _.sum(_.values(character.attributePoints));
+  const finalAttributes = calculateFinalAttributes(character);
+  const resources = calculateInitialResources(character.level, finalAttributes);
 
   // 命运点数
   _.set(mvuData, 'stat_data.命运点数', character.destinyPoints);
   _.set(mvuData, 'stat_data.主角', {
     种族: displayValues.race || '',
-    身份: displayValues.identity ? [displayValues.identity] : [],
     职业: [],
     生命层级: getLevelTierName(character.level),
     等级: character.level,
     累计经验值: 0,
     升级所需经验: character.level >= 25 ? 'MAX' : 120,
     属性点: Math.max(0, maxAp - usedAp),
-    属性: calculateFinalAttributes(character),
-    生命值: { 当前: 0, 上限: { _基础: 0, 额外: 0 } },
-    法力值: { 当前: 0, 上限: { _基础: 0, 额外: 0 } },
-    体力值: { 当前: 0, 上限: { _基础: 0, 额外: 0 } },
+    属性: finalAttributes,
+    ...resources,
     状态效果: {},
     金钱: Math.max(0, Math.round(character.money)),
     背包: toNamedRecord(items, toInventoryVariable),
@@ -308,51 +336,48 @@ export function generateAIPrompt(
   const deferredPartners = deferredCustomContent.partners || [];
   const hasDeferredContent =
     deferredEquipments.length +
-      deferredItems.length +
-      deferredAssets.length +
-      deferredSkills.length +
-      deferredPartners.length >
+    deferredItems.length +
+    deferredAssets.length +
+    deferredSkills.length +
+    deferredPartners.length >
     0;
   const displayGender = character.gender === '自定义' ? character.customGender : character.gender;
   const displayLocation =
     character.startLocation === '自定义' ? character.customStartLocation : character.startLocation;
+  const displayIdentity = getCharacterDisplayValues(character).identity;
 
   lines.push('【剧情生成上下文】');
   lines.push(
     hasDeferredContent
-      ? '角色、属性、金钱等结构化数据已写入 <status_current_variables>；下方列出的已选内容尚未写入。'
+      ? '角色、属性、金钱等一部分结构化数据已写入 <status_current_variables>；下方列出的已选内容尚未写入。'
       : '角色、属性、金钱、装备、背包、资产、技能、伙伴等结构化数据已写入 <status_current_variables>。',
   );
   lines.push(
     hasDeferredContent
-      ? '以下提供 schema 外字段、需要创作的开局上下文，以及未直接注入的已选内容。'
-      : '以下只提供 schema 外字段和需要创作的开局上下文。',
+      ? '以下提供需要创作的开局以及未直接注入<status_current_variables>的内容。'
+      : '以下只提供需要创作的开局。',
   );
   lines.push('');
   lines.push(`姓名: ${character.name || '未命名'}`);
   lines.push(`性别: ${displayGender || '未设置'}`);
   lines.push(`年龄: ${character.age}岁`);
+  lines.push(`身份: ${displayIdentity || '未设置'}`);
   lines.push(`起始地点: ${displayLocation || '未设置'}`);
   lines.push('');
   lines.push('【第一轮变量更新要求】');
-  lines.push(
-    '第一轮 AI 回复必须同步更新 <status_current_variables> 中的以下字段，不要保留空值或 0 占位：',
-  );
+  lines.push('第一轮 AI 回复必须同步更新 <status_current_variables> 中的以下字段：');
   lines.push('- 世界.时间');
   lines.push('- 世界.地点');
-  lines.push('- 主角.生命值.当前 / 主角.生命值.上限._基础 / 主角.生命值.上限.额外');
-  lines.push('- 主角.法力值.当前 / 主角.法力值.上限._基础 / 主角.法力值.上限.额外');
-  lines.push('- 主角.体力值.当前 / 主角.体力值.上限._基础 / 主角.体力值.上限.额外');
   lines.push('- 主角.装备.*.位置');
   lines.push(
-    '资源上限: 上限._基础 依据等级/属性/生命层级重算（只读来源），上限.额外 记录装备/状态/临时增益，当前 不得超过 _基础 + 额外。',
+    '- 资源（HP/MP/SP）额外上限: 上限.额外 记录装备/状态/临时增益',
   );
 
   if (hasDeferredContent) {
     lines.push('');
-    lines.push('【需要 AI 生成并写入变量的已选内容】');
+    lines.push('【需要本轮写入变量的其他已选内容】');
     lines.push(
-      '以下条目因用户关闭了直接注入而尚未写入变量。请依据给定设定和当前世界观生成、调整为符合 schema 的数据，并在第一轮回复中通过变量更新写入指定路径；名称必须作为键名，不得遗漏，也不要只在剧情正文中提及。',
+      '以下条目因用户关闭了直接注入而尚未写入变量。请依据给定设定和当前世界观生成、调整为符合 schema 的数据，并在第一轮回复中通过变量更新写入指定路径；名称必须作为键名，不得在<UpdateVariable>块遗漏',
     );
     lines.push('');
     appendDeferredItems(lines, '待生成道具', '背包', deferredItems);

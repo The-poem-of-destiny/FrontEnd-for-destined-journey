@@ -45,7 +45,6 @@ interface BasicInfoFieldConfig {
 const BasicInfoFields: BasicInfoFieldConfig[] = [
   { key: '种族', label: '种族', type: 'text', editable: true, defaultValue: '未知' },
   { key: '职业', label: '职业', type: 'tags', editable: true, defaultValue: [] },
-  { key: '身份', label: '身份', type: 'tags', editable: true, defaultValue: [] },
   { key: '生命层级', label: '生命层级', type: 'text', editable: false, defaultValue: '第一层级' },
   { key: '等级', label: '等级', type: 'number', editable: false, defaultValue: 1, prefix: 'Lv.' },
 ];
