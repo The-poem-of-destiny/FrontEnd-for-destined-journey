@@ -31,7 +31,7 @@
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  height: clamp(380px, 54vh, 760px);
+  height: clamp(460px, 60vh, 860px);
   min-height: 0;
   border: 1px solid color-mix(in srgb, var(--theme-card-border) 74%, transparent);
   border-radius: $border-radius-md;
@@ -548,7 +548,7 @@
   }
 
   .itemsWorkspace {
-    height: clamp(340px, 52vh, 620px);
+    height: clamp(360px, 54vh, 640px);
   }
 
   .itemsIndex {
