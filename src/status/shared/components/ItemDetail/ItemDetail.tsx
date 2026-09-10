@@ -215,7 +215,7 @@ export const ItemDetail: FC<ItemDetailProps> = ({
   };
 
   const renderTags = (allowEdit = editEnabled && !!pathPrefix) => {
-    if (_.isEmpty(data.标签)) return null;
+    if (!allowEdit && _.isEmpty(data.标签)) return null;
 
     return (
       <div className={styles.itemTags}>
@@ -269,8 +269,8 @@ export const ItemDetail: FC<ItemDetailProps> = ({
       )}
 
       {(displayMode === 'modal-detail' || editEnabled) &&
-      (itemCategory === 'equipment' || itemCategory === 'item') &&
-      (data.位置 || itemCategory === 'equipment') ? (
+      (itemCategory === 'asset' || itemCategory === 'equipment' || itemCategory === 'item') &&
+      (data.位置 || itemCategory === 'equipment' || (itemCategory === 'asset' && editEnabled)) ? (
         <div className={styles.itemFieldRow}>
           <span className={styles.fieldLabel}>位置</span>
           {renderEditableOrText('位置', data.位置 ?? '', 'text')}
@@ -322,7 +322,7 @@ export const ItemDetail: FC<ItemDetailProps> = ({
         </div>
       )}
 
-      {(!_.isEmpty(data.效果) || editEnabled) && (
+      {itemCategory !== 'asset' && (!_.isEmpty(data.效果) || editEnabled) && (
         <div className={styles.itemBlock}>
           <div className={styles.itemBlockTitle}>效果</div>
           <div className={styles.itemEffects}>
@@ -350,30 +350,113 @@ export const ItemDetail: FC<ItemDetailProps> = ({
         <div className={styles.itemBlock}>
           <div className={styles.itemBlockTitle}>内部资产</div>
           <div className={styles.internalAssets}>
-            {_.entries(data.内部资产).map(([name, internal]) => (
-              <div key={name} className={styles.internalAssetEntry}>
-                <div className={styles.internalAssetHeader}>
-                  <span className={styles.internalAssetName}>{name}</span>
-                  {internal.数量 ? (
-                    <span className={styles.internalAssetQty}>×{internal.数量}</span>
-                  ) : null}
-                  {internal.总占用空间 ? (
-                    <span className={styles.internalAssetSpace}>{internal.总占用空间}</span>
-                  ) : null}
-                </div>
-                {internal.描述 ? (
-                  <div className={styles.internalAssetDesc}>{internal.描述}</div>
-                ) : null}
-                {!_.isEmpty(internal.效果)
-                  ? _.entries(internal.效果).map(([key, value]) => (
-                      <div key={key} className={styles.effectRow}>
-                        <span className={styles.effectKey}>{key}</span>
-                        <span className={styles.effectValue}>{value}</span>
+            {_.entries(data.内部资产).map(([name, internal]) => {
+              const internalQualityClass = getQualityClass(internal.品质, styles);
+
+              return (
+                <div key={name} className={styles.internalAssetEntry}>
+                  <div className={styles.internalAssetHeader}>
+                    <span className={styles.internalAssetName}>{name}</span>
+                    {!editEnabled && internal.品质 ? (
+                      <span
+                        className={`${styles.internalAssetQuality} ${internalQualityClass}`.trim()}
+                      >
+                        {internal.品质}
+                      </span>
+                    ) : null}
+                    {!editEnabled && internal.数量 ? (
+                      <span className={styles.internalAssetQty}>×{internal.数量}</span>
+                    ) : null}
+                    {!editEnabled && internal.总占用空间 ? (
+                      <span className={styles.internalAssetSpace}>{internal.总占用空间}</span>
+                    ) : null}
+                  </div>
+                  {editEnabled && pathPrefix ? (
+                    <div className={styles.itemDetails}>
+                      <div className={styles.itemFieldRow}>
+                        <span className={styles.fieldLabel}>品质</span>
+                        <EditableField
+                          path={`${pathPrefix}.内部资产.${name}.品质`}
+                          value={internal.品质 ?? ''}
+                          type="select"
+                          selectConfig={{ options: QUALITY_OPTIONS }}
+                        />
                       </div>
-                    ))
-                  : null}
-              </div>
-            ))}
+                      <div className={styles.itemFieldRow}>
+                        <span className={styles.fieldLabel}>标签</span>
+                        <EditableField
+                          path={`${pathPrefix}.内部资产.${name}.标签`}
+                          value={internal.标签 ?? []}
+                          type="tags"
+                        />
+                      </div>
+                      <div className={styles.itemFieldRow}>
+                        <span className={styles.fieldLabel}>数量</span>
+                        <EditableField
+                          path={`${pathPrefix}.内部资产.${name}.数量`}
+                          value={internal.数量 ?? 0}
+                          type="number"
+                          numberConfig={{ min: 0, step: 1 }}
+                        />
+                      </div>
+                      <div className={styles.itemFieldRow}>
+                        <span className={styles.fieldLabel}>总占用空间</span>
+                        <EditableField
+                          path={`${pathPrefix}.内部资产.${name}.总占用空间`}
+                          value={internal.总占用空间 ?? ''}
+                          type="text"
+                        />
+                      </div>
+                      <div className={styles.itemBlock}>
+                        <div className={styles.itemBlockTitle}>描述</div>
+                        <div className={styles.itemDesc}>
+                          <EditableField
+                            path={`${pathPrefix}.内部资产.${name}.描述`}
+                            value={internal.描述 ?? ''}
+                            type="textarea"
+                          />
+                        </div>
+                      </div>
+                      <div className={styles.itemBlock}>
+                        <div className={styles.itemBlockTitle}>效果</div>
+                        <div className={styles.itemEffects}>
+                          <EditableField
+                            path={`${pathPrefix}.内部资产.${name}.效果`}
+                            value={internal.效果 ?? {}}
+                            type="keyvalue"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {!_.isEmpty(internal.标签) ? (
+                        <div className={styles.internalAssetTags}>
+                          {internal.标签?.map((tag, idx) => (
+                            <span key={idx} className={styles.internalAssetTag}>
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                      {internal.描述 ? (
+                        <div className={styles.internalAssetDesc}>{internal.描述}</div>
+                      ) : null}
+                      {!_.isEmpty(internal.效果) ? (
+                        <div className={styles.internalAssetEffects}>
+                          {_.entries(internal.效果).map(([key, value]) => (
+                            <div key={key} className={styles.effectRow}>
+                              <span className={styles.effectKey}>{key}</span>
+                              <span className={styles.effectValue}>{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : null}

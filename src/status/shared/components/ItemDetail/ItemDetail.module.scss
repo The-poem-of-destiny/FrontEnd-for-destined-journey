@@ -273,8 +273,7 @@
 .internalAssetEntry {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 6px 8px;
+  padding: 0;
   border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
   border-radius: $border-radius-sm;
   background: color-mix(in srgb, var(--theme-surface-muted) 45%, transparent);
@@ -285,6 +284,28 @@
   align-items: center;
   gap: 6px;
   min-width: 0;
+  flex-wrap: wrap;
+  padding: 7px 8px 5px;
+}
+
+.internalAssetTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 8px 6px;
+}
+
+.internalAssetTag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 2px 6px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 72%, transparent);
+  border-radius: $border-radius-sm;
+  background: color-mix(in srgb, var(--theme-card-bg) 72%, var(--theme-surface-muted) 28%);
+  color: var(--theme-text-primary);
+  font-size: 10px;
+  line-height: 1.25;
 }
 
 .internalAssetName {
@@ -299,6 +320,11 @@
   flex: 0 0 auto;
 }
 
+.internalAssetQuality {
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .internalAssetSpace {
   color: var(--theme-text-muted);
   font-size: 11px;
@@ -307,11 +333,20 @@
 }
 
 .internalAssetDesc {
+  padding: 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-card-border) 62%, transparent);
   color: var(--theme-text-secondary);
   font-size: 12px;
   line-height: 1.6;
   white-space: pre-line;
   word-break: break-word;
+}
+
+.internalAssetEffects {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px 8px;
 }
 
 .effectRow {
