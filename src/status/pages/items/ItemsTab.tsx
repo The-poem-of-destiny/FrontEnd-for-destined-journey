@@ -379,7 +379,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
           ) : (
             formatMoney(money)
           )}
-          <span className={styles.currencyUnit}>G</span>
+          <span className={styles.currencyUnit}>Z</span>
         </span>
       </div>
     );

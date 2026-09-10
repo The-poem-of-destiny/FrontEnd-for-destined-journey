@@ -410,7 +410,7 @@ const confirmAdd = () => {
       <!-- 结算（仅资产分类） -->
       <div v-if="categoryType === 'asset'" class="form-row">
         <FormLabel label="结算" />
-        <FormInput v-model="itemSettlement" placeholder="例如：每月收取 100 金币" />
+        <FormInput v-model="itemSettlement" placeholder="例如：每月收取 100 Z" />
       </div>
 
       <div v-if="categoryType === 'asset'" class="form-row">
