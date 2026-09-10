@@ -160,7 +160,7 @@ const getStairwayView = (partner: Partner) => {
             <p><strong>身份：</strong>{{ displayIdentity }}</p>
             <p><strong>起始地点：</strong>{{ displayLocation }}</p>
             <p><strong>等级：</strong>Lv.{{ characterStore.character.level }}</p>
-            <p><strong>金钱：</strong>{{ characterStore.character.money }} G</p>
+            <p><strong>金钱：</strong>{{ characterStore.character.money }} Z</p>
           </div>
         </section>
 
@@ -272,15 +272,25 @@ const getStairwayView = (partner: Partner) => {
                 <span v-if="asset.标签 && asset.标签.length > 0">
                   | 标签：{{ asset.标签.join('、') }}</span
                 >
+                <span v-if="asset.位置"> | 位置：{{ asset.位置 }}</span>
+                <span v-if="asset.总空间"> | 总空间：{{ asset.总空间 }}</span>
               </p>
               <div v-if="Object.keys(asset.内部资产 || {}).length > 0" class="item-desc">
                 <div v-for="(internal, name) in asset.内部资产" :key="name">
                   <strong>{{ name }}</strong>
+                  <span v-if="internal.品质"> | 品质：{{ internal.品质 }}</span>
+                  <span v-if="internal.标签 && internal.标签.length > 0">
+                    | 标签：{{ internal.标签.join('、') }}</span
+                  >
+                  <span v-if="internal.数量 !== undefined"> | 数量：{{ internal.数量 }}</span>
                   <span v-if="internal.总占用空间"> | 占用：{{ internal.总占用空间 }}</span>
                   <span v-if="internal.描述"> | {{ internal.描述 }}</span>
+                  <span v-for="(value, key) in internal.效果" :key="key" class="effect-inline">
+                    | {{ key }}：{{ value }}
+                  </span>
                 </div>
               </div>
-              <p v-else class="item-desc">效果：无</p>
+              <p v-else class="item-desc">无内部资产</p>
               <p v-if="asset.描述" class="item-flavor">{{ asset.描述 }}</p>
             </div>
           </div>
