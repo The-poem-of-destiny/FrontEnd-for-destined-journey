@@ -42,10 +42,10 @@ const ParchmentTheme: Theme = {
     textMuted: '#a1886b',
 
     // 资源条
-    resourceHp: '#c21a15',
-    resourceMp: '#3a5fcc',
-    resourceSp: '#17883f',
-    resourceExp: '#af7100',
+    resourceHp: '#a32d24',
+    resourceMp: '#3957a9',
+    resourceSp: '#2b7740',
+    resourceExp: '#966725',
     resourceText: '#e6d2b4',
 
     // 品质颜色
@@ -125,10 +125,10 @@ const CrimsonTheme: Theme = {
     textMuted: '#b78388',
 
     // 资源条
-    resourceHp: '#c2181c',
-    resourceMp: '#385fcc',
-    resourceSp: '#23873a',
-    resourceExp: '#b07000',
+    resourceHp: '#a32c27',
+    resourceMp: '#3857a9',
+    resourceSp: '#30763c',
+    resourceExp: '#976625',
     resourceText: '#e6bfc4',
 
     // 品质颜色
@@ -208,10 +208,10 @@ const IndigoTheme: Theme = {
     textMuted: '#8196b9',
 
     // 资源条
-    resourceHp: '#c2152f',
-    resourceMp: '#2962cc',
-    resourceSp: '#008755',
-    resourceExp: '#b66c01',
+    resourceHp: '#a32b33',
+    resourceMp: '#2e5aa9',
+    resourceSp: '#25764f',
+    resourceExp: '#9c6426',
     resourceText: '#c7d4f0',
 
     // 品质颜色
@@ -291,10 +291,10 @@ const BronzeTheme: Theme = {
     textMuted: '#aa956d',
 
     // 资源条
-    resourceHp: '#c11c03',
-    resourceMp: '#0c65ca',
-    resourceSp: '#008844',
-    resourceExp: '#ac7300',
+    resourceHp: '#a22d1d',
+    resourceMp: '#215ca8',
+    resourceSp: '#257643',
+    resourceExp: '#946926',
     resourceText: '#e2d2a8',
 
     // 品质颜色
@@ -374,10 +374,10 @@ const SakuraTheme: Theme = {
     textMuted: '#a27a90',
 
     // 资源条
-    resourceHp: '#c21820',
-    resourceMp: '#3460cc',
-    resourceSp: '#278739',
-    resourceExp: '#b16f00',
+    resourceHp: '#a32c29',
+    resourceMp: '#3558a9',
+    resourceSp: '#32763c',
+    resourceExp: '#986625',
     resourceText: '#e7c6d6',
 
     // 品质颜色
@@ -457,10 +457,10 @@ const ObsidianTheme: Theme = {
     textMuted: '#8f98a8',
 
     // 资源条
-    resourceHp: '#c21627',
-    resourceMp: '#2962cc',
-    resourceSp: '#008850',
-    resourceExp: '#b36e00',
+    resourceHp: '#a32b2d',
+    resourceMp: '#2e5aa9',
+    resourceSp: '#25764c',
+    resourceExp: '#996525',
     resourceText: '#f3f5f8',
 
     // 品质颜色
@@ -540,15 +540,15 @@ const IvoryTheme: Theme = {
     textMuted: '#6f5a48',
 
     // 资源条
-    resourceHp: '#d15d4d',
-    resourceMp: '#6280d4',
-    resourceSp: '#4a925c',
-    resourceExp: '#aa7a39',
+    resourceHp: '#b25a4d',
+    resourceMp: '#5c73b3',
+    resourceSp: '#4b8057',
+    resourceExp: '#936e3f',
     resourceText: '#f8f4ec',
 
     // 品质颜色
     qualityCommon: '#776748',
-    qualityUnique: '#15806e',
+    qualityUnique: '#0d7278',
     qualityMythic: '#d12a2b',
     qualityLegendary: '#a65a00',
     qualityEpic: '#833fae',
@@ -623,15 +623,15 @@ const MistyLilacTheme: Theme = {
     textMuted: '#544c62',
 
     // 资源条
-    resourceHp: '#d15c56',
-    resourceMp: '#5b84d5',
-    resourceSp: '#3f9569',
-    resourceExp: '#ae7a3d',
+    resourceHp: '#b25953',
+    resourceMp: '#5777b4',
+    resourceSp: '#448261',
+    resourceExp: '#966f42',
     resourceText: '#faf7ff',
 
     // 品质颜色
     qualityCommon: '#7c674b',
-    qualityUnique: '#008280',
+    qualityUnique: '#007581',
     qualityMythic: '#d32a48',
     qualityLegendary: '#ad5719',
     qualityEpic: '#7948bb',
