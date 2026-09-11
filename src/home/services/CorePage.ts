@@ -42,8 +42,11 @@ export interface CoreOption {
   specialNote: string; // 特别推荐的note
 }
 
-// 核心条目匹配模式 - 匹配以"命定系统-"开头的条目
-const CORE_PATTERN = /^命定系统-/;
+// 核心条目匹配模式 - 匹配命定系统标签，排除分段控制条目
+const CORE_PATTERN = /\[命定系统\](?!➡️系统(?:开始|结束)$)/;
+
+// 去掉命定系统标签及其前置分类标签，保留核心名称
+const CORE_LABEL_PREFIX_PATTERN = /^.*\[命定系统\]/;
 
 // 提取作者信息的正则 - 匹配末尾括号内容
 const AUTHOR_PATTERN = /\(([^)]*)\)$/;
@@ -271,8 +274,8 @@ export function generateSpecialRecommendCores(
       break;
     }
 
-    // 去掉"命定系统-"前缀
-    const nameWithoutPrefix = coreValue.replace(/^命定系统-/, '');
+    // 去掉世界书命定系统前缀
+    const nameWithoutPrefix = coreValue.replace(CORE_LABEL_PREFIX_PATTERN, '');
     // 提取作者信息（括号内容）
     const authorMatch = nameWithoutPrefix.match(/\(([^)]*)\)$/);
     const author = authorMatch ? authorMatch[1] : '';
@@ -344,8 +347,8 @@ export async function loadCoreOptions(
   );
 
   const coreOptions = entries.map((entry: { name: string; enabled: boolean }) => {
-    // 去掉"命定系统-"前缀
-    const nameWithoutPrefix = entry.name.replace(CORE_PATTERN, '');
+    // 去掉世界书命定系统前缀
+    const nameWithoutPrefix = entry.name.replace(CORE_LABEL_PREFIX_PATTERN, '');
     // 提取作者信息（括号内容）
     const authorMatch = nameWithoutPrefix.match(AUTHOR_PATTERN);
     const author = authorMatch ? authorMatch[1] : '';
