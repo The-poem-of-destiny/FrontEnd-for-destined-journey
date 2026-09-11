@@ -1578,6 +1578,9 @@
       changes: [],
       dirty: new Set(),
       modalResolver: null,
+      // 记录每个折叠块（details）的展开状态，key 由 renderEditor 生成的路径决定。
+      // 编辑器每次改动都会整块重建，靠它把用户手动展开/收起的状态保留下来。
+      detailsOpen: new Map(),
     };
 
     const el = {};
@@ -2151,6 +2154,50 @@
       return Math.max(0, Math.min(insertIndex, maxIndexAfterRemove));
     }
 
+    // 编辑器每次改动都会整块重建。这里用一条“当前路径”给折叠块和字段生成稳定 key，
+    // 重建后据此还原展开状态、滚动位置和焦点，避免编辑时面板被收起、跳动或失焦。
+    let pathStack = ["root"];
+    const currentPath = () => pathStack.join("/");
+
+    function withPath(segment, fn) {
+      pathStack.push(String(segment));
+      try {
+        return fn();
+      } finally {
+        pathStack.pop();
+      }
+    }
+
+    // parent 传 null 时只创建不挂载（用于需要返回节点的场景）。
+    function makeDetails(parent, segment, summaryHtml, defaultOpen, bodyClassName, fill) {
+      const key = currentPath() + "/" + segment;
+      const details = document.createElement("details");
+      details.dataset.dkey = key;
+      details.open = state.detailsOpen.has(key) ? Boolean(state.detailsOpen.get(key)) : Boolean(defaultOpen);
+      details.innerHTML = "<summary>" + summaryHtml + "</summary>";
+      details.addEventListener("toggle", () => {
+        state.detailsOpen.set(key, details.open);
+      });
+      const body = document.createElement("div");
+      if (bodyClassName) body.className = bodyClassName;
+      details.appendChild(body);
+      if (parent) parent.appendChild(details);
+      if (fill) withPath(segment, () => fill(body, details));
+      return { details, body };
+    }
+
+    function restoreEditorFocus(fkey) {
+      let holder = null;
+      el.editorScroll.querySelectorAll("[data-fkey]").forEach(node => {
+        if (!holder && node.dataset.fkey === fkey) holder = node;
+      });
+      if (!holder) return;
+      const focusable = holder.matches("input, textarea, select")
+        ? holder
+        : holder.querySelector("input, textarea, select");
+      if (focusable) focusable.focus({ preventScroll: true });
+    }
+
     function renderEditor() {
       const current = getCurrent();
       if (!current) {
@@ -2168,6 +2215,14 @@
 
       const row = resolveRow(state.selected);
       const item = getItem(row);
+      // 重建前先记下焦点所在字段和滚动位置，重建后原样还原。
+      const active = document.activeElement;
+      const focusKey =
+        active && el.editorScroll.contains(active) && active.closest
+          ? active.closest("[data-fkey]") && active.closest("[data-fkey]").dataset.fkey
+          : null;
+      const scrollTop = el.editorScroll.scrollTop;
+      pathStack = [state.currentFile + "|" + (row.id || row.category + "#" + row.index)];
       el.editorTitle.textContent = getName(row) || "未命名条目";
       el.editorSubtitle.textContent = DATASETS[state.currentFile].label + " / " + row.category;
       const wrap = document.createElement("div");
@@ -2180,6 +2235,9 @@
 
       el.editorScroll.innerHTML = "";
       el.editorScroll.appendChild(wrap);
+      el.editorScroll.scrollTop = scrollTop;
+      // 焦点若随重建丢失（例如点到了空白处、或正要点的控件被替换掉），就还给原来的字段。
+      if (focusKey && !el.editorScroll.contains(document.activeElement)) restoreEditorFocus(focusKey);
     }
 
     function renderStandardEditor(wrap, row, item) {
@@ -2219,58 +2277,66 @@
         item[ASSET_CHILDREN_KEY] = {};
       }
       const children = item[ASSET_CHILDREN_KEY];
-      const details = document.createElement("details");
-      details.open = true;
-      details.innerHTML = "<summary>内部资产 (" + Object.keys(children).length + ")</summary>";
-      const body = document.createElement("div");
-      body.className = "detail-body nested-list";
-      Object.entries(children).forEach(([childName, child]) => {
-        if (!child || typeof child !== "object" || Array.isArray(child)) children[childName] = defaultAssetChild();
-        body.appendChild(assetChildCard(children, childName, children[childName]));
-      });
-      const add = document.createElement("button");
-      add.className = "small-btn";
-      add.textContent = "添加内部资产";
-      add.addEventListener("click", () => {
-        const name = prompt("内部资产名称", "新内部资产");
-        if (!name) return;
-        if (children[name]) return showToast("内部资产「" + name + "」已存在。");
-        updateSelected("添加内部资产 " + name, () => {
-          children[name] = defaultAssetChild();
-        });
-      });
-      body.appendChild(add);
-      details.appendChild(body);
-      parent.appendChild(details);
+      makeDetails(
+        parent,
+        "内部资产",
+        "内部资产 (" + Object.keys(children).length + ")",
+        true,
+        "detail-body nested-list",
+        body => {
+          const listPath = currentPath();
+          Object.entries(children).forEach(([childName, child]) => {
+            if (!child || typeof child !== "object" || Array.isArray(child)) children[childName] = defaultAssetChild();
+            body.appendChild(assetChildCard(children, childName, children[childName]));
+          });
+          const add = document.createElement("button");
+          add.className = "small-btn";
+          add.textContent = "添加内部资产";
+          add.addEventListener("click", () => {
+            const name = prompt("内部资产名称", "新内部资产");
+            if (!name) return;
+            if (children[name]) return showToast("内部资产「" + name + "」已存在。");
+            // 新增的卡片默认展开，方便立刻填写内容。
+            state.detailsOpen.set(listPath + "/child:" + name, true);
+            updateSelected("添加内部资产 " + name, () => {
+              children[name] = defaultAssetChild();
+            });
+          });
+          body.appendChild(add);
+        },
+      );
     }
 
     function assetChildCard(children, childName, child) {
-      const card = document.createElement("details");
-      card.open = false;
-      card.innerHTML = "<summary>" + escapeHtml(childName) + "</summary>";
-      const body = document.createElement("div");
-      body.className = "detail-body";
-      assetChildNameField(body, children, childName);
-      addSelectField(body, "品质", child, "品质", rarityOptions());
-      addNumberField(body, "数量", child, "数量", "默认 1");
-      addTagsField(body, "标签", child, "标签");
-      addKeyValueField(body, "效果", child, "效果");
-      addTextField(body, "总占用空间", child, "总占用空间", "例如 约60m²");
-      addTextareaField(body, "描述", child, "描述", "叙事描述或说明");
-      const remove = document.createElement("button");
-      remove.className = "small-btn danger";
-      remove.textContent = "删除此项";
-      remove.addEventListener("click", () => {
-        updateSelected("删除内部资产 " + childName, () => {
-          delete children[childName];
-        });
-      });
-      body.appendChild(remove);
-      card.appendChild(body);
+      const { details: card } = makeDetails(
+        null,
+        "child:" + childName,
+        escapeHtml(childName),
+        false,
+        "detail-body",
+        body => {
+          assetChildNameField(body, children, childName, currentPath());
+          addSelectField(body, "品质", child, "品质", rarityOptions());
+          addNumberField(body, "数量", child, "数量", "默认 1");
+          addTagsField(body, "标签", child, "标签");
+          addKeyValueField(body, "效果", child, "效果");
+          addTextField(body, "总占用空间", child, "总占用空间", "例如 约60m²");
+          addTextareaField(body, "描述", child, "描述", "叙事描述或说明");
+          const remove = document.createElement("button");
+          remove.className = "small-btn danger";
+          remove.textContent = "删除此项";
+          remove.addEventListener("click", () => {
+            updateSelected("删除内部资产 " + childName, () => {
+              delete children[childName];
+            });
+          });
+          body.appendChild(remove);
+        },
+      );
       return card;
     }
 
-    function assetChildNameField(parent, children, childName) {
+    function assetChildNameField(parent, children, childName, listPath) {
       const shell = fieldShell(parent, "名称", "导出时作为内部资产的键");
       const input = document.createElement("input");
       input.value = childName;
@@ -2279,6 +2345,11 @@
         if (!next || next === childName) {
           input.value = childName;
           return;
+        }
+        // 键名变了，展开状态要跟着搬到新 key 上，否则改名后卡片会自己收起来。
+        if (listPath) {
+          state.detailsOpen.set(listPath + "/child:" + next, true);
+          state.detailsOpen.delete(listPath + "/child:" + childName);
         }
         updateSelected("重命名内部资产 " + childName + " -> " + next, () => {
           const value = children[childName];
@@ -2337,7 +2408,7 @@
       const shell = fieldShell(parent, label, hint);
       const input = document.createElement("input");
       input.value = obj[key] ?? "";
-      input.addEventListener("change", () => commitDirect("修改 " + label, () => setCleanValue(obj, key, input.value)));
+      input.addEventListener("change", () => commitDirect("修改 " + label, () => setCleanValue(obj, key, input.value), { keepEditor: true }));
       shell.appendChild(input);
     }
 
@@ -2385,7 +2456,7 @@
         option.value = value;
         list.appendChild(option);
       });
-      input.addEventListener("change", () => commitDirect("修改 " + label, () => setCleanValue(obj, key, input.value)));
+      input.addEventListener("change", () => commitDirect("修改 " + label, () => setCleanValue(obj, key, input.value), { keepEditor: true }));
       shell.append(input, list);
     }
 
@@ -2396,10 +2467,14 @@
       input.value = obj[key] ?? "";
       input.addEventListener("change", () => {
         const value = input.value === "" ? undefined : Number(input.value);
-        commitDirect("修改 " + label, () => {
-          if (value === undefined) delete obj[key];
-          else obj[key] = value;
-        });
+        commitDirect(
+          "修改 " + label,
+          () => {
+            if (value === undefined) delete obj[key];
+            else obj[key] = value;
+          },
+          { keepEditor: true },
+        );
       });
       shell.appendChild(input);
     }
@@ -2408,7 +2483,7 @@
       const shell = fieldShell(parent, label, "");
       const select = document.createElement("select");
       setSelect(select, options, obj[key] ?? "");
-      select.addEventListener("change", () => commitDirect("修改 " + label, () => setCleanValue(obj, key, select.value)));
+      select.addEventListener("change", () => commitDirect("修改 " + label, () => setCleanValue(obj, key, select.value), { keepEditor: true }));
       shell.appendChild(select);
     }
 
@@ -2416,7 +2491,7 @@
       const shell = fieldShell(parent, label, hint);
       const textarea = document.createElement("textarea");
       textarea.value = obj[key] ?? "";
-      textarea.addEventListener("change", () => commitDirect("修改 " + label, () => setCleanValue(obj, key, textarea.value)));
+      textarea.addEventListener("change", () => commitDirect("修改 " + label, () => setCleanValue(obj, key, textarea.value), { keepEditor: true }));
       shell.appendChild(textarea);
     }
 
@@ -2554,207 +2629,185 @@
 
     function addKeyValueField(parent, label, obj, key) {
       if (!obj[key] || typeof obj[key] !== "object" || Array.isArray(obj[key])) obj[key] = {};
-      const details = document.createElement("details");
-      details.open = true;
-      details.innerHTML = "<summary>" + escapeHtml(label) + "</summary>";
-      const body = document.createElement("div");
-      body.className = "detail-body kv-list";
-      const entries = Object.entries(obj[key]);
-      if (entries.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "hint";
-        empty.textContent = "暂无效果，点击下方按钮添加。";
-        body.appendChild(empty);
-      }
-      entries.forEach(([effectName, effectText]) => {
-        body.appendChild(kvRow(effectName, effectText, (nextKey, nextValue) => {
-          commitDirect("修改 " + label, () => {
-            const record = obj[key] || {};
-            if (nextKey !== effectName) delete record[effectName];
-            if (nextKey) record[nextKey] = nextValue;
-            obj[key] = record;
-          });
-        }, () => {
-          commitDirect("删除 " + effectName, () => {
-            if (obj[key]) delete obj[key][effectName];
-          });
-        }));
-      });
-      const add = document.createElement("button");
-      add.className = "small-btn";
-      add.textContent = "添加效果";
-      add.addEventListener("click", () => {
-        const name = prompt("效果名称", "新效果");
-        if (!name) return;
-        commitDirect("添加效果 " + name, () => {
-          if (!obj[key] || typeof obj[key] !== "object" || Array.isArray(obj[key])) obj[key] = {};
-          obj[key][name] = "";
+      makeDetails(parent, "kv:" + key, escapeHtml(label), true, "detail-body kv-list", body => {
+        const entries = Object.entries(obj[key]);
+        if (entries.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "hint";
+          empty.textContent = "暂无效果，点击下方按钮添加。";
+          body.appendChild(empty);
+        }
+        entries.forEach(([effectName, effectText]) => {
+          body.appendChild(kvRow(effectName, effectText, (nextKey, nextValue) => {
+            commitDirect("修改 " + label, () => {
+              const record = obj[key] || {};
+              if (nextKey !== effectName) delete record[effectName];
+              if (nextKey) record[nextKey] = nextValue;
+              obj[key] = record;
+            });
+          }, () => {
+            commitDirect("删除 " + effectName, () => {
+              if (obj[key]) delete obj[key][effectName];
+            });
+          }));
         });
+        const add = document.createElement("button");
+        add.className = "small-btn";
+        add.textContent = "添加效果";
+        add.addEventListener("click", () => {
+          const name = prompt("效果名称", "新效果");
+          if (!name) return;
+          commitDirect("添加效果 " + name, () => {
+            if (!obj[key] || typeof obj[key] !== "object" || Array.isArray(obj[key])) obj[key] = {};
+            obj[key][name] = "";
+          });
+        });
+        body.appendChild(add);
       });
-      body.appendChild(add);
-      details.appendChild(body);
-      parent.appendChild(details);
     }
 
     function addAttributesField(parent, item) {
       if (!item.attributes || typeof item.attributes !== "object") {
         item.attributes = {};
       }
-      const details = document.createElement("details");
-      details.open = true;
-      details.innerHTML = "<summary>属性</summary>";
-      const body = document.createElement("div");
-      body.className = "detail-body inline-grid";
-      ["strength", "dexterity", "constitution", "intelligence", "mind"].forEach(key => {
-        addNumberField(body, ATTRIBUTE_LABELS[key] || key, item.attributes, key, "数字");
+      makeDetails(parent, "attributes", "属性", true, "detail-body inline-grid", body => {
+        ["strength", "dexterity", "constitution", "intelligence", "mind"].forEach(key => {
+          addNumberField(body, ATTRIBUTE_LABELS[key] || key, item.attributes, key, "数字");
+        });
       });
-      details.appendChild(body);
-      parent.appendChild(details);
     }
 
     function addStairwayField(parent, item) {
       if (!item.stairway || typeof item.stairway !== "object") item.stairway = { isOpen: false };
-      const details = document.createElement("details");
-      details.open = false;
-      details.innerHTML = "<summary>登神长阶</summary>";
-      const body = document.createElement("div");
-      body.className = "detail-body";
-      const openShell = fieldShell(body, "是否开启", "");
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = Boolean(item.stairway.isOpen);
-      checkbox.addEventListener("change", () => updateSelected("修改登神长阶开关", target => {
-        if (!target.stairway || typeof target.stairway !== "object") target.stairway = {};
-        target.stairway.isOpen = checkbox.checked;
-      }));
-      openShell.appendChild(checkbox);
-      addNestedRecord(body, item.stairway, "elements", "要素");
-      addNestedRecord(body, item.stairway, "powers", "权能");
-      addNestedRecord(body, item.stairway, "laws", "法则");
-      addTextField(body, "神位", item.stairway, "godlyRank", "");
-      if (!item.stairway.godKingdom || typeof item.stairway.godKingdom !== "object") item.stairway.godKingdom = {};
-      const kingdom = document.createElement("details");
-      kingdom.open = false;
-      kingdom.innerHTML = "<summary>神国</summary>";
-      const kingdomBody = document.createElement("div");
-      kingdomBody.className = "detail-body";
-      addTextField(kingdomBody, "名称", item.stairway.godKingdom, "name", "");
-      addTextareaField(kingdomBody, "描述", item.stairway.godKingdom, "description", "");
-      kingdom.appendChild(kingdomBody);
-      body.appendChild(kingdom);
-      details.appendChild(body);
-      parent.appendChild(details);
+      makeDetails(parent, "stairway", "登神长阶", false, "detail-body", body => {
+        const openShell = fieldShell(body, "是否开启", "");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = Boolean(item.stairway.isOpen);
+        checkbox.addEventListener("change", () => updateSelected("修改登神长阶开关", target => {
+          if (!target.stairway || typeof target.stairway !== "object") target.stairway = {};
+          target.stairway.isOpen = checkbox.checked;
+        }));
+        openShell.appendChild(checkbox);
+        addNestedRecord(body, item.stairway, "elements", "要素");
+        addNestedRecord(body, item.stairway, "powers", "权能");
+        addNestedRecord(body, item.stairway, "laws", "法则");
+        addTextField(body, "神位", item.stairway, "godlyRank", "");
+        if (!item.stairway.godKingdom || typeof item.stairway.godKingdom !== "object") item.stairway.godKingdom = {};
+        makeDetails(body, "godKingdom", "神国", false, "detail-body", kingdomBody => {
+          addTextField(kingdomBody, "名称", item.stairway.godKingdom, "name", "");
+          addTextareaField(kingdomBody, "描述", item.stairway.godKingdom, "description", "");
+        });
+      });
     }
 
     function addNestedRecord(parent, owner, key, label) {
       if (!owner[key] || typeof owner[key] !== "object" || Array.isArray(owner[key])) owner[key] = {};
-      const details = document.createElement("details");
-      details.open = false;
-      details.innerHTML = "<summary>" + escapeHtml(label) + "</summary>";
-      const body = document.createElement("div");
-      body.className = "detail-body nested-list";
-      Object.entries(owner[key]).forEach(([groupName, record]) => {
-        const group = document.createElement("details");
-        group.open = false;
-        group.innerHTML = "<summary>" + escapeHtml(groupName) + "</summary>";
-        const groupBody = document.createElement("div");
-        groupBody.className = "detail-body kv-list";
-        Object.entries(record || {}).forEach(([effectName, effectText]) => {
-          groupBody.appendChild(kvRow(effectName, effectText, (nextKey, nextValue) => {
-            updateSelected("修改 " + label, target => {
-              const stairway = target.stairway || {};
-              const root = stairway[key] || {};
-              const inner = root[groupName] || {};
-              if (nextKey !== effectName) delete inner[effectName];
-              if (nextKey) inner[nextKey] = nextValue;
-              root[groupName] = inner;
-              stairway[key] = root;
-              target.stairway = stairway;
+      makeDetails(parent, "nr:" + key, escapeHtml(label), false, "detail-body nested-list", body => {
+        Object.entries(owner[key]).forEach(([groupName, record]) => {
+          makeDetails(body, "g:" + groupName, escapeHtml(groupName), false, "detail-body kv-list", groupBody => {
+            Object.entries(record || {}).forEach(([effectName, effectText]) => {
+              groupBody.appendChild(kvRow(effectName, effectText, (nextKey, nextValue) => {
+                updateSelected("修改 " + label, target => {
+                  const stairway = target.stairway || {};
+                  const root = stairway[key] || {};
+                  const inner = root[groupName] || {};
+                  if (nextKey !== effectName) delete inner[effectName];
+                  if (nextKey) inner[nextKey] = nextValue;
+                  root[groupName] = inner;
+                  stairway[key] = root;
+                  target.stairway = stairway;
+                });
+              }, () => {
+                updateSelected("删除 " + effectName, target => {
+                  target.stairway?.[key]?.[groupName] && delete target.stairway[key][groupName][effectName];
+                });
+              }));
             });
-          }, () => {
-            updateSelected("删除 " + effectName, target => {
-              target.stairway?.[key]?.[groupName] && delete target.stairway[key][groupName][effectName];
+            const addEffect = document.createElement("button");
+            addEffect.className = "small-btn";
+            addEffect.textContent = "添加内部效果";
+            addEffect.addEventListener("click", () => {
+              const name = prompt("效果名称", "新效果");
+              if (!name) return;
+              updateSelected("添加 " + name, target => {
+                target.stairway ??= {};
+                target.stairway[key] ??= {};
+                target.stairway[key][groupName] ??= {};
+                target.stairway[key][groupName][name] = "";
+              });
             });
-          }));
-        });
-        const addEffect = document.createElement("button");
-        addEffect.className = "small-btn";
-        addEffect.textContent = "添加内部效果";
-        addEffect.addEventListener("click", () => {
-          const name = prompt("效果名称", "新效果");
-          if (!name) return;
-          updateSelected("添加 " + name, target => {
-            target.stairway ??= {};
-            target.stairway[key] ??= {};
-            target.stairway[key][groupName] ??= {};
-            target.stairway[key][groupName][name] = "";
+            groupBody.appendChild(addEffect);
           });
         });
-        groupBody.appendChild(addEffect);
-        group.appendChild(groupBody);
-        body.appendChild(group);
-      });
-      const addGroup = document.createElement("button");
-      addGroup.className = "small-btn";
-      addGroup.textContent = "添加分组";
-      addGroup.addEventListener("click", () => {
-        const name = prompt("分组名称", "新分组");
-        if (!name) return;
-        updateSelected("添加 " + label + " 分组", target => {
-          target.stairway ??= {};
-          target.stairway[key] ??= {};
-          target.stairway[key][name] = {};
+        const addGroup = document.createElement("button");
+        addGroup.className = "small-btn";
+        addGroup.textContent = "添加分组";
+        addGroup.addEventListener("click", () => {
+          const name = prompt("分组名称", "新分组");
+          if (!name) return;
+          updateSelected("添加 " + label + " 分组", target => {
+            target.stairway ??= {};
+            target.stairway[key] ??= {};
+            target.stairway[key][name] = {};
+          });
         });
+        body.appendChild(addGroup);
       });
-      body.appendChild(addGroup);
-      details.appendChild(body);
-      parent.appendChild(details);
     }
 
     function addNestedItemArray(parent, label, owner, key, mode) {
       if (!Array.isArray(owner[key])) owner[key] = [];
-      const details = document.createElement("details");
-      details.open = false;
-      details.innerHTML = "<summary>" + escapeHtml(label) + " (" + owner[key].length + ")</summary>";
-      const body = document.createElement("div");
-      body.className = "detail-body nested-list";
-      owner[key].forEach((item, index) => {
-        const card = document.createElement("details");
-        card.open = false;
-        card.innerHTML = "<summary>" + escapeHtml(item.name || "未命名") + "</summary>";
-        const cardBody = document.createElement("div");
-        cardBody.className = "detail-body";
-        addTextField(cardBody, "名称", item, "name", "");
-        addTextField(cardBody, "类型", item, "type", "");
-        addSelectField(cardBody, "品质", item, "rarity", rarityOptions());
-        if (mode === "skill") addTextField(cardBody, "消耗", item, "consume", "");
-        addTagsField(cardBody, "标签", item, "tag");
-        addKeyValueField(cardBody, "效果", item, "effect");
-        addTextareaField(cardBody, "描述", item, "description", "");
-        const remove = document.createElement("button");
-        remove.className = "small-btn danger";
-        remove.textContent = "删除此项";
-        remove.addEventListener("click", () => {
-          updateSelected("删除嵌套项", target => {
-            if (Array.isArray(target[key])) target[key].splice(index, 1);
+      makeDetails(
+        parent,
+        "narr:" + key,
+        escapeHtml(label) + " (" + owner[key].length + ")",
+        false,
+        "detail-body nested-list",
+        body => {
+          const listPath = currentPath();
+          owner[key].forEach((item, index) => {
+            makeDetails(body, "i:" + index, escapeHtml(item.name || "未命名"), false, "detail-body", (cardBody, card) => {
+              const nameShell = fieldShell(cardBody, "名称", "");
+              const nameInput = document.createElement("input");
+              nameInput.value = item.name ?? "";
+              nameInput.addEventListener("change", () => {
+                commitDirect("修改 名称", () => setCleanValue(item, "name", nameInput.value), { keepEditor: true });
+                const summary = card.querySelector("summary");
+                if (summary) summary.textContent = nameInput.value.trim() || "未命名";
+              });
+              nameShell.appendChild(nameInput);
+              addTextField(cardBody, "类型", item, "type", "");
+              addSelectField(cardBody, "品质", item, "rarity", rarityOptions());
+              if (mode === "skill") addTextField(cardBody, "消耗", item, "consume", "");
+              addTagsField(cardBody, "标签", item, "tag");
+              addKeyValueField(cardBody, "效果", item, "effect");
+              addTextareaField(cardBody, "描述", item, "description", "");
+              const remove = document.createElement("button");
+              remove.className = "small-btn danger";
+              remove.textContent = "删除此项";
+              remove.addEventListener("click", () => {
+                updateSelected("删除嵌套项", target => {
+                  if (Array.isArray(target[key])) target[key].splice(index, 1);
+                });
+              });
+              cardBody.appendChild(remove);
+            });
           });
-        });
-        cardBody.appendChild(remove);
-        card.appendChild(cardBody);
-        body.appendChild(card);
-      });
-      const add = document.createElement("button");
-      add.className = "small-btn";
-      add.textContent = "添加";
-      add.addEventListener("click", () => {
-        updateSelected("添加嵌套项", target => {
-          if (!Array.isArray(target[key])) target[key] = [];
-          target[key].push(defaultNested(mode));
-        });
-      });
-      body.appendChild(add);
-      details.appendChild(body);
-      parent.appendChild(details);
+          const add = document.createElement("button");
+          add.className = "small-btn";
+          add.textContent = "添加";
+          add.addEventListener("click", () => {
+            const nextIndex = Array.isArray(owner[key]) ? owner[key].length : 0;
+            state.detailsOpen.set(listPath + "/i:" + nextIndex, true);
+            updateSelected("添加嵌套项", target => {
+              if (!Array.isArray(target[key])) target[key] = [];
+              target[key].push(defaultNested(mode));
+            });
+          });
+          body.appendChild(add);
+        },
+      );
     }
 
     function kvRow(effectName, effectText, onSave, onDelete) {
@@ -2764,6 +2817,9 @@
       keyInput.value = effectName;
       const valueInput = document.createElement("textarea");
       valueInput.value = typeof effectText === "string" ? effectText : JSON.stringify(effectText, null, 2);
+      const rowKey = currentPath() + "/kv:" + effectName;
+      keyInput.dataset.fkey = rowKey + "#key";
+      valueInput.dataset.fkey = rowKey + "#value";
       const save = () => onSave(keyInput.value.trim(), valueInput.value);
       keyInput.addEventListener("change", save);
       valueInput.addEventListener("change", save);
@@ -2778,6 +2834,7 @@
     function fieldShell(parent, label, hint) {
       const field = document.createElement("div");
       field.className = "field";
+      field.dataset.fkey = currentPath() + "/f:" + label;
       const labelNode = document.createElement("label");
       labelNode.innerHTML = "<span>" + escapeHtml(label) + "</span>" + (hint ? "<span class=\"hint\">" + escapeHtml(hint) + "</span>" : "");
       field.appendChild(labelNode);
@@ -2816,9 +2873,25 @@
       setStatus(label);
     }
 
-    function commitDirect(label, fn) {
+    // keepEditor: 只改值的编辑（文本、数字、下拉）不重建右侧表单。
+    // 重建会收起用户展开的折叠块、丢失焦点和滚动位置，所以这类改动只刷新表格和标题。
+    function commitDirect(label, fn, options = {}) {
       commit(label, fn);
+      if (options.keepEditor) {
+        renderFilters();
+        renderTable();
+        updateButtons();
+        refreshEditorHead();
+        return;
+      }
       render();
+    }
+
+    function refreshEditorHead() {
+      const row = state.selected ? resolveRow(state.selected) : null;
+      if (!row) return;
+      el.editorTitle.textContent = getName(row) || "未命名条目";
+      el.editorSubtitle.textContent = DATASETS[state.currentFile].label + " / " + row.category;
     }
 
     function snapshot() {
