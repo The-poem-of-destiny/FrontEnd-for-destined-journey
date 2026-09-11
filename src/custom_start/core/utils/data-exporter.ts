@@ -220,13 +220,13 @@ const toAscensionVariable = (stairway?: Partner['stairway']) => ({
   神位: stairway?.godlyRank ?? '',
   神国: stairway?.godKingdom
     ? {
-      名称: stairway.godKingdom.name || '',
-      描述: stairway.godKingdom.description || '',
-    }
+        名称: stairway.godKingdom.name || '',
+        描述: stairway.godKingdom.description || '',
+      }
     : {
-      名称: '',
-      描述: '',
-    },
+        名称: '',
+        描述: '',
+      },
 });
 
 const toPartnerVariable = (partner: Partner) => ({
@@ -336,10 +336,10 @@ export function generateAIPrompt(
   const deferredPartners = deferredCustomContent.partners || [];
   const hasDeferredContent =
     deferredEquipments.length +
-    deferredItems.length +
-    deferredAssets.length +
-    deferredSkills.length +
-    deferredPartners.length >
+      deferredItems.length +
+      deferredAssets.length +
+      deferredSkills.length +
+      deferredPartners.length >
     0;
   const displayGender = character.gender === '自定义' ? character.customGender : character.gender;
   const displayLocation =
@@ -369,9 +369,7 @@ export function generateAIPrompt(
   lines.push('- 世界.时间');
   lines.push('- 世界.地点');
   lines.push('- 主角.装备.*.位置');
-  lines.push(
-    '- 资源（HP/MP/SP）额外上限: 上限.额外 记录装备/状态/临时增益',
-  );
+  lines.push('- 资源（HP/MP/SP）额外上限: 上限.额外 记录装备/状态/临时增益');
 
   if (hasDeferredContent) {
     lines.push('');
