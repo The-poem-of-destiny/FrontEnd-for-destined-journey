@@ -50,7 +50,7 @@ const ParchmentTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#e4d1b0',
-    qualityUnique: '#5ac5af',
+    qualityUnique: '#ff0000',
     qualityMythic: '#f2464a',
     qualityLegendary: '#f4b330',
     qualityEpic: '#be80f4',
@@ -133,7 +133,7 @@ const CrimsonTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#e6d1b0',
-    qualityUnique: '#60c5a9',
+    qualityUnique: '#ff0000',
     qualityMythic: '#f24552',
     qualityLegendary: '#f8b134',
     qualityEpic: '#bb81f6',
@@ -216,7 +216,7 @@ const IndigoTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#ebceb2',
-    qualityUnique: '#4ec4c4',
+    qualityUnique: '#ff0000',
     qualityMythic: '#f0436e',
     qualityLegendary: '#ffab52',
     qualityEpic: '#ad86ff',
@@ -299,7 +299,7 @@ const BronzeTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#e2d3b0',
-    qualityUnique: '#55c5b6',
+    qualityUnique: '#ff0000',
     qualityMythic: '#f2483a',
     qualityLegendary: '#eeb72d',
     qualityEpic: '#9d8eff',
@@ -382,7 +382,7 @@ const SakuraTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#e7d0b1',
-    qualityUnique: '#4ec4ca',
+    qualityUnique: '#ff0000',
     qualityMythic: '#f24457',
     qualityLegendary: '#faaf36',
     qualityEpic: '#b882f8',
@@ -465,7 +465,7 @@ const ObsidianTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#e8d0b1',
-    qualityUnique: '#4fc5c1',
+    qualityUnique: '#ff0000',
     qualityMythic: '#f14362',
     qualityLegendary: '#fdae39',
     qualityEpic: '#af85fe',
@@ -548,7 +548,7 @@ const IvoryTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#776748',
-    qualityUnique: '#0d7278',
+    qualityUnique: '#ff0000',
     qualityMythic: '#d12a2b',
     qualityLegendary: '#a65a00',
     qualityEpic: '#833fae',
@@ -631,7 +631,7 @@ const MistyLilacTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#7c674b',
-    qualityUnique: '#007581',
+    qualityUnique: '#ff0000',
     qualityMythic: '#d32a48',
     qualityLegendary: '#ad5719',
     qualityEpic: '#7948bb',

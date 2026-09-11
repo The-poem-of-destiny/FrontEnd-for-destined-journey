@@ -142,11 +142,37 @@ const appendDeferredAssets = (lines: string[], assets: Asset[], playerName = '')
   if (assets.length === 0) return;
 
   lines.push('【待生成资产】');
-  assets.forEach((asset, index) => {
-    lines.push(`${index + 1}. ${asset.name}`);
-    lines.push(`- 写入路径: 主角.资产.${asset.name}`);
-    lines.push('- 资产 schema 数据:');
-    lines.push(JSON.stringify(toAssetVariable(asset, playerName), null, 2));
+  assets.forEach((source, index) => {
+    const asset = toAssetVariable(source, playerName);
+    const internalAssets = Object.entries(asset.内部资产);
+
+    lines.push(`${index + 1}. ${source.name}`);
+    lines.push(`- 写入路径: 主角.资产.${source.name}`);
+    lines.push(`- 类型: ${asset.类型 || '由 AI 根据描述确定'}`);
+    lines.push(`- 品质: ${asset.品质}`);
+    lines.push(`- 标签: ${asset.标签.join('、') || '无'}`);
+    lines.push(`- 总空间: ${asset.总空间 || '无'}`);
+    lines.push(`- 结算: ${asset.结算 || '无'}`);
+    lines.push(`- 位置: ${asset.位置 || '由 AI 根据描述确定'}`);
+    if (typeof asset._隐藏 === 'boolean') {
+      lines.push(`- _隐藏: ${asset._隐藏 ? '是' : '否'}`);
+    }
+
+    if (internalAssets.length === 0) {
+      lines.push('- 内部资产: 无');
+    } else {
+      lines.push('- 内部资产:');
+      internalAssets.forEach(([name, internal]) => {
+        lines.push(`  - ${name}`);
+        lines.push(`    - 品质: ${internal.品质}`);
+        lines.push(`    - 标签: ${internal.标签.join('、') || '无'}`);
+        lines.push(`    - 数量: ${internal.数量}`);
+        lines.push(`    - 总占用空间: ${internal.总占用空间 || '无'}`);
+        lines.push(`    - 效果: ${formatEffect(internal.效果)}`);
+        lines.push(`    - 描述: ${internal.描述 || '无'}`);
+      });
+    }
+    lines.push(`- 描述: ${asset.描述 || '无'}`);
   });
   lines.push('');
 };
@@ -359,9 +385,9 @@ export function generateAIPrompt(
   );
   lines.push('');
   lines.push(`姓名: ${character.name || '未命名'}`);
+  lines.push(`身份: ${displayIdentity || '未设置'}`);
   lines.push(`性别: ${displayGender || '未设置'}`);
   lines.push(`年龄: ${character.age}岁`);
-  lines.push(`身份: ${displayIdentity || '未设置'}`);
   lines.push(`起始地点: ${displayLocation || '未设置'}`);
   lines.push('');
   lines.push('【第一轮变量更新要求】');

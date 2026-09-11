@@ -4,7 +4,7 @@ import type { Rarity } from '../types';
 /**
  * 品质/稀有度选项配置
  */
-// 品质颜色对齐主 theme 的「米黄羊皮纸」(ivory) 预设
+// 品质颜色以主 theme 的「米黄羊皮纸」(ivory) 预设
 export const RARITY_OPTIONS: { value: Rarity; label: string; color: string }[] = [
   { value: 'common', label: '普通', color: '#776748' },
   { value: 'uncommon', label: '优良', color: '#206d35' },
@@ -12,7 +12,7 @@ export const RARITY_OPTIONS: { value: Rarity; label: string; color: string }[] =
   { value: 'epic', label: '史诗', color: '#833fae' },
   { value: 'legendary', label: '传说', color: '#a65a00' },
   { value: 'mythic', label: '神话', color: '#d12a2b' },
-  { value: 'only', label: '唯一', color: '#15806e' },
+  { value: 'only', label: '唯一', color: '#ff0000' },
 ];
 
 /**
