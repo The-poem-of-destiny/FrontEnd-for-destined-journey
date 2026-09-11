@@ -213,6 +213,7 @@ watch(
         v-show="isCustomBackground(item) && isSelected(item)"
         class="custom-input-area"
         @click.stop
+        @keydown.stop
       >
         <div class="custom-input-label">请编写您的自定义开局剧情：</div>
         <FormTextarea
