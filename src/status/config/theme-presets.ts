@@ -548,12 +548,12 @@ const IvoryTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#776748',
-    qualityUnique: '#0d7278',
+    qualityUnique: '#0a8f92',
     qualityMythic: '#d12a2b',
     qualityLegendary: '#a65a00',
     qualityEpic: '#833fae',
     qualityRare: '#4a5ba0',
-    qualityUncommon: '#206d35',
+    qualityUncommon: '#288843',
 
     // 交互状态
     primaryBg: '#b58a4a',
@@ -631,12 +631,12 @@ const MistyLilacTheme: Theme = {
 
     // 品质颜色
     qualityCommon: '#7c674b',
-    qualityUnique: '#007581',
+    qualityUnique: '#0a8f9c',
     qualityMythic: '#d32a48',
     qualityLegendary: '#ad5719',
     qualityEpic: '#7948bb',
     qualityRare: '#3d61a1',
-    qualityUncommon: '#00704e',
+    qualityUncommon: '#087a3a',
 
     // 交互状态
     primaryBg: '#7A5CB3',
