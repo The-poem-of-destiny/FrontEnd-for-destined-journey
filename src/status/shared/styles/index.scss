@@ -3,6 +3,7 @@
 
 // 默认主题CSS变量（现代深色 RPG 面板）
 // 这些变量会在JS加载后被 themeStore.applyCssVariables() 覆盖
+// TODO 当前默认值不匹配 theme 颜色方案
 :root {
   // 窗口容器
   --theme-window-bg: #15171c;
@@ -42,7 +43,7 @@
 
   // 品质颜色
   --theme-quality-common: #e2e8f0;
-  --theme-quality-unique: #ff0000;
+  --theme-quality-unique: #f09f4d;
   --theme-quality-mythic: #e4587d;
   --theme-quality-legendary: #e5c166;
   --theme-quality-epic: #9a72f8;

@@ -12,7 +12,7 @@ export const RARITY_OPTIONS: { value: Rarity; label: string; color: string }[] =
   { value: 'epic', label: '史诗', color: '#833fae' },
   { value: 'legendary', label: '传说', color: '#a65a00' },
   { value: 'mythic', label: '神话', color: '#d12a2b' },
-  { value: 'only', label: '唯一', color: '#ff0000' },
+  { value: 'only', label: '唯一', color: '#0d7278' },
 ];
 
 /**
