@@ -37,9 +37,7 @@ export async function saveOutputSelection(selectedValue: string): Promise<void> 
   const escapedNames = Array.from(desiredStates.keys()).map(name =>
     name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
   );
-  const matchingEntries = await getFilteredEntries(
-    new RegExp(`^(?:${escapedNames.join('|')})$`),
-  );
+  const matchingEntries = await getFilteredEntries(new RegExp(`^(?:${escapedNames.join('|')})$`));
 
   if (matchingEntries.length === 0) {
     console.error('未找到变量输出方式条目');

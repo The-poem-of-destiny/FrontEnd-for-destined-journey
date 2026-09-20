@@ -1,4 +1,8 @@
-import { getActiveWorldBookNames, getFilteredEntries, updateWorldBooks } from './worldbookload&update';
+import {
+  getActiveWorldBookNames,
+  getFilteredEntries,
+  updateWorldBooks,
+} from './worldbookload&update';
 
 // ========================
 // 统一 DLC 类型定义

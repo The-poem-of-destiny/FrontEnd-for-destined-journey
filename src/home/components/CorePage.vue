@@ -292,10 +292,7 @@ async function handleNext() {
   isSaving.value = true;
   try {
     if (bookNames.value.length > 0) {
-      coreOptions.value = await saveChangesService(
-        coreOptions.value,
-        localCoreSelections.value,
-      );
+      coreOptions.value = await saveChangesService(coreOptions.value, localCoreSelections.value);
     }
   } catch (error) {
     console.error('保存核心选择失败:', error);

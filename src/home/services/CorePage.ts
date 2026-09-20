@@ -1,6 +1,10 @@
 import JSON5 from 'json5';
 
-import { getActiveWorldBookNames, getFilteredEntries, updateWorldBooks } from './worldbookload&update';
+import {
+  getActiveWorldBookNames,
+  getFilteredEntries,
+  updateWorldBooks,
+} from './worldbookload&update';
 
 // 未分类的默认tab名称
 export const UNCATEGORIZED_TAB = '这是什么杯';

@@ -221,10 +221,7 @@ async function handleNext() {
   isSaving.value = true;
   try {
     if (bookNames.value.length > 0) {
-      const updatedOptions = await saveDLCChangesService(
-        dlcOptions.value,
-        localSelections.value,
-      );
+      const updatedOptions = await saveDLCChangesService(dlcOptions.value, localSelections.value);
       dlcOptions.value = updatedOptions;
     }
   } catch (error) {
