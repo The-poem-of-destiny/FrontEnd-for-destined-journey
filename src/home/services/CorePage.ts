@@ -347,7 +347,7 @@ export async function loadCoreOptions(
     specialRecommendCoreList.filter(core => core.available).map(core => core.value),
   );
 
-  const coreOptions = entries.map((entry: { name: string; enabled: boolean }) => {
+  const coreOptions = entries.map(entry => {
     // 去掉世界书命定系统前缀
     const nameWithoutPrefix = entry.name.replace(CORE_LABEL_PREFIX_PATTERN, '');
     // 提取作者信息（括号内容）
