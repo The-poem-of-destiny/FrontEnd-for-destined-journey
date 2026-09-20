@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - main
+      - hotfix/home-ignore-ws-tag
     paths-ignore:
       - dist/**
   workflow_dispatch:
@@ -18,7 +19,7 @@ concurrency:
 
 jobs:
   bundle:
-    if: github.repository == 'The-poem-of-destiny/FrontEnd-for-destined-journey'
+    if: github.repository == 'The-poem-of-destiny/FrontEnd-for-destined-journey' || github.repository == 'uikawinwing/FrontEnd-for-destined-journey'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
