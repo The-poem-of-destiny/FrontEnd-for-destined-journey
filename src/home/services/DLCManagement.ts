@@ -91,13 +91,18 @@ export function sortDLCOptions(options: DLCOption[]): DLCOption[] {
 // 解析函数
 // ========================
 
+/** Remove standalone [WS] marker for DLC parsing only. Original entry names are preserved for writes. */
+function normalizeDLCEntryName(entryName: string): string {
+  return entryName.replace(/\[WS\]/g, '');
+}
+
 /**
  * 从条目名称中提取分组 Key
  * @param entryName 如 "薇薇拉-本体[DLC][角色][薇薇拉](Author)"
  * @returns 如 "[DLC][角色][薇薇拉]"，不匹配则返回 null
  */
 function extractDLCKey(entryName: string): string | null {
-  const match = entryName.match(DLC_KEY_PATTERN);
+  const match = normalizeDLCEntryName(entryName).match(DLC_KEY_PATTERN);
   return match ? match[1] : null;
 }
 
@@ -107,7 +112,7 @@ function extractDLCKey(entryName: string): string | null {
  * @returns 如 "角色"，不匹配则返回 null
  */
 function extractDLCCategory(entryName: string): DLCCategory | null {
-  const match = entryName.match(DLC_CATEGORY_PATTERN);
+  const match = normalizeDLCEntryName(entryName).match(DLC_CATEGORY_PATTERN);
   return match ? (match[1] as DLCCategory) : null;
 }
 
