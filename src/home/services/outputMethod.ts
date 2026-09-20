@@ -1,6 +1,6 @@
 // ==================== 变量输出方式相关 ====================
 
-import { getWorldBookName, updateWorldBook } from '@/home/services/worldbookload&update';
+import { getFilteredEntries, updateWorldBooks } from '@/home/services/worldbookload&update';
 
 // 固定的条目名称
 const OUTPUT_ENTRY_MAIN_API = 'output_format (随AI输出开，主API)';
@@ -28,19 +28,29 @@ export const OUTPUT_OPTIONS = [
  * @param selectedValue 选中的输出方式值（'主API' 或 '额外API'）
  */
 export async function saveOutputSelection(selectedValue: string): Promise<void> {
-  const bookName = getWorldBookName();
-  if (!bookName) {
-    console.error('未找到世界书');
+  const desiredStates = new Map(
+    OUTPUT_OPTIONS.flatMap(opt =>
+      opt.entryNames.map(name => [name, opt.value === selectedValue] as const),
+    ),
+  );
+
+  const escapedNames = Array.from(desiredStates.keys()).map(name =>
+    name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+  );
+  const matchingEntries = await getFilteredEntries(
+    new RegExp(`^(?:${escapedNames.join('|')})$`),
+  );
+
+  if (matchingEntries.length === 0) {
+    console.error('未找到变量输出方式条目');
     return;
   }
 
-  // 根据选择构建更新条目；选中的输出方式会启用其对应的全部条目
-  const updatedEntries = OUTPUT_OPTIONS.flatMap(opt =>
-    opt.entryNames.map(name => ({
-      name,
-      enabled: opt.value === selectedValue,
+  await updateWorldBooks(
+    matchingEntries.map(entry => ({
+      name: entry.name,
+      enabled: desiredStates.get(entry.name) ?? entry.enabled,
+      bookName: entry.bookName,
     })),
   );
-
-  await updateWorldBook(updatedEntries, bookName);
 }
