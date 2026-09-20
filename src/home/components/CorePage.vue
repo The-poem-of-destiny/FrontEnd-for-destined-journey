@@ -178,7 +178,7 @@ const tabs = ref<string[]>([...initialCoreState.tabs]);
 const activeTab = ref<string>(initialCoreState.activeTab);
 const coreOptions = ref<CoreOption[]>([...initialCoreState.coreOptions]);
 const localCoreSelections = ref(new Map(initialCoreState.localCoreSelections));
-const bookName = ref<string | null>(null);
+const bookNames = ref<string[]>([]);
 const specialRecommendCoreList = ref<SpecialRecommendCore[]>([]);
 
 // 选中查看详情的核心
@@ -263,14 +263,14 @@ async function loadCoreOptions() {
     coreOptions.value = result.coreOptions;
     localCoreSelections.value = result.localCoreSelections;
     activeTab.value = result.activeTab;
-    bookName.value = result.bookName;
+    bookNames.value = result.bookNames;
     specialRecommendCoreList.value = result.specialRecommendCoreList;
   } catch (error) {
     console.error('加载核心列表失败:', error);
     tabs.value = [];
     coreOptions.value = [];
     localCoreSelections.value = new Map();
-    bookName.value = null;
+    bookNames.value = [];
     specialRecommendCoreList.value = [];
   } finally {
     isLoading.value = false;
@@ -291,11 +291,10 @@ function handleSelectCore(coreValue: string) {
 async function handleNext() {
   isSaving.value = true;
   try {
-    if (bookName.value) {
+    if (bookNames.value.length > 0) {
       coreOptions.value = await saveChangesService(
         coreOptions.value,
         localCoreSelections.value,
-        bookName.value,
       );
     }
   } catch (error) {
