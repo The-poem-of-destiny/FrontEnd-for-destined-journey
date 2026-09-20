@@ -6,22 +6,17 @@ export interface WorldbookEntryRef {
 
 /**
  * 获取 Home 当前应该读取的所有世界书来源。
- * 顺序：角色主世界书 → 角色附加世界书 → 当前聊天世界书 → 全局世界书。
+ * 顺序：角色主世界书 → 角色附加世界书。
  */
 export function getActiveWorldBookNames(): string[] {
   const helper = window.top?.TavernHelper;
   if (!helper) return [];
 
   const charBooks = helper.getCharWorldbookNames('current');
-  const chatBook = helper.getChatWorldbookName('current');
-  const globalBooks = helper.getGlobalWorldbookNames();
 
-  return [
-    charBooks?.primary ?? null,
-    ...(charBooks?.additional ?? []),
-    chatBook,
-    ...(globalBooks ?? []),
-  ].filter((name, index, all): name is string => Boolean(name) && all.indexOf(name) === index);
+  return [charBooks?.primary ?? null, ...(charBooks?.additional ?? [])].filter(
+    (name, index, all): name is string => Boolean(name) && all.indexOf(name) === index,
+  );
 }
 
 /** @deprecated 仅保留给旧调用；Home 新逻辑应使用 getActiveWorldBookNames。 */
