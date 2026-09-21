@@ -1,6 +1,10 @@
 import JSON5 from 'json5';
 
-import { getFilteredEntries, getWorldBookName, updateWorldBook } from './worldbookload&update';
+import {
+  getActiveWorldBookNames,
+  getFilteredEntries,
+  updateWorldBooks,
+} from './worldbookload&update';
 
 // 未分类的默认tab名称
 export const UNCATEGORIZED_TAB = '这是什么杯';
@@ -35,6 +39,7 @@ export interface SpecialRecommendCore {
 export interface CoreOption {
   value: string;
   label: string;
+  bookName: string;
   author: string; // 作者信息，从括号内提取
   enabled: boolean;
   tabs: string[]; // 数组，支持一个核心属于多个分组
@@ -324,13 +329,13 @@ export async function loadCoreOptions(
   localCoreSelections: Map<string, boolean>;
   tabs: string[];
   activeTab: string;
-  bookName: string | null;
+  bookNames: string[];
   specialRecommendCoreList: SpecialRecommendCore[];
 }> {
   // 动态获取tabs（需要先加载核心分类数据）
   const tabs = await getTabsFromRankings();
-  const bookName = getWorldBookName();
-  const entries = await getFilteredEntries(CORE_PATTERN, bookName);
+  const bookNames = getActiveWorldBookNames();
+  const entries = await getFilteredEntries(CORE_PATTERN, bookNames);
 
   // 构建存在的核心值集合
   const existingCoreValues = new Set(entries.map((entry: { name: string }) => entry.name));
@@ -346,7 +351,7 @@ export async function loadCoreOptions(
     specialRecommendCoreList.filter(core => core.available).map(core => core.value),
   );
 
-  const coreOptions = entries.map((entry: { name: string; enabled: boolean }) => {
+  const coreOptions = entries.map(entry => {
     // 去掉世界书命定系统前缀
     const nameWithoutPrefix = entry.name.replace(CORE_LABEL_PREFIX_PATTERN, '');
     // 提取作者信息（括号内容）
@@ -368,6 +373,7 @@ export async function loadCoreOptions(
     return {
       value: entry.name,
       label,
+      bookName: entry.bookName,
       author,
       enabled: entry.enabled,
       tabs: coreTabs,
@@ -387,7 +393,7 @@ export async function loadCoreOptions(
     localCoreSelections,
     tabs,
     activeTab,
-    bookName,
+    bookNames,
     specialRecommendCoreList,
   };
 }
@@ -432,25 +438,24 @@ export function hasChanges(
  * 保存核心选择到世界书
  * @param coreOptions 核心选项列表
  * @param localCoreSelections 本地选择状态
- * @param bookName 世界书名称
  * @returns 更新后的核心选项列表
  */
 export async function saveChanges(
   coreOptions: CoreOption[],
   localCoreSelections: Map<string, boolean>,
-  bookName: string,
 ): Promise<CoreOption[]> {
   if (!hasChanges(coreOptions, localCoreSelections)) {
     return coreOptions;
   }
 
   // 构建更新列表
-  const updatedEntries = Array.from(localCoreSelections).map(([name, enabled]) => ({
-    name,
-    enabled,
+  const updatedEntries = coreOptions.map(core => ({
+    name: core.value,
+    enabled: localCoreSelections.get(core.value) ?? false,
+    bookName: core.bookName,
   }));
 
-  await updateWorldBook(updatedEntries, bookName);
+  await updateWorldBooks(updatedEntries);
 
   // 返回更新后的核心选项列表
   return coreOptions.map(core => ({
