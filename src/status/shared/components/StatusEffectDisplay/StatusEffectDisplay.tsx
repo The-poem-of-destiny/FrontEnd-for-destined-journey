@@ -131,7 +131,13 @@ export const StatusEffectDisplay: FC<StatusEffectDisplayProps> = ({
                 <div className={styles.effectEditHeader}>
                   <div className={styles.effectEditHeaderContent}>
                     <div className={styles.effectHeaderMain}>
-                      <span className={styles.effectName}>{name}</span>
+                      <EditableField
+                        path={basePath}
+                        value={name}
+                        type="text"
+                        renameKey
+                        className={styles.effectName}
+                      />
                       <EditableField
                         path={`${basePath}.类型`}
                         value={effect.类型 ?? '增益'}

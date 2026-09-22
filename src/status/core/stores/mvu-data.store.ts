@@ -21,6 +21,8 @@ interface MvuDataActions {
   setPartnerPresence: (partnerName: string, present: boolean) => Promise<boolean>;
   /** 更新指定路径的值 */
   updateField: (path: string, value: unknown) => Promise<boolean>;
+  /** 重命名记录中的键 */
+  renameField: (path: string, nextName: string) => Promise<boolean>;
   /** 删除指定路径的值 */
   deleteField: (path: string) => Promise<boolean>;
   /** 使用 1 点自由属性点提升指定属性（双字段原子更新） */
@@ -144,6 +146,43 @@ export const useMvuDataStore = create<MvuDataStore>()(
         return true;
       } catch (e) {
         console.error('[StatusBar] 更新数据失败:', e);
+        return false;
+      }
+    },
+
+    renameField: async (path: string, nextName: string): Promise<boolean> => {
+      try {
+        const normalizedName = nextName.trim();
+        const pathParts = _.toPath(path);
+        const currentName = pathParts.pop();
+        if (!normalizedName || !currentName || normalizedName === currentName) return false;
+
+        await waitGlobalInitialized('Mvu');
+        const mvuData = Mvu.getMvuData({
+          type: 'message',
+          message_id: getCurrentMessageId(),
+        });
+        const parent = _.get(mvuData, ['stat_data', ...pathParts]);
+        if (!_.isObject(parent) || !Object.hasOwn(parent, currentName)) return false;
+        if (Object.hasOwn(parent, normalizedName)) return false;
+
+        Object.defineProperty(parent, normalizedName, {
+          value: (parent as Record<string, unknown>)[currentName],
+          enumerable: true,
+          configurable: true,
+          writable: true,
+        });
+        delete (parent as Record<string, unknown>)[currentName];
+
+        await Mvu.replaceMvuData(mvuData, {
+          type: 'message',
+          message_id: getCurrentMessageId(),
+        });
+
+        get().refresh();
+        return true;
+      } catch (e) {
+        console.error('[StatusBar] 重命名数据失败:', e);
         return false;
       }
     },

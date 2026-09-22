@@ -486,8 +486,34 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 />
                 <div className={styles.heroIdentity}>
                   <div className={styles.heroTitleRow}>
-                    <span className={styles.heroLevel}>Lv.{player.等级 ?? 1}</span>
-                    <span className={styles.heroTier}>{player.生命层级 || '未记录生命层级'}</span>
+                    {editEnabled ? (
+                      <>
+                        <div className={styles.heroEditRow}>
+                          <span className={styles.heroEditLabel}>等级</span>
+                          <EditableField
+                            path="主角.等级"
+                            value={player.等级 ?? 1}
+                            type="number"
+                            numberConfig={{ min: 1, max: 25, step: 1 }}
+                          />
+                        </div>
+                        <div className={styles.heroEditRow}>
+                          <span className={styles.heroEditLabel}>生命层级</span>
+                          <EditableField
+                            path="主角.生命层级"
+                            value={player.生命层级 ?? ''}
+                            type="text"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <span className={styles.heroLevel}>Lv.{player.等级 ?? 1}</span>
+                        <span className={styles.heroTier}>
+                          {player.生命层级 || '未记录生命层级'}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

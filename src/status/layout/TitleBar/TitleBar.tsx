@@ -1,5 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { useMvuDataStore } from '../../core/stores';
+import { useEditorSettingStore, useMvuDataStore } from '../../core/stores';
+import { EditableField } from '../../shared/components';
 import styles from './TitleBar.module.scss';
 
 interface TitleBarProps {
@@ -12,6 +13,7 @@ interface TitleBarProps {
  */
 export const TitleBar: FC<TitleBarProps> = ({ onSettingsClick }) => {
   const { data, refresh, loading } = useMvuDataStore();
+  const editEnabled = useEditorSettingStore(state => state.editEnabled);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenTarget, setFullscreenTarget] = useState<HTMLElement | null>(null);
 
@@ -126,16 +128,34 @@ export const TitleBar: FC<TitleBarProps> = ({ onSettingsClick }) => {
     <div className={styles.titleBar}>
       {/* 世界信息 */}
       <div className={styles.info}>
-        {worldInfo?.时间 && (
+        {(worldInfo?.时间 || editEnabled) && (
           <span className={styles.time}>
             <i className="fa-regular fa-clock" />
-            {worldInfo.时间}
+            {editEnabled ? (
+              <EditableField
+                path="世界.时间"
+                value={worldInfo?.时间 ?? ''}
+                type="text"
+                className={styles.worldField}
+              />
+            ) : (
+              worldInfo?.时间
+            )}
           </span>
         )}
-        {worldInfo?.地点 && (
+        {(worldInfo?.地点 || editEnabled) && (
           <span className={styles.location}>
             <i className="fa-solid fa-location-dot" />
-            {worldInfo.地点}
+            {editEnabled ? (
+              <EditableField
+                path="世界.地点"
+                value={worldInfo?.地点 ?? ''}
+                type="text"
+                className={styles.worldField}
+              />
+            ) : (
+              worldInfo?.地点
+            )}
           </span>
         )}
       </div>

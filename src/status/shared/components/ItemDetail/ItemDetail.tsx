@@ -71,6 +71,8 @@ interface ItemDetailProps {
   displayMode?: ItemDetailDisplayMode;
   /** 点击查看详情 */
   onInspect?: () => void;
+  /** 名称修改成功 */
+  onRename?: (name: string) => void;
 }
 
 /**
@@ -90,6 +92,7 @@ export const ItemDetail: FC<ItemDetailProps> = ({
   itemCategory = 'item',
   displayMode = 'panel-card',
   onInspect,
+  onRename,
 }) => {
   const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -254,6 +257,19 @@ export const ItemDetail: FC<ItemDetailProps> = ({
 
   const renderDetailContent = () => (
     <div className={styles.itemDetails}>
+      {editEnabled && pathPrefix ? (
+        <div className={styles.itemFieldRow}>
+          <span className={styles.fieldLabel}>名称</span>
+          <EditableField
+            path={pathPrefix}
+            value={name}
+            type="text"
+            renameKey
+            onUpdateSuccess={value => onRename?.(String(value).trim())}
+          />
+        </div>
+      ) : null}
+
       {(data.品质 || editEnabled) && (
         <div className={styles.itemFieldRow}>
           <span className={styles.fieldLabel}>品质</span>
@@ -356,7 +372,17 @@ export const ItemDetail: FC<ItemDetailProps> = ({
               return (
                 <div key={name} className={styles.internalAssetEntry}>
                   <div className={styles.internalAssetHeader}>
-                    <span className={styles.internalAssetName}>{name}</span>
+                    {editEnabled && pathPrefix ? (
+                      <EditableField
+                        path={`${pathPrefix}.内部资产.${name}`}
+                        value={name}
+                        type="text"
+                        renameKey
+                        className={styles.internalAssetName}
+                      />
+                    ) : (
+                      <span className={styles.internalAssetName}>{name}</span>
+                    )}
                     {!editEnabled && internal.品质 ? (
                       <span
                         className={`${styles.internalAssetQuality} ${internalQualityClass}`.trim()}

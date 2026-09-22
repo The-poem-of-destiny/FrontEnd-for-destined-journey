@@ -54,7 +54,17 @@ export const Ascension: FC<AscensionProps> = ({
         <div className={styles.items}>
           {_.map(sectionData, (details, name) => (
             <div key={name} className={`${styles.item} ${styles[itemClass]}`}>
-              <div className={styles.itemName}>{name}</div>
+              {editEnabled && pathPrefix ? (
+                <EditableField
+                  path={`${pathPrefix}.${sectionKey}.${name}`}
+                  value={name}
+                  type="text"
+                  renameKey
+                  className={styles.itemName}
+                />
+              ) : (
+                <div className={styles.itemName}>{name}</div>
+              )}
               {editEnabled && pathPrefix ? (
                 <div className={styles.itemDetails}>
                   <EditableField

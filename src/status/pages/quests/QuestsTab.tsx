@@ -120,9 +120,15 @@ interface QuestDetailContentProps {
   name: string;
   quest: Task;
   editEnabled: boolean;
+  onRename: (name: string) => void;
 }
 
-const QuestDetailContent: FC<QuestDetailContentProps> = ({ name, quest, editEnabled }) => {
+const QuestDetailContent: FC<QuestDetailContentProps> = ({
+  name,
+  quest,
+  editEnabled,
+  onRename,
+}) => {
   const basePath = `任务列表.${name}`;
 
   const renderFieldContent = (fieldKey: QuestFieldKey) => {
@@ -168,6 +174,19 @@ const QuestDetailContent: FC<QuestDetailContentProps> = ({ name, quest, editEnab
 
   return (
     <div className={styles.questDetailContent}>
+      {editEnabled ? (
+        <section className={styles.questDetailSection}>
+          <div className={styles.questDetailSectionTitle}>名称</div>
+          <EditableField
+            path={basePath}
+            value={name}
+            type="text"
+            renameKey
+            className={styles.questEditableField}
+            onUpdateSuccess={value => onRename(String(value).trim())}
+          />
+        </section>
+      ) : null}
       {QuestFields.map(field => (
         <section key={field.key} className={styles.questDetailSection}>
           <div className={styles.questDetailSectionTitle}>{field.label}</div>
@@ -290,6 +309,14 @@ const QuestsTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   const handleCloseInspect = () => {
     setInspectQuest(null);
+  };
+
+  const handleQuestRename = (currentName: string, nextName: string) => {
+    if (!nextName || nextName === currentName) return;
+    setInspectQuest({ name: nextName });
+    if (focusQuestName === currentName) {
+      setFocusQuestName(nextName);
+    }
   };
 
   return (
@@ -446,6 +473,7 @@ const QuestsTabContent: FC<WithMvuDataProps> = ({ data }) => {
             name={inspectQuest.name}
             quest={inspectedQuest}
             editEnabled={editEnabled}
+            onRename={nextName => handleQuestRename(inspectQuest.name, nextName)}
           />
         ) : null}
       </ItemInspectModal>

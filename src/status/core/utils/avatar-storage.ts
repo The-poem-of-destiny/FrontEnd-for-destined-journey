@@ -124,6 +124,25 @@ export const removeAvatarRecord = async (
   });
 };
 
+export const renameAvatarRecord = async (
+  scope_key: string,
+  owner_type: AvatarOwnerType,
+  current_name: string,
+  next_name: string,
+): Promise<void> => {
+  const record = await getAvatarRecord(scope_key, owner_type, current_name);
+  if (!record) return;
+
+  await saveAvatarRecord({
+    scope_key,
+    owner_type,
+    owner_name: next_name,
+    source_type: record.source_type,
+    value: record.value,
+  });
+  await removeAvatarRecord(scope_key, owner_type, current_name);
+};
+
 export const markAvatarAsRemoved = async (
   scope_key: string,
   owner_type: AvatarOwnerType,

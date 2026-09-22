@@ -42,6 +42,11 @@
   }
 }
 
+.worldField {
+  flex: 1;
+  min-width: 0;
+}
+
 .actions {
   display: flex;
   gap: $spacing-xs;
