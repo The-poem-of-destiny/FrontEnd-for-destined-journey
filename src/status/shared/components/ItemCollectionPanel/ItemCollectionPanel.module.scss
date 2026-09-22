@@ -196,6 +196,8 @@
 }
 
 .itemRowName {
+  flex: 0 0 auto;
+  max-width: 100%;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -335,6 +337,7 @@
   }
 
   .itemRow {
+    grid-template-columns: 10px minmax(7em, 1fr) auto;
     min-height: 40px;
     padding: 7px 8px;
   }
