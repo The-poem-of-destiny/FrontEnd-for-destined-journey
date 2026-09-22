@@ -3,9 +3,10 @@
 import { getWorldBookName, updateWorldBook } from '@/home/services/worldbookload&update';
 
 // 固定的条目名称
-const OUTPUT_ENTRY_MAIN_API = 'output_format (随AI输出开，主API)';
-const OUTPUT_ENTRY_EXTRA_API = '[mvu_update]output_format (使用额外模型更新变量开)';
-const OUTPUT_ENTRY_EXTRA_API_LATEST_INPUT = '[mvu_update]用户最新输入(使用额外模型更新变量开)';
+const OUTPUT_ENTRY_MAIN_API = '[本体][变量]output_format_(随AI输出开，主API)';
+const OUTPUT_ENTRY_EXTRA_API = '[本体][变量][mvu_update]output_format_(使用额外模型更新变量开)';
+const OUTPUT_ENTRY_EXTRA_API_LATEST_INPUT =
+  '[本体][变量][mvu_update]用户最新输入(使用额外模型更新变量开)';
 
 // 变量输出方式选项
 export const OUTPUT_OPTIONS = [
