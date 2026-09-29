@@ -9,7 +9,7 @@ import {
   getTierAttributeBonus,
   INITIAL_REINCARNATION_POINTS,
   MAX_BASE_POINTS_PER_ATTR,
-  MAX_BASE_POINTS_TOTAL,
+  TALENT_LEVELS,
 } from '../data/base-info';
 import { getSkills } from '../data/skills';
 import type {
@@ -41,6 +41,7 @@ export const useCharacterStore = defineStore('character', () => {
     startLocation: '自定义',
     customStartLocation: '',
     level: 1,
+    talentLevel: '',
     basePoints: {
       力量: 0,
       敏捷: 0,
@@ -81,6 +82,8 @@ export const useCharacterStore = defineStore('character', () => {
       _.get(getRaceCosts.value, character.value.race, 0),
       // 身份消耗
       _.get(getIdentityCosts.value, character.value.identity, 0),
+      // 天赋水平消耗
+      selectedTalent.value?.cost ?? 0,
       // 属性加点消耗 (每点1个转生点)
       usedAP.value,
       // 装备消耗
@@ -155,6 +158,7 @@ export const useCharacterStore = defineStore('character', () => {
       startLocation: '自定义',
       customStartLocation: '',
       level: 1,
+      talentLevel: '',
       basePoints: {
         力量: 0,
         敏捷: 0,
@@ -276,8 +280,22 @@ export const useCharacterStore = defineStore('character', () => {
 
   // 基础点相关计算
   const usedBP = computed(() => _.sum(_.values(character.value.basePoints)));
-  const maxBP = computed(() => MAX_BASE_POINTS_TOTAL);
+  const selectedTalent = computed(() =>
+    TALENT_LEVELS.find(talent => talent.name === character.value.talentLevel),
+  );
+  const maxBP = computed(() => selectedTalent.value?.points ?? 0);
   const remainingBP = computed(() => maxBP.value - usedBP.value);
+
+  // 降档后若超出预算，重新分配基础点；同步执行以支持预设恢复。
+  watch(
+    maxBP,
+    maxPoints => {
+      if (usedBP.value > maxPoints) {
+        character.value.basePoints = { 力量: 0, 敏捷: 0, 体质: 0, 智力: 0, 精神: 0 };
+      }
+    },
+    { flush: 'sync' },
+  );
 
   // 额外点相关计算
   const usedAP = computed(() => _.sum(_.values(character.value.attributePoints)));
@@ -362,6 +380,7 @@ export const useCharacterStore = defineStore('character', () => {
     selectedBackground,
 
     usedBP,
+    selectedTalent,
     maxBP,
     remainingBP,
     usedAP,

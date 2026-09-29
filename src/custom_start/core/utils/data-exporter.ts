@@ -388,6 +388,7 @@ export function generateAIPrompt(
   lines.push(`身份: ${displayIdentity || '未设置'}`);
   lines.push(`性别: ${displayGender || '未设置'}`);
   lines.push(`年龄: ${character.age}岁`);
+  lines.push(`天赋水平: ${character.talentLevel}`);
   lines.push(`起始地点: ${displayLocation || '未设置'}`);
   lines.push('');
   lines.push('【第一轮变量更新要求】');

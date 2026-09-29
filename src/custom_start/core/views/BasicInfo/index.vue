@@ -21,6 +21,7 @@ import {
   MAX_BASE_POINTS_PER_ATTR,
   MAX_LEVEL,
   MIN_LEVEL,
+  TALENT_LEVELS,
 } from '../../data/base-info';
 import { useCharacterStore } from '../../store';
 
@@ -36,6 +37,10 @@ const startLocationsCascader = getStartLocationsCascader;
 
 const raceOptions = computed(() => Object.keys(raceCosts.value));
 const identityOptions = computed(() => Object.keys(identityCosts.value));
+const talentOptions = TALENT_LEVELS.map(talent => ({
+  value: talent.name,
+  label: `${talent.name} · ${talent.points} 属性点（消耗 ${talent.cost} 转生点）`,
+}));
 
 // 计算当前等级的层级属性加成
 const tierAttributeBonus = computed(() => getTierAttributeBonus(character.value.level));
@@ -175,7 +180,22 @@ const displayStartLocation = computed(() => {
       </div>
 
       <!-- 属性分配面板 -->
-      <div class="attributes-panel" :class="{ 'has-extra-points': hasAttributePoints }">
+      <div class="form-field">
+        <FormLabel :label="`${character.name || '{{user}}'} 天赋水平`" required />
+        <FormSelect
+          v-model="character.talentLevel"
+          :options="talentOptions"
+          placeholder="请先选择天赋水平"
+        />
+        <p class="field-hint">
+          天赋决定可分配的基础属性点；降低档位后若已超额，将清空基础点重新分配。
+        </p>
+      </div>
+      <div
+        v-if="characterStore.selectedTalent"
+        class="attributes-panel"
+        :class="{ 'has-extra-points': hasAttributePoints }"
+      >
         <div class="panel-header">
           <h3>属性分配</h3>
           <div class="points-summary">

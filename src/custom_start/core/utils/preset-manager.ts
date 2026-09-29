@@ -247,6 +247,7 @@ const CharacterFields = [
   'startLocation',
   'customStartLocation',
   'level',
+  'talentLevel',
   'basePoints',
   'attributePoints',
   'reincarnationPoints',
@@ -269,6 +270,14 @@ const AttrKeys = ['力量', '敏捷', '体质', '智力', '精神'] as const;
  * basePoints 初始化为全零由玩家重新分配
  */
 function migratePresetCharacter(char: Record<string, unknown>): Record<string, unknown> {
+  // 旧预设未购买天赋，需先选择档位再重新分配基础点。
+  if (!('talentLevel' in char)) {
+    char = {
+      ...char,
+      talentLevel: '',
+      ...('basePoints' in char ? { basePoints: { ...EmptyAttrPoints } } : {}),
+    };
+  }
   if (!('basePoints' in char)) {
     // 从旧 attributePoints 扣除多算的5点
     const oldAttr = char.attributePoints as Record<string, number> | undefined;

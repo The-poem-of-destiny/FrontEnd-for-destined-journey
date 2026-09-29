@@ -89,8 +89,14 @@ export const MAX_LEVEL = 10;
 export const MIN_LEVEL = 1;
 
 // 基础点常量
-/** 基础点总和上限 */
-export const MAX_BASE_POINTS_TOTAL = 25;
+/** 天赋档位：消耗转生点，获得对应的基础属性点 */
+export const TALENT_LEVELS = [
+  { name: '平庸', points: 20, cost: 1 },
+  { name: '普通', points: 22, cost: 100 },
+  { name: '出众', points: 25, cost: 200 },
+  { name: '卓越', points: 28, cost: 300 },
+  { name: '天纵奇才', points: 30, cost: 114514 },
+] as const;
 /** 基础点单项上限 */
 export const MAX_BASE_POINTS_PER_ATTR = 6;
 

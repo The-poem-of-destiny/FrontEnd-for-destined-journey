@@ -21,6 +21,10 @@ export function useJourney(): UseJourneyReturn {
   const { character } = storeToRefs(characterStore);
 
   const executeJourney = async (triggerAI: boolean = true) => {
+    if (!characterStore.selectedTalent) {
+      toastr.warning('请先选择天赋水平');
+      return;
+    }
     try {
       const injectionSettings = customContentStore.customInjectionSettings;
       const deferredCustomContent = {

@@ -110,6 +110,7 @@ const handleOpenPresetManage = () => {
 
 // 计算属性
 const isNextButtonDisabled = computed(() => {
+  if (!characterStore.selectedTalent) return true;
   if (isLastStep.value) {
     return availablePoints.value < 0;
   }
@@ -135,7 +136,9 @@ const nextButtonText = computed(() => {
       :can-go-previous="canGoPrevious"
       :is-next-disabled="isNextButtonDisabled"
       :next-button-text="nextButtonText"
-      next-disabled-title="可用转生点数不能为负"
+      :next-disabled-title="
+        !characterStore.selectedTalent ? '请先选择天赋水平' : '可用转生点数不能为负'
+      "
       @previous="goToPrevious"
       @next="handleNext"
     />
