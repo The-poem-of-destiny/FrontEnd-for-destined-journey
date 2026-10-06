@@ -32,6 +32,54 @@
   @include list-container;
 }
 
+.uniqueColorSetting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-md;
+  margin-top: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  @include bg-overlay-medium;
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+}
+
+.uniqueColorDescription {
+  margin-top: $spacing-xs;
+  color: var(--theme-text-muted);
+  font-size: 11px;
+}
+
+.uniqueColorControl {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+}
+
+.uniqueColorInput {
+  width: 36px;
+  height: 28px;
+  padding: 2px;
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+  background: var(--theme-card-bg);
+  cursor: pointer;
+}
+
+.uniqueColorValue {
+  min-width: 70px;
+  color: var(--theme-text-primary);
+  font-size: 11px;
+}
+
+.resetColorButton {
+  @include button-secondary;
+  padding: $spacing-xs $spacing-sm;
+  font-size: 10px;
+}
+
 .themeSelectorLabel {
   font-size: 11px;
   font-weight: 600;

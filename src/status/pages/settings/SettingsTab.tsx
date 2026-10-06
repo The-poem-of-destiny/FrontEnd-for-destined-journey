@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import { ThemeList } from '../../config/theme-presets';
 import { useEditorSettingStore, useThemeStore } from '../../core/stores';
+import type { ThemePresetId } from '../../core/types';
 import { Card } from '../../shared/components';
 import { ToggleEditor } from '../../shared/components/editors/ToggleEditor/ToggleEditor';
 import styles from './SettingsTab.module.scss';
@@ -9,8 +10,18 @@ import styles from './SettingsTab.module.scss';
  * 设置页组件
  */
 export const SettingsTab: FC = () => {
-  const { currentThemeId, setTheme, reset, saveTheme } = useThemeStore();
+  const {
+    currentThemeId,
+    qualityUniqueOverride,
+    setTheme,
+    setQualityUniqueOverride,
+    resetQualityUniqueOverride,
+    reset,
+    saveTheme,
+    getColors,
+  } = useThemeStore();
   const { editEnabled, setEditEnabled, saveSettings } = useEditorSettingStore();
+  const currentUniqueColor = getColors().qualityUnique;
 
   const handleToggle = async (next: boolean) => {
     setEditEnabled(next);
@@ -18,10 +29,6 @@ export const SettingsTab: FC = () => {
     toastr.success(next ? '已启用编辑' : '已关闭编辑');
   };
 
-  /** 处理主题变化 */
-  const handleThemeChange = (themeId: string) => {
-    setTheme(themeId as any);
-  };
 
   /** 处理保存 */
   const handleSave = async () => {
@@ -29,10 +36,16 @@ export const SettingsTab: FC = () => {
     toastr.success('主题已保存');
   };
 
-  /** 处理重置 */
+  /** 处理重置主题 */
   const handleReset = async () => {
     await reset();
     toastr.info('已恢复默认主题');
+  };
+
+  /** 恢复当前预设的唯一品质颜色 */
+  const handleResetUniqueColor = async () => {
+    await resetQualityUniqueOverride();
+    toastr.info('已恢复当前主题的唯一品质颜色');
   };
 
   return (
@@ -57,12 +70,40 @@ export const SettingsTab: FC = () => {
               <button
                 key={theme.id}
                 className={`${styles.themeOption} ${currentThemeId === theme.id ? styles.themeOptionActive : ''}`}
-                onClick={() => handleThemeChange(theme.id)}
+                onClick={() => setTheme(theme.id)}
               >
                 <span className={styles.themePreview} data-theme={theme.id} />
                 <span className={styles.themeName}>{theme.name}</span>
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className={styles.uniqueColorSetting}>
+          <div>
+            <div className={styles.themeSelectorLabel}>唯一品质颜色</div>
+            <div className={styles.uniqueColorDescription}>
+              仅修改“唯一”品质；其他品质颜色始终跟随主题预设。
+            </div>
+          </div>
+          <div className={styles.uniqueColorControl}>
+            <input
+              className={styles.uniqueColorInput}
+              type="color"
+              value={currentUniqueColor}
+              onChange={event => setQualityUniqueOverride(event.target.value)}
+              aria-label="选择唯一品质颜色"
+            />
+            <code className={styles.uniqueColorValue}>{currentUniqueColor}</code>
+            {qualityUniqueOverride ? (
+              <button
+                className={styles.resetColorButton}
+                type="button"
+                onClick={handleResetUniqueColor}
+              >
+                恢复预设色
+              </button>
+            ) : null}
           </div>
         </div>
 
