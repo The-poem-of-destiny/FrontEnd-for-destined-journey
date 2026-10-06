@@ -2,7 +2,10 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
+  />
   <title>自定义开局数据编辑器</title>
   <style>
     :root {
@@ -17,11 +20,9 @@
       --muted: #756a60;
       --accent: #8b5e34;
       --accent-hover: #754d28;
-      --accent-2: #2e6f62;
       --danger: #9b2f2f;
       --danger-hover: #842727;
       --warn: #966a00;
-      --ok: #276749;
       --focus: #3b6f8f;
       --focus-ring: rgba(59, 111, 143, 0.14);
       --button-hover-bg: #f8efe2;
@@ -93,11 +94,9 @@
       --muted: #b7aa9b;
       --accent: #d09a5f;
       --accent-hover: #e0ad72;
-      --accent-2: #65bca5;
       --danger: #c95d5d;
       --danger-hover: #df7373;
       --warn: #e5bd58;
-      --ok: #7bd49c;
       --focus: #73afd1;
       --focus-ring: rgba(115, 175, 209, 0.22);
       --button-hover-bg: #30363d;
@@ -213,9 +212,46 @@
     }
 
     textarea {
-      min-height: 132px;
-      resize: vertical;
+      /* 只做兜底下限，实际高度由 JS 按内容多少设置的 rows 决定（字少矮、字多高）。 */
+      min-height: 68px;
+      /* 桌面端可以直接拖右下角把内容框拉大；触屏端改用下面的 .resize-handle。 */
+      resize: both;
       line-height: 1.55;
+    }
+
+    /* 内容输入框右下角的「加高」手柄：手机端上下拖动调整高度，点一下恢复默认。
+       桌面端浏览器自带 resize 角，所以这里默认隐藏。 */
+    .resize-host {
+      position: relative;
+    }
+
+    .resize-handle {
+      display: none;
+      position: absolute;
+      right: 6px;
+      bottom: 5px;
+      width: 36px;
+      height: 36px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-3);
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1;
+      cursor: ns-resize;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      opacity: 0.92;
+      z-index: 1;
+    }
+
+    .resize-handle.dragging {
+      border-color: var(--accent);
+      color: var(--accent);
+      opacity: 1;
     }
 
     input:focus,
@@ -230,7 +266,9 @@
       grid-template-rows: auto 1fr;
       height: 100vh;
       --sidebar-w: 220px;
-      --editor-w: 34vw;
+      /* 编辑区默认更宽一些，输入框更好用；仍可用右侧分隔条拖动调整。 */
+      --editor-w: 40vw;
+      --splitter-w: 8px;
     }
 
     .topbar {
@@ -331,8 +369,17 @@
 
     .layout {
       display: grid;
-      grid-template-columns: var(--sidebar-w) 8px minmax(560px, 1fr) 8px minmax(520px, var(--editor-w));
+      grid-template-columns:
+        var(--sidebar-w) var(--splitter-w) minmax(520px, 1fr) var(--splitter-w)
+        minmax(480px, var(--editor-w));
       min-height: 0;
+    }
+
+    /* 触屏上把分隔条加宽一点，手指更容易抓住。 */
+    @media (pointer: coarse), (hover: none) {
+      .app {
+        --splitter-w: 18px;
+      }
     }
 
     .splitter {
@@ -341,6 +388,8 @@
       background: var(--splitter-bg);
       cursor: col-resize;
       z-index: 4;
+      /* 触屏拖动分隔条时不要触发页面滚动。 */
+      touch-action: none;
       border-left: 1px solid var(--splitter-line);
       border-right: 1px solid var(--splitter-line);
     }
@@ -427,7 +476,52 @@
       background: var(--panel-2);
       font-size: 11px;
       user-select: none;
+      -webkit-user-select: none;
       cursor: grab;
+      /* 手机上由脚本接管长按拖动，禁用浏览器默认手势避免和滚动打架。 */
+      touch-action: none;
+    }
+
+    .cat-tools {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .cat-move,
+    .row-move {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 24px;
+      min-height: 0;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--panel-2);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1;
+      cursor: pointer;
+      /* 这里不要用 touch-action:none：手机上一列挤了好几个按钮，
+         会让整块区域变成滑不动的死区。只有真正的拖拽握把才需要禁用手势。 */
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .cat-move:hover,
+    .row-move:hover {
+      border-color: var(--line-strong);
+      background: var(--button-hover-bg);
+      color: var(--text);
+    }
+
+    .cat-move:disabled,
+    .row-move:disabled {
+      opacity: 0.3;
+      cursor: default;
     }
 
     .dataset-button.active {
@@ -601,12 +695,15 @@
       background: var(--panel-2);
       font-size: 12px;
       user-select: none;
+      -webkit-user-select: none;
       cursor: grab;
+      touch-action: none;
     }
 
-    .drag-handle.is-disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
+    /* 长按拖动进行中：禁止选中文字，避免拖动时触发系统选择菜单。 */
+    .touch-dragging {
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     .cell-name {
@@ -801,6 +898,18 @@
       font-size: 11px;
       letter-spacing: -2px;
       opacity: 0.75;
+      padding: 0 2px;
+      cursor: grab;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .tag-text {
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .tag-item.dragging {
@@ -816,14 +925,37 @@
     }
 
     .tag-item button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       min-height: 0;
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       padding: 0;
       border: none;
+      border-radius: 4px;
       background: transparent;
-      color: var(--danger);
       line-height: 1;
+      font-size: 13px;
+    }
+
+    .tag-item .tag-remove {
+      color: var(--danger);
+    }
+
+    .tag-item .tag-move {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .tag-item .tag-move:disabled {
+      opacity: 0.25;
+      cursor: default;
+    }
+
+    .tag-item .tag-move:hover:not(:disabled) {
+      background: var(--panel-3);
+      color: var(--text);
     }
 
     .tag-editor input {
@@ -835,6 +967,15 @@
       box-shadow: none;
     }
 
+    .tag-add-btn {
+      flex: 0 0 auto;
+      min-height: 28px;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
     .kv-list,
     .nested-list {
       display: flex;
@@ -844,13 +985,15 @@
 
     .kv-row {
       display: grid;
-      grid-template-columns: minmax(130px, 0.32fr) 1fr auto;
+      /* 值那一列用 minmax(0,1fr)：被手动拉宽时只让输入框溢出，不把整行撑变形。 */
+      grid-template-columns: minmax(130px, 0.32fr) minmax(0, 1fr) auto;
       gap: 8px;
       align-items: start;
     }
 
     .kv-row textarea {
-      min-height: 84px;
+      /* 高度同样交给 JS 的 rows 估算，短文本自动矮一点。 */
+      min-height: 68px;
     }
 
     .small-btn {
@@ -1007,9 +1150,11 @@
 
     @media (max-width: 1200px) {
       .layout {
-        --sidebar-w: 200px;
+        --sidebar-w: 190px;
         --editor-w: 520px;
-        grid-template-columns: var(--sidebar-w) 8px minmax(480px, 1fr) 8px minmax(460px, var(--editor-w));
+        grid-template-columns:
+          var(--sidebar-w) var(--splitter-w) minmax(360px, 1fr) var(--splitter-w)
+          minmax(380px, var(--editor-w));
       }
 
       .filters {
@@ -1021,23 +1166,84 @@
       }
     }
 
-    @media (max-width: 900px) {
+    /* ===== 移动端：顶部分页 + 触屏友好尺寸 ===== */
+
+    .mobile-tabs {
+      display: none;
+    }
+
+    /* 900 → 1024：手机横屏、或系统开了“桌面版网站”时也能落到这套单栏布局，
+       输入框才不会被三栏布局挤窄。JS 里的 MOBILE_LAYOUT 必须保持一致。 */
+    @media (max-width: 1024px) {
       body {
         overflow: auto;
+        -webkit-text-size-adjust: 100%;
       }
 
+      /* 手机上改成普通块级排列：一是让 sticky 分页栏 / 底部操作条有可粘附的高度，
+         二是避免 .app 的 1fr 行把分页栏撑高。 */
       .app {
+        display: block;
         height: auto;
         min-height: 100vh;
       }
 
       .topbar {
-        align-items: flex-start;
+        align-items: stretch;
         flex-direction: column;
+        gap: 8px;
+        padding: 10px 12px;
+      }
+
+      .brand {
+        min-width: 0;
+        margin-right: 0;
       }
 
       .toolbar {
         width: 100%;
+      }
+
+      .status {
+        margin-left: 0;
+        max-width: none;
+        white-space: normal;
+      }
+
+      /* 手机上让侧栏 / 列表 / 编辑区一次只显示一个，避免长距离来回滚动。 */
+      .mobile-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        position: sticky;
+        top: 0;
+        z-index: 6;
+        padding: 8px 12px;
+        background: var(--panel);
+        border-bottom: 1px solid var(--line);
+        box-shadow: var(--topbar-shadow);
+      }
+
+      .mobile-tabs button {
+        min-height: 40px;
+        border-radius: 8px;
+        font-size: 13px;
+      }
+
+      .mobile-tabs button.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--panel);
+        font-weight: 700;
+      }
+
+      body[data-mobile-view="browse"] .center,
+      body[data-mobile-view="browse"] .editor,
+      body[data-mobile-view="table"] .sidebar,
+      body[data-mobile-view="table"] .editor,
+      body[data-mobile-view="edit"] .sidebar,
+      body[data-mobile-view="edit"] .center {
+        display: none;
       }
 
       .layout {
@@ -1051,27 +1257,214 @@
       .sidebar,
       .center,
       .editor {
+        display: block;
         height: auto;
         min-height: 0;
         overflow: visible;
         border: none;
       }
 
-      .category-scroll,
-      .table-wrap,
-      .editor-scroll {
+      .category-scroll {
         max-height: none;
         overflow: visible;
       }
 
-      .filters,
+      /* 单栏视野本来就窄，编辑区左右留白收一点，输入框能多出一点宽度。
+         这里不再做横向滚动容器：手机上输入框本来就是整行宽，不需要溢出。 */
+      .editor-scroll {
+        max-height: none;
+        padding: 12px;
+        overflow: visible;
+      }
+
+      /* 折叠块内层也少留一点白，效果框能更宽。 */
+      .detail-body {
+        padding: 8px;
+      }
+
+      .table-wrap {
+        max-height: none;
+        /* 只横向滚动，纵向交给整页；千万不要加 overscroll-behavior: contain，
+           那会把手指在表格上的上下滑动吞掉，导致页面滚不动。 */
+        overflow-x: auto;
+      }
+
+      table {
+        min-width: 640px;
+      }
+
+      .filters {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .filters #searchInput {
+        grid-column: 1 / -1;
+      }
+
       .batchbar {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .batchbar .batch-title {
+        grid-column: 1 / -1;
+      }
+
+      /* ===== 单栏布局下让“内容”类输入框占满整行，别再被挤窄 ===== */
+
+      /* 标签输入框：至少占半屏，通常会被换到独立一行后自动铺满。 */
+      .tag-editor input {
+        flex: 1 1 220px;
+        min-width: 180px;
+      }
+
+      /* 效果（键 / 值）：键单独一行，值占满整行。 */
+      .kv-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+      }
+
+      .kv-row > input {
+        grid-column: 1 / 2;
+        grid-row: 1;
+      }
+
+      .kv-row > textarea {
+        grid-column: 1 / -1;
+        grid-row: 2;
+      }
+
+      .kv-row > button {
+        grid-column: 2 / 3;
+        grid-row: 1;
+      }
+
+      /* 批量操作里的内容输入框也各占一行。 */
+      .batchbar #batchTag,
+      .batchbar #batchCost {
+        grid-column: 1 / -1;
+      }
+
+      /* 两列字段在窄屏自动退回单列，够宽时才并排。 */
+      .inline-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      }
+
+      /* 编辑时底部操作始终可点。 */
+      .editor-actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 3;
+      }
+
+      .modal {
+        width: calc(100vw - 16px);
+        max-height: calc(100vh - 24px);
+      }
+
+      .toast {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        min-width: 0;
+        max-width: none;
+      }
+    }
+
+    /* 触屏设备：放大点击热区，避免误触和 iOS 自动缩放。 */
+    @media (pointer: coarse), (hover: none) {
+      button {
+        min-height: 42px;
+      }
+
+      input,
+      select {
+        font-size: 16px;
+        min-height: 42px;
+      }
+
+      /* 内容输入框的默认高度由 JS 按文本多少算出的 rows 决定：
+         文本少就矮一点，文本多就保持较高的默认高度。这里只留一个兜底下限。 */
+      textarea {
+        font-size: 16px;
+        min-height: 68px;
+      }
+
+      .kv-row textarea {
+        min-height: 68px;
+      }
+
+      .small-btn {
+        min-height: 36px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+      }
+
+      .tag-editor input {
+        min-height: 34px;
+      }
+
+      .tag-item {
+        min-height: 34px;
+        gap: 6px;
+        padding: 4px 8px;
+        font-size: 13px;
+      }
+
+      .tag-item button {
+        width: 26px;
+        height: 26px;
+        font-size: 16px;
+      }
+
+      .tag-add-btn {
+        min-height: 36px;
+        font-size: 14px;
+      }
+
+      .tag-grip {
+        font-size: 14px;
+        padding: 0 4px;
+      }
+
+      .drag-handle {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+      }
+
+      /* 触屏上原生的缩放手柄太小抓不住，改用自绘的「加高」手柄。
+         默认高度交给 JS 按文本多少算出的 rows，短文本自然矮一些。 */
+      textarea {
+        resize: none;
+      }
+
+      .resize-handle {
+        display: inline-flex;
+        width: 38px;
+        height: 38px;
+        font-size: 17px;
+        opacity: 0.95;
+      }
+
+      .cat-move,
+      .row-move {
+        width: 30px;
+        height: 32px;
+        font-size: 14px;
+      }
+
+      .category-drag {
+        width: 34px;
+        height: 34px;
+        font-size: 13px;
       }
     }
   </style>
 </head>
-<body>
+<body data-mobile-view="browse">
   <div class="app">
     <header class="topbar">
       <div class="brand">
@@ -1080,7 +1473,10 @@
       <div class="toolbar">
         <label class="file-label">
           导入 JSON 文件
-          <input id="fileInput" type="file" multiple accept=".json,.json5,application/json" />
+          <!-- 故意不写 accept：安卓文件选择器是按 MIME 过滤的，而很多 .json（从聊天软件/网盘存下来的）
+                MIME 是 application/octet-stream，写了 accept=".json" 反而会让 partners.json 在选择器里
+                变灰、点不动，表现为「无法导入」。这里放开选择，文件名在 handleFiles 里再校验。 -->
+          <input id="fileInput" type="file" multiple />
         </label>
         <button id="exportBtn" class="primary">导出</button>
         <button id="historyBtn">历史</button>
@@ -1089,6 +1485,12 @@
         <span id="statusText" class="status">等待导入 public/assets/data 中的数据文件</span>
       </div>
     </header>
+
+    <nav id="mobileTabs" class="mobile-tabs">
+      <button type="button" data-view="browse">文件 / 分类</button>
+      <button type="button" data-view="table">列表</button>
+      <button type="button" data-view="edit">编辑</button>
+    </nav>
 
     <main class="layout">
       <aside class="sidebar">
@@ -1211,21 +1613,164 @@
   <script>
     "use strict";
 
+    // ===== JSON5-lite 解析（不依赖 eval） =====
+    // 数据文件里带 // 注释，严格 JSON.parse 会失败。旧实现用 Function(...) 兜底，
+    // 但那需要 eval 权限：页面一旦带 CSP、或跑在不允许 eval 的 WebView / 预览器里，
+    // 带注释的 partners.json、backgrounds.json、baseInfo.json 就会全部“导入失败”
+    //（其余 5 个是严格 JSON，走 JSON.parse 正常）。这里改成纯文本清洗。
     const JSON5Lite = {
       parse(text) {
         const source = String(text || "").replace(/^\uFEFF/, "");
+        if (!source.trim()) throw new Error("文件是空的");
         try {
           return JSON.parse(source);
-        } catch (_jsonError) {
+        } catch (_strictError) {
+          // 严格 JSON 失败，继续走宽松模式。
+        }
+        let reason = null;
+        // 报错里的 position 是针对哪段文本算的：清洗器报的是原文，JSON.parse 报的是清洗后的文本。
+        let reasonSource = source;
+        let cleaned = null;
+        try {
+          cleaned = stripJson5(source);
+        } catch (error) {
+          reason = error;
+        }
+        if (cleaned !== null) {
           try {
-            return Function('"use strict"; return (' + source + "\n);")();
+            return JSON.parse(cleaned);
           } catch (error) {
-            error.message = "JSON/JSON5 解析失败: " + error.message;
-            throw error;
+            reason = error;
+            reasonSource = cleaned;
           }
         }
+        // 清洗后仍然解析不了：这里不再用 Function(...) 兜底。
+        // 一是禁 eval 的环境（CSP / 部分 WebView）必然抛错，等于白跑一次；
+        // 二是那等于把数据文件当脚本执行，数据文件被替换过就变成执行任意代码。
+        // 直接把清洗器的报错抛给用户，反而更好定位。
+        const detail = reason && reason.message ? reason.message : "未知原因";
+        throw new Error("JSON/JSON5 解析失败: " + withLineColumn(reasonSource, detail));
       },
     };
+
+    // 把报错里的 position N 换算成行列号，方便直接定位到文件里的那一行。
+    function withLineColumn(source, message) {
+      const match = /position (\d+)/.exec(message);
+      if (!match) return message;
+      const pos = Math.min(Number(match[1]), source.length);
+      const before = source.slice(0, pos);
+      const line = before.split("\n").length;
+      const column = pos - before.lastIndexOf("\n");
+      return message + "（第 " + line + " 行第 " + column + " 列）";
+    }
+
+    // 去掉 // 与 /* */ 注释、对象/数组末尾多余逗号，顺带支持单引号字符串和无引号键名。
+    // 全程按字符扫描并跳过字符串内部，所以字符串里的 // 、/* */ 、} ] 都不会被误伤。
+    function stripJson5(source) {
+      const out = [];
+      const n = source.length;
+      let i = 0;
+      const isIdentStart = c => /[A-Za-z_$]/.test(c);
+      const isIdentPart = c => /[A-Za-z0-9_$]/.test(c);
+      // 跳过空白与注释，返回下一个有意义的字符。
+      const nextSignificant = start => {
+        let j = start;
+        while (j < n) {
+          const c = source[j];
+          if (/\s/.test(c)) {
+            j += 1;
+            continue;
+          }
+          if (c === "/" && source[j + 1] === "/") {
+            while (j < n && source[j] !== "\n") j += 1;
+            continue;
+          }
+          if (c === "/" && source[j + 1] === "*") {
+            j += 2;
+            while (j < n && !(source[j] === "*" && source[j + 1] === "/")) j += 1;
+            j += 2;
+            continue;
+          }
+          return source[j];
+        }
+        return "";
+      };
+      while (i < n) {
+        const ch = source[i];
+        if (ch === "/" && source[i + 1] === "/") {
+          while (i < n && source[i] !== "\n") i += 1;
+          continue;
+        }
+        if (ch === "/" && source[i + 1] === "*") {
+          i += 2;
+          while (i < n && !(source[i] === "*" && source[i + 1] === "/")) i += 1;
+          i += 2;
+          continue;
+        }
+        if (ch === '"' || ch === "'") {
+          const quote = ch;
+          const stringStart = i;
+          let value = "";
+          let closed = false;
+          i += 1;
+          while (i < n) {
+            const c = source[i];
+            if (c === "\\") {
+              const next = source[i + 1];
+              if (next === undefined) {
+                i += 1;
+                break;
+              }
+              if (next === "u" && quote === "'") {
+                value += source.slice(i, i + 6);
+                i += 6;
+                continue;
+              }
+              if (quote === '"' || next !== "'") value += "\\" + next;
+              else value += "'";
+              i += 2;
+              continue;
+            }
+            if (c === quote) {
+              closed = true;
+              i += 1;
+              break;
+            }
+            if (quote === "'" && c === '"') {
+              value += '\\"';
+              i += 1;
+              continue;
+            }
+            value += c;
+            i += 1;
+          }
+          if (!closed) throw new Error("字符串没有闭合（position " + stringStart + "）");
+          out.push('"' + value + '"');
+          continue;
+        }
+        if (isIdentStart(ch)) {
+          let j = i;
+          while (j < n && isIdentPart(source[j])) j += 1;
+          let k = j;
+          while (k < n && /\s/.test(source[k])) k += 1;
+          if (source[k] === ":") {
+            out.push('"' + source.slice(i, j) + '"');
+            i = j;
+            continue;
+          }
+        }
+        if (ch === ",") {
+          const next = nextSignificant(i + 1);
+          if (next === "}" || next === "]") {
+            i += 1;
+            continue;
+          }
+        }
+        out.push(ch);
+        i += 1;
+      }
+      return out.join("");
+    }
 
     // ===== 注释保留：解析原文件并把注释按 JSON 路径锚定，导出时再放回 =====
 
@@ -1296,7 +1841,82 @@
     }
 
     // 返回 { pre, post, rootPre }；pre[path] = 该键/数组项前的注释，post[path] = 该容器收尾前（“}”/“]”前）的注释。
-    function buildCommentAnchors(source) {
+    // path 的每一段：对象用键名，数组项优先用 anchorIdentity（拿不到唯一身份时退回下标）。
+    // data 是同一份文本解析出来的数据，用来把数组项的锚点段从「下标」改成「身份」；不传则一律按下标定位。
+    //
+    // 数组项在注释锚点里的“身份键”：能唯一定位一条数据的用身份，定位不了的只能用下标。
+    //  - 对象（非数组）取 name 字段，标量取字面值本身
+    //  - 前缀 \u0001 用来区分命名空间，避免对象的 name 与同名字符串撞车
+    // 返回 null 表示这条数据没有可用身份。
+    function anchorIdentity(item) {
+      if (item !== null && typeof item === "object" && !Array.isArray(item)) {
+        return typeof item.name === "string" && item.name ? "\u0001n:" + item.name : null;
+      }
+      if (typeof item === "string") return item === "" ? null : "\u0001s:" + item;
+      if (typeof item === "number" || typeof item === "boolean") return "\u0001s:" + String(item);
+      return null;
+    }
+
+    // 统计一个数组里各身份值出现的次数：只有唯一的身份值才适合当锚点键，
+    // 否则两条同名的数据会互相抢注释。
+    function anchorIdentityCounts(arr) {
+      const counts = new Map();
+      arr.forEach(item => {
+        const id = anchorIdentity(item);
+        if (id !== null) counts.set(id, (counts.get(id) || 0) + 1);
+      });
+      return counts;
+    }
+
+    // 锚点默认按数组下标定位，一旦在数组中间插入 / 删除 / 排序，后面的注释就会整体错位。
+    // 所以对「每个条目都能拿到唯一身份」的数组，直接把锚点键里的下标段整体换成身份段
+    // （对象用 name，标量用值本身），注释就跟着具体那条数据走，而不是跟着位置走。
+    // 数组里只要有条目拿不到唯一身份，就整组保持下标定位（与改动前完全一致），
+    // 避免同一组里一半身份一半下标、互相错取。
+    function moveAnchorPathsToIdentity(pre, post, data) {
+      const renames = new Map(); // 下标路径 -> 对应位置的身份路径
+      (function collect(node, oldBase, newBase) {
+        if (Array.isArray(node)) {
+          const counts = anchorIdentityCounts(node);
+          const uniform = node.every(item => {
+            const id = anchorIdentity(item);
+            return id !== null && counts.get(id) === 1;
+          });
+          node.forEach((item, index) => {
+            const oldChild = oldBase.concat(String(index));
+            // 非一致数组保持下标定位，但祖先段可能已经换成身份了，这里要跟着走。
+            const newChild = uniform ? newBase.concat(anchorIdentity(item)) : newBase.concat(String(index));
+            renames.set(oldChild.join("\u0000"), newChild.join("\u0000"));
+            collect(item, oldChild, newChild);
+          });
+          return;
+        }
+        if (node !== null && typeof node === "object") {
+          Object.keys(node).forEach(key => collect(node[key], oldBase.concat(key), newBase.concat(key)));
+        }
+      })(data, [], []);
+      if (renames.size === 0) return;
+      [pre, post].forEach(dict => {
+        const moved = [];
+        Object.keys(dict).forEach(key => {
+          const parts = key.split("\u0000");
+          // 取最长的一个匹配前缀改写：这样「数组里的数组」能一次替换到位，
+          // 而且替换结果里已经包含了所有祖先段的变化。
+          for (let len = parts.length; len >= 1; len -= 1) {
+            const from = parts.slice(0, len).join("\u0000");
+            const to = renames.get(from);
+            if (to !== undefined) {
+              moved.push([to + key.slice(from.length), dict[key]]);
+              delete dict[key]; // 旧的下标键必须删掉，否则会被错位到该位置的条目捡走
+              break;
+            }
+          }
+        });
+        moved.forEach(entry => { if (!(entry[0] in dict)) dict[entry[0]] = entry[1]; });
+      });
+    }
+
+    function buildCommentAnchors(source, data) {
       const tokens = tokenizeJson5(source);
       if (!tokens || tokens.length === 0) return null;
       // 用普通对象而不是 Map，方便被 snapshot/undo 的 deepClone（JSON 序列化）完整保留。
@@ -1372,6 +1992,7 @@
       } catch (_error) {
         return null; // 结构异常则放弃注释保留，退回普通 JSON 序列化
       }
+      if (data) moveAnchorPathsToIdentity(pre, post, data);
       return { pre, post, rootPre };
     }
 
@@ -1380,6 +2001,14 @@
       const pre = anchors.pre;
       const post = anchors.post;
       const pk = path => path.join("\u0000");
+      // 真的挂了注释的路径很少，预先收集它们的所有前缀，就能 O(1) 判断“某条路径下有没有注释”。
+      const anchoredPaths = new Set();
+      [pre, post].forEach(dict => {
+        Object.keys(dict).forEach(key => {
+          const parts = key.split("\u0000");
+          for (let len = 1; len <= parts.length; len += 1) anchoredPaths.add(parts.slice(0, len).join("\u0000"));
+        });
+      });
       const renderScalar = value => {
         if (value === null || value === undefined) return "null";
         if (typeof value === "string") return JSON.stringify(value);
@@ -1396,6 +2025,20 @@
       function addComma(items) {
         const last = items[items.length - 1];
         items[items.length - 1] = { text: last.text + ",", level: last.level };
+      }
+
+      // 给数组每一项定出「用哪段路径 / 挂哪条注释」。
+      // 锚点已经按身份定位的数组：身份段直接命中，注释跟着数据本身走；
+      // 拿不到唯一身份（新加的重复条目、被改名的条目）就退回下标段 —— 这类路径下面已经没有锚点了，
+      // 所以既不会错挂到别人头上，也不会把同一条注释输出两遍。
+      function resolveArrayItems(arr, path) {
+        const counts = anchorIdentityCounts(arr);
+        return arr.map((item, index) => {
+          const id = anchorIdentity(item);
+          const key = id !== null && counts.get(id) === 1 ? pk(path.concat(id)) : null;
+          const segment = key !== null && anchoredPaths.has(key) ? id : String(index);
+          return { segment, comments: pre[pk(path.concat(segment))] || null };
+        });
       }
 
       function renderObject(obj, path) {
@@ -1419,9 +2062,10 @@
       function renderArray(arr, path) {
         const out = [{ text: "[", level: 0 }];
         const closeComments = post[pk(path)];
+        const items = resolveArrayItems(arr, path);
         arr.forEach((value, index) => {
-          const childPath = path.concat(String(index));
-          const before = pre[pk(childPath)];
+          const childPath = path.concat(items[index].segment);
+          const before = items[index].comments;
           if (before) before.forEach(comment => out.push({ text: comment, level: 1 }));
           const sub = renderValue(value, childPath);
           out.push({ text: sub[0].text, level: 1 });
@@ -1581,11 +2225,33 @@
       // 记录每个折叠块（details）的展开状态，key 由 renderEditor 生成的路径决定。
       // 编辑器每次改动都会整块重建，靠它把用户手动展开/收起的状态保留下来。
       detailsOpen: new Map(),
+      // 用户手动加高过的内容输入框高度（按字段种类记，换条目/重绘都不会丢）。
+      fieldHeights: new Map(),
     };
 
     const el = {};
     const $ = id => document.getElementById(id);
     let searchTimer = null;
+
+    // 手机布局用分页切换（文件/分类、列表、编辑），触屏设备用长按拖动代替 HTML5 拖拽。
+    // 断点要和 CSS 里的 @media (max-width: 1024px) 保持一致。
+    // (hover: none) 一起判断，避免个别手机浏览器/WebView 不认 pointer: coarse。
+    const MOBILE_LAYOUT = window.matchMedia ? window.matchMedia("(max-width: 1024px)") : { matches: false };
+    const COARSE_POINTER = window.matchMedia
+      ? window.matchMedia("(pointer: coarse), (hover: none)")
+      : { matches: false };
+    const isMobileLayout = () => MOBILE_LAYOUT.matches;
+    const isCoarsePointer = () => COARSE_POINTER.matches;
+
+    function setMobileView(view) {
+      const allowed = ["browse", "table", "edit"];
+      const next = allowed.includes(view) ? view : "browse";
+      document.body.dataset.mobileView = next;
+      if (!el.mobileTabs) return;
+      el.mobileTabs.querySelectorAll("button[data-view]").forEach(button => {
+        button.classList.toggle("active", button.dataset.view === next);
+      });
+    }
 
     window.addEventListener("DOMContentLoaded", init);
     window.addEventListener("beforeunload", event => {
@@ -1644,9 +2310,22 @@
         "modalContent",
         "modalActions",
         "modalClose",
+        "mobileTabs",
       ].forEach(id => (el[id] = $(id)));
 
       setupIncrementalTable();
+
+      if (el.mobileTabs) {
+        el.mobileTabs.addEventListener("click", event => {
+          const button = event.target.closest("button[data-view]");
+          if (button) setMobileView(button.dataset.view);
+        });
+      }
+      // 旋转屏幕或切换输入设备（接鼠标）时重画一次，让拖拽方式跟着切换。
+      [MOBILE_LAYOUT, COARSE_POINTER].forEach(query => {
+        if (query.addEventListener) query.addEventListener("change", () => render());
+      });
+      setMobileView("browse");
 
       el.fileInput.addEventListener("change", handleFiles);
       el.exportBtn.addEventListener("click", showExportChoices);
@@ -1723,11 +2402,247 @@
       applyTheme(current === "dark" ? "light" : "dark");
     }
 
+    // ===== 读取本地文件（兼容旧 WebView + 防截断） =====
+    // 两个坑：
+    // 1) 安卓 WebView / 各种 App 内置浏览器不一定有 File.prototype.text()，直接调会抛
+    //    “file.text is not a function”；
+    // 2) 某些安卓 content:// 提供商会少给一段数据（整读被截断），于是 partners.json 这种大文件
+    //    会报“字符串没有闭合”，但磁盘上的文件其实是完整的。
+    // 所以这里统一用 FileReader 读，并用 file.size 校验读到的字节数，对不上就分块重读。
+
+    function getFileReaderCtor() {
+      try {
+        if (typeof window !== "undefined" && window.FileReader) return window.FileReader;
+      } catch (_error) { /* 忽略：继续用全局的。 */ }
+      try {
+        if (typeof FileReader !== "undefined") return FileReader;
+      } catch (_error) { /* 忽略：也没有就返回 null。 */ }
+      return null;
+    }
+
+    function utf8ByteLength(text) {
+      const value = String(text === null || text === undefined ? "" : text);
+      if (typeof TextEncoder === "function") {
+        try {
+          return new TextEncoder().encode(value).length;
+        } catch (_error) {
+          // 退回手算。
+        }
+      }
+      let bytes = 0;
+      for (let i = 0; i < value.length; i += 1) {
+        const code = value.charCodeAt(i);
+        if (code < 0x80) bytes += 1;
+        else if (code < 0x800) bytes += 2;
+        else if (code >= 0xd800 && code <= 0xdbff && i + 1 < value.length) { bytes += 4; i += 1; }
+        else bytes += 3;
+      }
+      return bytes;
+    }
+
+    function readBlobAsText(blob) {
+      if (blob && typeof blob.text === "function") {
+        try {
+          const result = blob.text();
+          if (result && typeof result.then === "function") return result;
+        } catch (_error) {
+          // blob.text() 存在但坏了，继续走 FileReader。
+        }
+      }
+      return new Promise((resolve, reject) => {
+        const Reader = getFileReaderCtor();
+        if (!Reader) {
+          reject(new Error("当前浏览器不支持读取本地文件（缺少 FileReader），请换用 Chrome / 系统浏览器打开本页面"));
+          return;
+        }
+        const reader = new Reader();
+        reader.onload = () => resolve(String(reader.result === null || reader.result === undefined ? "" : reader.result));
+        reader.onerror = () => reject(reader.error || new Error("读取文件出错"));
+        reader.onabort = () => reject(new Error("读取文件被中断"));
+        try {
+          reader.readAsText(blob, "utf-8");
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+
+    function readBlobAsArrayBuffer(blob) {
+      return new Promise((resolve, reject) => {
+        const Reader = getFileReaderCtor();
+        if (!Reader) {
+          reject(new Error("当前浏览器不支持读取本地文件（缺少 FileReader）"));
+          return;
+        }
+        const reader = new Reader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error || new Error("读取文件出错"));
+        reader.onabort = () => reject(new Error("读取文件被中断"));
+        try {
+          reader.readAsArrayBuffer(blob);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+
+    // 按 file.size 分块读成二进制再整体按 UTF-8 解码，避免把多字节汉字从中间切开。
+    async function readFileInChunks(file, total) {
+      const chunkSize = 256 * 1024;
+      const parts = [];
+      let offset = 0;
+      while (offset < total) {
+        const end = Math.min(offset + chunkSize, total);
+        const buffer = await readBlobAsArrayBuffer(file.slice(offset, end));
+        if (!buffer || !buffer.byteLength) break;
+        parts.push(new Uint8Array(buffer));
+        offset += buffer.byteLength;
+      }
+      let length = 0;
+      parts.forEach(part => { length += part.length; });
+      const merged = new Uint8Array(length);
+      let position = 0;
+      parts.forEach(part => { merged.set(part, position); position += part.length; });
+      if (typeof TextDecoder === "function") return new TextDecoder("utf-8").decode(merged);
+      return readBlobAsText(file.slice(0, total));
+    }
+
+    // 返回 { text, expected, actual, complete, error }；expected / actual 都是字节数。
+    async function readFileText(file) {
+      const expected = file && typeof file.size === "number" && file.size >= 0 ? file.size : -1;
+      let best = "";
+      let lastError = null;
+      try {
+        best = await readBlobAsText(file);
+      } catch (error) {
+        best = "";
+        lastError = error;
+      }
+      let bestBytes = utf8ByteLength(best);
+      // 读到的字节数和 file.size 对不上，说明这次读取被截断了：整读 / 分块读各重试几次，取最长的。
+      if (expected >= 0 && bestBytes !== expected) {
+        for (let attempt = 0; attempt < 3 && bestBytes !== expected; attempt += 1) {
+          const candidates = [];
+          try { candidates.push(await readBlobAsText(file)); } catch (error) { if (bestBytes === 0) lastError = error; }
+          if (expected > 0 && typeof file.slice === "function") {
+            try { candidates.push(await readFileInChunks(file, expected)); } catch (error) { if (bestBytes === 0) lastError = error; }
+          }
+          candidates.forEach(candidate => {
+            const bytes = utf8ByteLength(candidate);
+            if (bytes > bestBytes) { best = candidate; bestBytes = bytes; }
+          });
+        }
+      }
+      return {
+        text: best,
+        expected,
+        actual: bestBytes,
+        complete: expected < 0 || bestBytes === expected,
+        error: bestBytes === 0 ? lastError : null,
+      };
+    }
+
+    // 扫描 JSON5 文本的结构状态：跳过字符串内部与注释，记录还没闭合的 { [ 。
+    // describeIncompleteJson 与 repairTruncatedJson5 都基于它，避免同一段状态机写两遍。
+    // 返回 stack（未闭合的开括号字符，按出现顺序）、inString、lastIndex（要定位的字符下标）。
+    function scanJsonStructure(text) {
+      const n = text.length;
+      const stack = [];
+      const openIndex = [];
+      let inString = false;
+      let quote = "";
+      let escaped = false;
+      let stringIndex = -1;
+      let i = 0;
+      while (i < n) {
+        const c = text[i];
+        if (inString) {
+          if (escaped) { escaped = false; i += 1; continue; }
+          if (c === "\\") { escaped = true; i += 1; continue; }
+          if (c === quote) { inString = false; i += 1; continue; }
+          i += 1;
+          continue;
+        }
+        if (c === "/" && text[i + 1] === "/") { while (i < n && text[i] !== "\n") i += 1; continue; }
+        if (c === "/" && text[i + 1] === "*") {
+          const end = text.indexOf("*/", i + 2);
+          i = end === -1 ? n : end + 2;
+          continue;
+        }
+        if (c === '"' || c === "'") { inString = true; quote = c; stringIndex = i; i += 1; continue; }
+        if (c === "{" || c === "[") { stack.push(c); openIndex.push(i); i += 1; continue; }
+        if (c === "}" || c === "]") { stack.pop(); openIndex.pop(); i += 1; continue; }
+        i += 1;
+      }
+      const lastIndex = inString
+        ? stringIndex
+        : openIndex.length ? openIndex[openIndex.length - 1] : -1;
+      return { stack, inString, lastIndex };
+    }
+
+    // 判断文本是不是“写了一半就被截断”：结尾停在字符串里，或者还有没闭合的 { } [ ]。
+    function describeIncompleteJson(source) {
+      const text = String(source === null || source === undefined ? "" : source);
+      const { stack, inString, lastIndex } = scanJsonStructure(text);
+      if (!inString && stack.length === 0) return null;
+      const before = text.slice(0, lastIndex);
+      const line = before.split("\n").length;
+      const column = lastIndex - before.lastIndexOf("\n");
+      const lines = text.split("\n");
+      let lastLine = "";
+      for (let k = lines.length - 1; k >= 0; k -= 1) {
+        if (lines[k].trim()) { lastLine = lines[k].trim(); break; }
+      }
+      return {
+        line,
+        column,
+        lastLine: lastLine.length > 80 ? lastLine.slice(0, 80) + "…" : lastLine,
+        label: inString
+          ? "第 " + line + " 行第 " + column + " 列的字符串写到一半就没了"
+          : "还有 " + stack.length + " 个括号没有闭合",
+      };
+    }
+
+    // 抢救被截断的 JSON5：退回到最后一个结构完整的断点，再补上没闭合的括号。
+    // strictItemBoundary = true 时（partners/equipments/... 这种「分类 -> 数组 -> 对象」的数据），
+    // 只接受「刚好关掉一个分类数组里的完整条目」或「刚好关掉一个分类」的断点，
+    // 这样末尾那条写了一半的伙伴不会被当成完整数据导进来。
+    function repairTruncatedJson5(source, strictItemBoundary) {
+      const text = String(source === null || source === undefined ? "" : source);
+      let cut = Math.max(text.lastIndexOf("}"), text.lastIndexOf("]"));
+      let fallback = null;
+      for (let attempt = 0; attempt < 200 && cut >= 0; attempt += 1) {
+        const prefix = text.slice(0, cut + 1);
+        const { stack, inString } = scanJsonStructure(prefix);
+        if (!inString) {
+          let closers = "";
+          for (let k = stack.length - 1; k >= 0; k -= 1) closers += stack[k] === "{" ? "}" : "]";
+          const repaired = prefix + closers;
+          try {
+            JSON.parse(stripJson5(repaired));
+            const cleanBoundary =
+              (stack.length === 1 && stack[0] === "{") ||
+              (stack.length === 2 && stack[0] === "{" && stack[1] === "[");
+            if (cleanBoundary) return repaired;
+            if (!strictItemBoundary && fallback === null) fallback = repaired;
+          } catch (_error) {
+            // 这个断点还不行，继续往前退。
+          }
+        }
+        const nextCut = Math.max(text.lastIndexOf("}", cut - 1), text.lastIndexOf("]", cut - 1));
+        if (nextCut < 0 || nextCut >= cut) break;
+        cut = nextCut;
+      }
+      return fallback;
+    }
+
     async function handleFiles(event) {
       const files = Array.from(event.target.files || []);
       if (files.length === 0) return;
       const loaded = [];
       const skipped = [];
+      const failed = [];
+      const salvaged = [];
       for (const file of files) {
         const name = normalizeFilename(file.name);
         if (!DATASETS[name]) {
@@ -1735,22 +2650,52 @@
           continue;
         }
         try {
-          const text = await file.text();
-          const data = JSON5Lite.parse(text);
+          const read = await readFileText(file);
+          const text = read.text;
+          if (!text.trim()) {
+            failed.push(file.name + "：" + (read.error && read.error.message ? read.error.message : "文件是空的（读到 0 字节）"));
+            continue;
+          }
+          const sizeNote = read.complete ? "" : "（文件共 " + read.expected + " 字节，只读到 " + read.actual + " 字节）";
+          let data = null;
+          let usedText = text;
+          let incomplete = null;
+          try {
+            data = JSON5Lite.parse(text);
+          } catch (error) {
+            // 先判断是不是“被截断”。是的话，退回到最后一个完整条目，让用户决定要不要导入可读部分。
+            const broken = describeIncompleteJson(text);
+            if (!broken) throw error;
+            const repaired = repairTruncatedJson5(text, DATASETS[name].kind === "collection");
+            const proceed = Boolean(repaired) && typeof confirm === "function" && confirm(
+              file.name + " 的内容不完整" + sizeNote + "：" + broken.label + "。\n\n" +
+                "要继续导入这份文件「完整的可读部分」吗？\n" +
+                "末尾残缺的内容不会被导入；建议先重新复制/下载一份完整的 " + name + " 再导入。",
+            );
+            if (!proceed) {
+              failed.push(file.name + "：内容不完整，在第 " + broken.line + " 行中断" + sizeNote + "。请重新复制/下载完整文件后再导入。");
+              continue;
+            }
+            data = JSON5Lite.parse(repaired);
+            usedText = repaired;
+            incomplete = broken;
+            salvaged.push(name);
+          }
           ensureShape(name, data);
           state.files[name] = {
             filename: name,
             label: DATASETS[name].label,
             kind: DATASETS[name].kind,
             data,
-            raw: text,
-            anchors: buildCommentAnchors(text),
+            raw: usedText,
+            anchors: buildCommentAnchors(usedText, data),
             everEdited: false,
+            incomplete: Boolean(incomplete),
             importedAt: new Date().toISOString(),
           };
           loaded.push(name);
         } catch (error) {
-          showToast(file.name + " 导入失败: " + error.message);
+          failed.push(file.name + "：" + (error && error.message ? error.message : "未知错误"));
         }
       }
       if (loaded.length > 0) {
@@ -1760,19 +2705,44 @@
         state.selected = null;
         state.selectedRows.clear();
         state.changes.push("导入 " + loaded.join(", "));
-        setStatus("已导入 " + loaded.length + " 个文件" + (skipped.length ? "，跳过 " + skipped.length + " 个未知文件" : ""));
-      } else if (skipped.length) {
-        showToast("没有识别到目标数据文件。");
+        setStatus(
+          "已导入 " + loaded.length + " 个文件" +
+            (skipped.length ? "，跳过 " + skipped.length + " 个未知文件" : "") +
+            (salvaged.length ? "；⚠ " + salvaged.join("、") + " 是截断文件，只导入了完整可读的部分" : ""),
+        );
+      } else if (skipped.length && failed.length === 0) {
+        showToast("没有识别到目标数据文件：" + skipped.join("、") + "。可选文件名：" + Object.keys(DATASETS).join(" / "));
+      }
+      if (salvaged.length > 0) {
+        showToast("⚠ " + salvaged.join("、") + " 内容被截断，只导入了完整可读的部分。请尽快用完整文件重新导入，否则导出会丢失末尾内容。");
+      } else if (failed.length > 0) {
+        showToast("导入失败 " + failed.length + " 个文件 → " + failed.join("；"));
       }
       event.target.value = "";
       render();
     }
 
     function normalizeFilename(name) {
-      const leaf = String(name).split(/[\\/]/).pop();
-      if (DATASETS[leaf]) return leaf;
-      const lower = leaf.toLowerCase();
-      return Object.keys(DATASETS).find(file => file.toLowerCase() === lower) || leaf;
+      // 去掉路径、首尾空白和 BOM / 零宽字符，安卓的文件选择器偶尔会带上这些。
+      const leaf = String(name === null || name === undefined ? "" : name)
+        .split(/[\\/]/)
+        .pop()
+        .replace(/^[\uFEFF\u200B-\u200D\u2060]+/, "")
+        .trim();
+      const exact = Object.keys(DATASETS).find(file => file.toLowerCase() === leaf.toLowerCase());
+      if (exact) return exact;
+      // 重复下载时系统会把文件改名成 partners(1).json / partners - 副本.json，这里还原原名再匹配一次。
+      const stem = leaf.replace(/\.(json5?|txt)$/i, "");
+      const ext = leaf.slice(stem.length);
+      const cleaned = stem.replace(/[\s_-]*[（(]\d+[)）]$/, "").replace(/[\s_-]*(副本|copy)$/i, "").trim();
+      if (cleaned && cleaned !== stem) {
+        const candidates = [cleaned + ext, cleaned + (ext || ".json")];
+        for (const candidate of candidates) {
+          const hit = Object.keys(DATASETS).find(file => file.toLowerCase() === candidate.toLowerCase());
+          if (hit) return hit;
+        }
+      }
+      return leaf;
     }
 
     function ensureShape(filename, data) {
@@ -1782,33 +2752,41 @@
       const config = DATASETS[filename];
       if (config.kind === "collection") {
         for (const [category, value] of Object.entries(data)) {
-          if (!Array.isArray(value)) throw new Error("分类 " + category + " 必须是数组");
+          if (!Array.isArray(value)) {
+          const actual = value === null ? "null" : typeof value === "object" ? "对象" : typeof value;
+          throw new Error("分类「" + category + "」必须是数组，实际是" + actual);
+        }
         }
       }
     }
 
     // 滚动接近底部时追加渲染下一批行；用 rAF 合并同一帧内的多次 scroll 事件。
+    // 桌面端表格自己滚动，手机端表格不设高度、由整页滚动，所以两种滚动都要监听。
     function setupIncrementalTable() {
       if (!el.tableWrap) return;
       let queued = false;
-      el.tableWrap.addEventListener(
-        "scroll",
-        () => {
-          if (queued) return;
-          queued = true;
-          requestAnimationFrame(() => {
-            queued = false;
-            const wrap = el.tableWrap;
-            if (!wrap) return;
-            if (wrap.scrollTop + wrap.clientHeight < wrap.scrollHeight - 400) return;
-            const visible = getVisibleRows().length;
-            if (state.renderLimit >= visible) return;
-            state.renderLimit = Math.min(visible, state.renderLimit + RENDER_CHUNK);
-            renderTable();
-          });
-        },
-        { passive: true },
-      );
+      const loadMoreIfNeeded = () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => {
+          queued = false;
+          const wrap = el.tableWrap;
+          if (!wrap) return;
+          // 先做便宜的判断，避免每次滚动都对全表过滤排序。
+          const wrapScrolls = wrap.scrollHeight > wrap.clientHeight + 4;
+          const reachedEnd = wrapScrolls
+            ? wrap.scrollTop + wrap.clientHeight >= wrap.scrollHeight - 400
+            : wrap.getBoundingClientRect().bottom <= window.innerHeight + 400;
+          if (!reachedEnd) return;
+          const visible = getVisibleRows().length;
+          if (state.renderLimit >= visible) return;
+          state.renderLimit = Math.min(visible, state.renderLimit + RENDER_CHUNK);
+          renderTable();
+        });
+      };
+      el.tableWrap.addEventListener("scroll", loadMoreIfNeeded, { passive: true });
+      window.addEventListener("scroll", loadMoreIfNeeded, { passive: true });
+      window.addEventListener("resize", loadMoreIfNeeded, { passive: true });
     }
 
     // 切换文件/分类/筛选/排序/搜索时回到首批，避免沿用上一次已展开的渲染量。
@@ -1850,6 +2828,7 @@
           state.selectedRows.clear();
           resetRenderLimit();
           render();
+          if (isMobileLayout()) setMobileView("table");
         });
         el.datasetList.appendChild(button);
       }
@@ -1868,36 +2847,69 @@
         state.selectedRows.clear();
         resetRenderLimit();
         render();
+        if (isMobileLayout()) setMobileView("table");
       });
       el.categoryList.appendChild(allButton);
 
-      const categoryDragEnabled = getCategories().length > 1;
-      el.categoryList.title = categoryDragEnabled ? "按住分类按钮拖动，会直接改变这个分类在 JSON 里的位置" : "";
+      const categoryDragEnabled = categories.length > 1;
 
       for (const category of categories) {
         const button = document.createElement("button");
         button.className = "category-button" + (state.currentCategory === category ? " active" : "");
+        button.dataset.category = category;
+        const tools = categoryDragEnabled
+          ? "<span class=\"cat-tools\">" +
+            "<span class=\"cat-move\" data-dir=\"up\" role=\"button\" title=\"上移分类\">↑</span>" +
+            "<span class=\"cat-move\" data-dir=\"down\" role=\"button\" title=\"下移分类\">↓</span>" +
+            "<span class=\"category-drag\" title=\"按住拖动（手机长按），会直接改变这个分类在 JSON 里的位置\">拖</span>" +
+            "</span>"
+          : "";
         button.innerHTML =
-          "<span>" + escapeHtml(category) + "</span><span class=\"count\">" + countInCategory(category) + "</span>" +
-          (categoryDragEnabled ? "<span class=\"category-drag\" title=\"按住左键拖动，会直接改变这个分类在 JSON 里的位置\">拖</span>" : "");
-        button.draggable = categoryDragEnabled;
+          "<span>" + escapeHtml(category) + "</span><span class=\"count\">" + countInCategory(category) + "</span>" + tools;
+        // 触屏上 HTML5 拖拽不可用，改用长按拖动，并保留 ↑↓ 按钮做精确微调。
+        button.draggable = categoryDragEnabled && !isCoarsePointer();
         button.addEventListener("click", event => {
+          const move = event.target && event.target.closest(".cat-move");
+          if (move) {
+            moveCategory(category, move.dataset.dir === "up" ? -1 : 1);
+            return;
+          }
           if (event.target && event.target.closest(".category-drag")) return;
           state.currentCategory = category;
           state.selected = null;
           state.selectedRows.clear();
           resetRenderLimit();
           render();
+          if (isMobileLayout()) setMobileView("table");
         });
         if (categoryDragEnabled) {
-          button.addEventListener("dragstart", event => startCategoryDrag(event, category));
-          button.addEventListener("dragover", event => updateCategoryDrop(event, category));
-          button.addEventListener("dragleave", event => clearCategoryDrop(event));
-          button.addEventListener("drop", event => dropCategory(event, category));
-          button.addEventListener("dragend", clearDragState);
+          if (!isCoarsePointer()) {
+            button.addEventListener("dragstart", event => categoryDrag.start(event, category));
+            button.addEventListener("dragover", event => categoryDrag.update(event, category));
+            button.addEventListener("dragleave", categoryDrag.leave);
+            button.addEventListener("drop", event => categoryDrag.drop(event, category, reorderCategory));
+            button.addEventListener("dragend", clearDragState);
+          }
+          const grip = button.querySelector(".category-drag");
+          if (grip) {
+            enableLongPressReorder(grip, {
+              container: el.categoryList,
+              selector: ".category-button[data-category]",
+              axis: "y",
+              onDrop: (source, target, position) => reorderCategory(source.dataset.category, target.dataset.category, position),
+            });
+          }
         }
         el.categoryList.appendChild(button);
       }
+    }
+
+    function moveCategory(category, delta) {
+      const categories = getCategories();
+      const from = categories.indexOf(category);
+      const to = from + delta;
+      if (from === -1 || to < 0 || to >= categories.length) return;
+      reorderCategory(category, categories[to], delta < 0 ? "before" : "after");
     }
 
     function renderFilters() {
@@ -1930,23 +2942,24 @@
         const warnings = validateRow(row, duplicateMap);
         const tr = document.createElement("tr");
         tr.dataset.rowId = row.id;
-        tr.draggable = dragEnabled;
+        // 触屏上没有可用的 HTML5 拖拽，改用握把长按拖动 + ↑↓ 按钮。
+        tr.draggable = dragEnabled && !isCoarsePointer();
         if (state.selected && state.selected.id === row.id) tr.classList.add("selected");
         if (state.draggingRowId === row.id) tr.classList.add("dragging");
         if (state.dragOverRowId === row.id) tr.classList.add(state.dropPosition === "after" ? "drop-after" : "drop-before");
         tr.addEventListener("click", event => {
-          if (event.target && event.target.matches("input[type='checkbox']")) return;
-          if (event.target && event.target.closest(".drag-handle")) return;
+          if (event.target && event.target.closest("input, button, .drag-handle, .row-move")) return;
           state.selected = row;
           renderTable();
           renderEditor();
           updateButtons();
+          if (isMobileLayout()) setMobileView("edit");
         });
-        if (dragEnabled) {
-          tr.addEventListener("dragstart", event => startRowDrag(event, row));
-          tr.addEventListener("dragover", event => updateRowDrop(event, row));
-          tr.addEventListener("dragleave", event => clearRowDrop(event, row));
-          tr.addEventListener("drop", event => dropRow(event, row));
+        if (dragEnabled && !isCoarsePointer()) {
+          tr.addEventListener("dragstart", event => rowDrag.start(event, row.id));
+          tr.addEventListener("dragover", event => rowDrag.update(event, row.id));
+          tr.addEventListener("dragleave", rowDrag.leave);
+          tr.addEventListener("drop", event => rowDrag.drop(event, row.id, applyRowReorder));
           tr.addEventListener("dragend", clearDragState);
         }
 
@@ -1957,8 +2970,42 @@
           const handle = document.createElement("span");
           handle.className = "drag-handle";
           handle.textContent = "拖";
-          handle.title = "按住左键拖动，会直接改变这个物品在 JSON 数组里的位置";
+          handle.title = "按住拖动（手机长按），会直接改变这个物品在 JSON 数组里的位置";
           controls.appendChild(handle);
+
+          const list = getCurrent() && getCurrent().data ? getCurrent().data[row.category] : null;
+          const up = document.createElement("button");
+          up.type = "button";
+          up.className = "row-move";
+          up.textContent = "↑";
+          up.title = "上移";
+          up.disabled = row.index <= 0;
+          up.addEventListener("click", event => {
+            event.stopPropagation();
+            moveRowWithinCategory(row, -1);
+          });
+          const down = document.createElement("button");
+          down.type = "button";
+          down.className = "row-move";
+          down.textContent = "↓";
+          down.title = "下移";
+          down.disabled = !Array.isArray(list) || row.index >= list.length - 1;
+          down.addEventListener("click", event => {
+            event.stopPropagation();
+            moveRowWithinCategory(row, 1);
+          });
+          controls.append(up, down);
+
+          enableLongPressReorder(handle, {
+            container: el.entityTable,
+            selector: "tr[data-row-id]",
+            axis: "y",
+            onDrop: (source, target, position) => {
+              const sourceRow = resolveRowById(source.dataset.rowId);
+              const targetRow = resolveRowById(target.dataset.rowId);
+              if (sourceRow && targetRow) reorderCollectionRow(sourceRow, targetRow, position);
+            },
+          });
         }
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -2004,42 +3051,62 @@
       );
     }
 
-    function startRowDrag(event, row) {
-      if (!canDragRows()) {
-        event.preventDefault();
-        return;
-      }
-      state.draggingRowId = row.id;
-      state.dragNode = event.currentTarget;
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", row.id);
-      event.currentTarget.classList.add("dragging");
+    // ===== HTML5 拖拽排序（分类 与 表格行 共用一份实现）=====
+    // 两者的 dragstart / dragover / dragleave / drop 逻辑完全一样，
+    // 差别只有 state 上的字段名和「最后写回数据」的函数，所以用工厂生成两套处理器。
+    const DRAG_SLOTS = {
+      row: { dragging: "draggingRowId", dragOver: "dragOverRowId", drop: "dropPosition" },
+      category: { dragging: "draggingCategory", dragOver: "dragOverCategory", drop: "categoryDropPosition" },
+    };
+
+    function makeSortDrag(kind, canStart) {
+      const slots = DRAG_SLOTS[kind];
+      return {
+        start(event, key) {
+          if (canStart && !canStart()) {
+            event.preventDefault();
+            return;
+          }
+          state[slots.dragging] = key;
+          state.dragNode = event.currentTarget;
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", key);
+          event.currentTarget.classList.add("dragging");
+        },
+        update(event, key) {
+          if (!state[slots.dragging] || state[slots.dragging] === key) return;
+          event.preventDefault();
+          const position = getDropPosition(event, event.currentTarget);
+          clearDropMarkers();
+          state[slots.dragOver] = key;
+          state[slots.drop] = position;
+          state.dropMarkerNode = event.currentTarget;
+          state.dropMarkerNode.classList.add(position === "after" ? "drop-after" : "drop-before");
+          event.dataTransfer.dropEffect = "move";
+        },
+        leave(event) {
+          if (event && event.currentTarget.contains(event.relatedTarget)) return;
+          event.currentTarget.classList.remove("drop-before", "drop-after");
+        },
+        // applyDrop(sourceKey, targetKey, position) 负责把「谁落到谁的前/后」写回数据。
+        drop(event, targetKey, applyDrop) {
+          event.preventDefault();
+          const sourceKey = event.dataTransfer.getData("text/plain") || state[slots.dragging];
+          const position = state[slots.drop];
+          clearDragState();
+          if (!sourceKey || sourceKey === targetKey) return;
+          applyDrop(sourceKey, targetKey, position);
+        },
+      };
     }
 
-    function updateRowDrop(event, row) {
-      if (!state.draggingRowId || state.draggingRowId === row.id) return;
-      event.preventDefault();
-      const position = getDropPosition(event, event.currentTarget);
-      clearDropMarkers();
-      state.dragOverRowId = row.id;
-      state.dropPosition = position;
-      state.dropMarkerNode = event.currentTarget;
-      state.dropMarkerNode.classList.add(position === "after" ? "drop-after" : "drop-before");
-      event.dataTransfer.dropEffect = "move";
-    }
+    const rowDrag = makeSortDrag("row", canDragRows);
+    const categoryDrag = makeSortDrag("category");
 
-    function clearRowDrop(event) {
-      if (event.currentTarget.contains(event.relatedTarget)) return;
-      event.currentTarget.classList.remove("drop-before", "drop-after");
-    }
-
-    function dropRow(event, targetRow) {
-      event.preventDefault();
-      const sourceId = event.dataTransfer.getData("text/plain") || state.draggingRowId;
-      const position = state.dropPosition;
-      clearDragState();
-      const source = resolveRowById(sourceId);
-      const target = resolveRow(targetRow);
+    // 表格行落盘前要把 id 还原成 { category, index }，并挡掉「落到自己身上」。
+    function applyRowReorder(sourceKey, targetKey, position) {
+      const source = resolveRowById(sourceKey);
+      const target = resolveRowById(targetKey);
       if (!source || !target || source.id === target.id) return;
       reorderCollectionRow(source, target, position);
     }
@@ -2068,40 +3135,6 @@
       state.draggingCategory = null;
       state.dragOverCategory = null;
       state.categoryDropPosition = "before";
-    }
-
-    function startCategoryDrag(event, category) {
-      state.draggingCategory = category;
-      state.dragNode = event.currentTarget;
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", category);
-      event.currentTarget.classList.add("dragging");
-    }
-
-    function updateCategoryDrop(event, category) {
-      if (!state.draggingCategory || state.draggingCategory === category) return;
-      event.preventDefault();
-      const position = getDropPosition(event, event.currentTarget);
-      clearDropMarkers();
-      state.dragOverCategory = category;
-      state.categoryDropPosition = position;
-      state.dropMarkerNode = event.currentTarget;
-      state.dropMarkerNode.classList.add(position === "after" ? "drop-after" : "drop-before");
-      event.dataTransfer.dropEffect = "move";
-    }
-
-    function clearCategoryDrop(event) {
-      if (event && event.currentTarget.contains(event.relatedTarget)) return;
-      event.currentTarget.classList.remove("drop-before", "drop-after");
-    }
-
-    function dropCategory(event, target) {
-      event.preventDefault();
-      const source = event.dataTransfer.getData("text/plain") || state.draggingCategory;
-      const position = state.categoryDropPosition;
-      clearDragState();
-      if (!source || source === target) return;
-      reorderCategory(source, target, position);
     }
 
     function reorderCategory(source, target, position) {
@@ -2152,6 +3185,19 @@
       if (source.index < target.index) insertIndex -= 1;
       if (position === "after") insertIndex += 1;
       return Math.max(0, Math.min(insertIndex, maxIndexAfterRemove));
+    }
+
+    // 手机上的 ↑↓ 按钮：每次只挪一格，比拖动好按。
+    function moveRowWithinCategory(row, delta) {
+      if (!canDragRows()) return;
+      const current = getCurrent();
+      const list = current && current.data ? current.data[row.category] : null;
+      if (!Array.isArray(list)) return;
+      const targetIndex = row.index + delta;
+      if (targetIndex < 0 || targetIndex >= list.length) return;
+      const target = resolveRowById("row|" + row.category + "|" + targetIndex);
+      if (!target) return;
+      reorderCollectionRow(row, target, delta < 0 ? "before" : "after");
     }
 
     // 编辑器每次改动都会整块重建。这里用一条“当前路径”给折叠块和字段生成稳定 key，
@@ -2439,8 +3485,10 @@
       const shell = fieldShell(parent, label, hint);
       const textarea = document.createElement("textarea");
       textarea.value = obj[key] ?? "";
+      textarea.rows = estimateTextRows(textarea.value);
       textarea.addEventListener("change", () => updateSelected("修改 " + label, target => setCleanValue(target, key, textarea.value), { rebuildSpecial: true }));
       shell.appendChild(textarea);
+      attachTextareaResize(shell, textarea, "h:direct:" + label);
     }
 
     function addDatalistField(parent, label, obj, key, values) {
@@ -2491,76 +3539,206 @@
       const shell = fieldShell(parent, label, hint);
       const textarea = document.createElement("textarea");
       textarea.value = obj[key] ?? "";
+      textarea.rows = estimateTextRows(textarea.value);
       textarea.addEventListener("change", () => commitDirect("修改 " + label, () => setCleanValue(obj, key, textarea.value), { keepEditor: true }));
       shell.appendChild(textarea);
+      attachTextareaResize(shell, textarea, "h:" + label);
     }
 
-    function addTagsField(parent, label, obj, key) {
+    // ===== 标签编辑器（值为 string[] 的字段）=====
+    // 状态集中在 ctx 上，每一步拆成一个独立函数：改「删除」不会碰到「拖动」，
+    // 改「拖动」也不会碰到「输入框」，比原来 250 行的一体化闭包好定位得多。
+
+    const TAG_ITEM = ".tag-item";
+
+    function createTagContext(parent, label, obj, key) {
       if (!Array.isArray(obj[key])) obj[key] = [];
-      const shell = fieldShell(parent, label, "回车添加、点小叉删除，按住标签拖动可调整顺序");
+      const shell = fieldShell(parent, label, "点“添加”或按回车新增；长按 ⋮⋮ 拖动排序，也可用 ‹ › 微调");
       const editor = document.createElement("div");
       editor.className = "tag-editor";
-      const tags = obj[key];
-      let sourceIndex = -1;
+      const input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = "输入标签";
+      input.autocomplete = "off";
+      input.autocapitalize = "off";
+      input.spellcheck = false;
+      // 让手机输入法把回车显示成“完成”而不是“下一项”；下面还有可点的“添加”按钮兜底。
+      input.setAttribute("enterkeyhint", "done");
+      input.dataset.fkey = currentPath() + "/f:" + label + "#tag-input";
+      const addButton = document.createElement("button");
+      addButton.type = "button";
+      addButton.className = "tag-add-btn";
+      addButton.textContent = "添加";
+      addButton.title = "把输入框里的文字加为标签";
+      editor.append(input, addButton);
+      return { obj, key, shell, editor, input, addButton, sourceIndex: -1 };
+    }
 
-      const clearTagMarkers = () => {
-        editor.querySelectorAll(".tag-item.drop-before, .tag-item.drop-after").forEach(node => {
-          node.classList.remove("drop-before", "drop-after");
-        });
-      };
-      const finishTagDrag = () => {
-        clearTagMarkers();
-        editor.querySelectorAll(".tag-item.dragging").forEach(node => node.classList.remove("dragging"));
-        sourceIndex = -1;
-      };
+    function tagListOf(ctx) {
+      if (!Array.isArray(ctx.obj[ctx.key])) ctx.obj[ctx.key] = [];
+      return ctx.obj[ctx.key];
+    }
 
-      tags.forEach((tag, index) => {
-        const chip = document.createElement("span");
-        chip.className = "tag-item";
-        chip.draggable = true;
-        chip.title = "按住左键拖动，会直接改变这个标签在 JSON 数组里的位置";
+    function tagNodes(ctx) {
+      return Array.from(ctx.editor.querySelectorAll(TAG_ITEM));
+    }
 
-        const grip = document.createElement("span");
-        grip.className = "tag-grip";
-        grip.textContent = "⋮⋮";
+    function clearTagMarkers(ctx) {
+      tagNodes(ctx).forEach(node => node.classList.remove("drop-before", "drop-after"));
+    }
 
-        const text = document.createElement("span");
-        text.textContent = tag;
+    function finishTagDrag(ctx) {
+      clearTagMarkers(ctx);
+      tagNodes(ctx).forEach(node => node.classList.remove("dragging"));
+      ctx.sourceIndex = -1;
+    }
 
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.textContent = "×";
-        remove.title = "删除标签";
-        remove.addEventListener("click", () => {
-          commitDirect("删除标签 " + tag, () => {
-            if (!Array.isArray(obj[key])) obj[key] = [];
-            obj[key].splice(index, 1);
-          });
-        });
+    // 只重建标签，不重建输入框：手机上输入法状态、焦点和键盘都不会被打断。
+    function refreshTagChips(ctx) {
+      tagNodes(ctx).forEach(node => node.remove());
+      const list = tagListOf(ctx);
+      list.forEach((tag, index) => ctx.editor.insertBefore(makeTagChip(ctx, tag, index, list.length), ctx.input));
+    }
 
-        chip.addEventListener("dragstart", event => {
-          sourceIndex = index;
-          event.dataTransfer.effectAllowed = "move";
-          try {
-            event.dataTransfer.setData("text/plain", String(index));
-          } catch (_error) {
-            // 某些浏览器禁止在 dragstart 写入数据，忽略即可。
-          }
-          chip.classList.add("dragging");
-        });
-        chip.addEventListener("dragend", finishTagDrag);
+    function reorderTag(ctx, from, to) {
+      const list = tagListOf(ctx);
+      if (from < 0 || from >= list.length) return;
+      const target = Math.max(0, Math.min(to, list.length - 1));
+      if (target === from) return;
+      const moved = list[from];
+      commitDirect("调整标签顺序 " + moved, () => {
+        const current = tagListOf(ctx);
+        const [value] = current.splice(from, 1);
+        current.splice(target, 0, value);
+      }, { keepEditor: true });
+      refreshTagChips(ctx);
+    }
 
-        chip.append(grip, text, remove);
-        editor.appendChild(chip);
+    function addTag(ctx, raw, refocus = true) {
+      const value = String(raw == null ? "" : raw).trim();
+      if (!value) {
+        ctx.input.value = "";
+        return;
+      }
+      if (tagListOf(ctx).includes(value)) {
+        showToast("标签「" + value + "」已存在。");
+        ctx.input.value = "";
+        if (refocus) ctx.input.focus({ preventScroll: true });
+        return;
+      }
+      commitDirect("添加标签 " + value, () => {
+        const list = tagListOf(ctx);
+        if (!list.includes(value)) list.push(value);
+      }, { keepEditor: true });
+      ctx.input.value = "";
+      refreshTagChips(ctx);
+      // 保持焦点，方便连着输入好几个标签。
+      if (refocus) ctx.input.focus({ preventScroll: true });
+    }
+
+    function removeTag(ctx, tag, index) {
+      commitDirect("删除标签 " + tag, () => {
+        const list = tagListOf(ctx);
+        const at = list[index] === tag ? index : list.indexOf(tag);
+        if (at !== -1) list.splice(at, 1);
+      }, { keepEditor: true });
+      refreshTagChips(ctx);
+    }
+
+    // 把「源位置 from 落在 targetIndex 的左 / 右半区」换算成移动后的目标下标：
+    // 源条目被摘掉会让它后面的下标整体前移一位，所以先减一、再按左右半区补回。
+    // 鼠标拖拽与手机长按拖拽共用这一段，两处判定不会再走岔。
+    function tagDropIndex(from, targetIndex, after) {
+      let to = targetIndex;
+      if (from < targetIndex) to -= 1;
+      if (after) to += 1;
+      return to;
+    }
+
+    function bindTagChipDrag(ctx, chip, index) {
+      chip.addEventListener("dragstart", event => {
+        ctx.sourceIndex = index;
+        event.dataTransfer.effectAllowed = "move";
+        try {
+          event.dataTransfer.setData("text/plain", String(index));
+        } catch (_error) {
+          // 某些浏览器禁止在 dragstart 写入数据，忽略即可。
+        }
+        chip.classList.add("dragging");
+      });
+      chip.addEventListener("dragend", () => finishTagDrag(ctx));
+    }
+
+    // 手机端：长按握把拖动排序，HTML5 拖拽在触屏上不可靠。
+    function bindTagGripLongPress(ctx, grip) {
+      enableLongPressReorder(grip, {
+        container: ctx.editor,
+        selector: TAG_ITEM,
+        axis: "x",
+        onDrop: (source, target, position) => {
+          const nodes = tagNodes(ctx);
+          const from = nodes.indexOf(source);
+          const targetIndex = nodes.indexOf(target);
+          if (from < 0 || targetIndex < 0) return;
+          reorderTag(ctx, from, tagDropIndex(from, targetIndex, position === "after"));
+        },
+      });
+    }
+
+    // ‹ / › 微调按钮：step 为 -1 前移、+1 后移。
+    function makeTagMoveButton(ctx, index, total, step) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "tag-move";
+      button.textContent = step < 0 ? "‹" : "›";
+      button.title = step < 0 ? "前移" : "后移";
+      button.disabled = step < 0 ? index === 0 : index >= total - 1;
+      button.addEventListener("click", event => {
+        event.stopPropagation();
+        reorderTag(ctx, index, index + step);
+      });
+      return button;
+    }
+
+    function makeTagChip(ctx, tag, index, total) {
+      const chip = document.createElement("span");
+      chip.className = "tag-item";
+      chip.draggable = !isCoarsePointer();
+      chip.title = tag;
+
+      const grip = document.createElement("span");
+      grip.className = "tag-grip";
+      grip.textContent = "⋮⋮";
+      grip.title = "长按拖动排序";
+
+      const text = document.createElement("span");
+      text.className = "tag-text";
+      text.textContent = tag;
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "tag-remove";
+      remove.textContent = "×";
+      remove.title = "删除标签";
+      remove.addEventListener("click", event => {
+        event.stopPropagation();
+        removeTag(ctx, tag, index);
       });
 
-      // 容器级精确落点：指针在标签上、标签间隙、换行空隙或末尾空白时，
-      // 都取“离指针最近的其它标签”并按其左右半区决定插入到前面还是后面。
+      bindTagChipDrag(ctx, chip, index);
+      bindTagGripLongPress(ctx, grip);
+      chip.append(grip, text, makeTagMoveButton(ctx, index, total, -1), makeTagMoveButton(ctx, index, total, 1), remove);
+      return chip;
+    }
+
+    // 容器级精确落点（鼠标拖拽）：指针在标签上、标签间隙、换行空隙或末尾空白时，
+    // 都取“离指针最近的其它标签”并按其左右半区决定插入到前面还是后面。
+    function bindTagContainerDrag(ctx) {
       const dropTargetFor = (clientX, clientY) => {
         let best = null;
         let bestD = Infinity;
-        editor.querySelectorAll(".tag-item").forEach((node, chipIndex) => {
-          if (chipIndex === sourceIndex) return;
+        tagNodes(ctx).forEach((node, chipIndex) => {
+          if (chipIndex === ctx.sourceIndex) return;
           const rect = node.getBoundingClientRect();
           const dx = Math.max(rect.left - clientX, 0, clientX - rect.right);
           const dy = Math.max(rect.top - clientY, 0, clientY - rect.bottom);
@@ -2574,57 +3752,70 @@
         return { node: best.node, index: best.index, side: clientX < best.center ? "before" : "after" };
       };
 
-      editor.addEventListener("dragover", event => {
-        if (sourceIndex === -1) return;
+      ctx.editor.addEventListener("dragover", event => {
+        if (ctx.sourceIndex === -1) return;
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
         const target = dropTargetFor(event.clientX, event.clientY);
-        clearTagMarkers();
+        clearTagMarkers(ctx);
         if (!target) return;
         target.node.classList.add(target.side === "before" ? "drop-before" : "drop-after");
       });
-      editor.addEventListener("dragleave", event => {
-        if (event.relatedTarget && editor.contains(event.relatedTarget)) return;
-        clearTagMarkers();
+      ctx.editor.addEventListener("dragleave", event => {
+        if (event.relatedTarget && ctx.editor.contains(event.relatedTarget)) return;
+        clearTagMarkers(ctx);
       });
-      editor.addEventListener("drop", event => {
-        if (sourceIndex === -1) return;
+      ctx.editor.addEventListener("drop", event => {
+        if (ctx.sourceIndex === -1) return;
         event.preventDefault();
         const target = dropTargetFor(event.clientX, event.clientY);
+        const from = ctx.sourceIndex;
         if (!target) {
-          finishTagDrag();
+          finishTagDrag(ctx);
           return;
         }
         // 先考虑源行移除带来的位移，再按左右半区确定插入位置。
-        let to = target.index;
-        if (sourceIndex < target.index) to -= 1;
-        if (target.side === "after") to += 1;
-        to = Math.max(0, Math.min(to, tags.length - 1));
-        if (to !== sourceIndex) {
-          const movedText = tags[sourceIndex];
-          commitDirect("调整标签顺序 " + movedText, () => {
-            const [moved] = tags.splice(sourceIndex, 1);
-            tags.splice(to, 0, moved);
-          });
-        }
-        finishTagDrag();
+        const to = tagDropIndex(from, target.index, target.side === "after");
+        finishTagDrag(ctx);
+        if (to !== from) reorderTag(ctx, from, to);
       });
+    }
 
-      const input = document.createElement("input");
-      input.placeholder = "输入后回车";
-      input.addEventListener("keydown", event => {
-        if (event.key === "Enter") {
+    function bindTagInput(ctx) {
+      const submitTagInput = () => {
+        // 输入框为空时也把焦点收回来，方便接着输入下一个标签。
+        if (!ctx.input.value.trim()) {
+          ctx.input.focus({ preventScroll: true });
+          return;
+        }
+        addTag(ctx, ctx.input.value, true);
+      };
+      ctx.input.addEventListener("keydown", event => {
+        if (event.isComposing) return;
+        if (event.key === "Enter" || event.keyCode === 13) {
           event.preventDefault();
-          const value = input.value.trim();
-          if (!value) return;
-          commitDirect("添加标签 " + value, () => {
-            if (!Array.isArray(obj[key])) obj[key] = [];
-            if (!obj[key].includes(value)) obj[key].push(value);
-          });
+          submitTagInput();
         }
       });
-      editor.appendChild(input);
-      shell.appendChild(editor);
+      // 有些输入法按回车是插入换行 / 提交输入，这里再兜一层，保证手机上一定能加进去。
+      ctx.input.addEventListener("beforeinput", event => {
+        if (event.inputType === "insertLineBreak" || event.inputType === "insertParagraph") {
+          event.preventDefault();
+          submitTagInput();
+        }
+      });
+      // 手机输入法的回车经常被换成“下一项”，那种情况不会触发 keydown；
+      // 用 change 兜底：焦点离开输入框时，把还没提交的文字也加为标签。
+      ctx.input.addEventListener("change", () => addTag(ctx, ctx.input.value, false));
+      ctx.addButton.addEventListener("click", submitTagInput);
+    }
+
+    function addTagsField(parent, label, obj, key) {
+      const ctx = createTagContext(parent, label, obj, key);
+      bindTagInput(ctx);
+      bindTagContainerDrag(ctx);
+      refreshTagChips(ctx);
+      ctx.shell.appendChild(ctx.editor);
     }
 
     function addKeyValueField(parent, label, obj, key) {
@@ -2817,6 +4008,7 @@
       keyInput.value = effectName;
       const valueInput = document.createElement("textarea");
       valueInput.value = typeof effectText === "string" ? effectText : JSON.stringify(effectText, null, 2);
+      valueInput.rows = estimateTextRows(valueInput.value);
       const rowKey = currentPath() + "/kv:" + effectName;
       keyInput.dataset.fkey = rowKey + "#key";
       valueInput.dataset.fkey = rowKey + "#value";
@@ -2828,6 +4020,7 @@
       del.textContent = "删";
       del.addEventListener("click", onDelete);
       row.append(keyInput, valueInput, del);
+      attachTextareaResize(row, valueInput, "h:kv-value");
       return row;
     }
 
@@ -2840,6 +4033,143 @@
       field.appendChild(labelNode);
       parent.appendChild(field);
       return field;
+    }
+
+    // ===== 内容输入框默认高度：按文本多少自适应 =====
+    // 文本少的框矮一点，文本多的维持在较高的默认高度；用户拖过手柄后以内联高度为准。
+    const TEXTAREA_MIN_ROWS = 3;
+    const TEXTAREA_MAX_ROWS = 7;
+    const TEXTAREA_CHARS_PER_LINE = 18;
+
+    function estimateTextRows(text) {
+      const value = String(text ?? "");
+      if (!value.trim()) return TEXTAREA_MIN_ROWS;
+      const rows = value
+        .split(/\r?\n/)
+        .reduce((count, line) => count + Math.max(1, Math.ceil([...line].length / TEXTAREA_CHARS_PER_LINE)), 0);
+      return Math.min(Math.max(rows, TEXTAREA_MIN_ROWS), TEXTAREA_MAX_ROWS);
+    }
+
+    // ===== 内容输入框「加高」手柄 =====
+    // 手机端原生 textarea 的缩放角太小抓不住，这里自绘一个右下角 ↕ 手柄：
+    // 上下拖动改变高度，拖到屏幕下边缘会自动向下滚动页面继续加高；点一下恢复默认高度。
+    // 横向刻意不做：单栏布局下输入框本来就是整行宽，再宽只会被拖出屏幕，
+    // 所以宽度固定 100%，只调整高度；高度按字段种类记住，换条目、编辑器重绘都不会丢。
+    const RESIZE_MIN_HEIGHT = 72;
+    const RESIZE_MAX_HEIGHT = 1600;
+    const RESIZE_EDGE = 64;
+
+    function attachTextareaResize(host, textarea, storeKey) {
+      if (!host || !textarea) return;
+      host.classList.add("resize-host");
+
+      const handle = document.createElement("span");
+      handle.className = "resize-handle";
+      handle.textContent = "↕";
+      handle.title = "上下拖动调整输入框高度，点一下恢复默认";
+      handle.setAttribute("role", "separator");
+      handle.setAttribute("aria-label", "拖动调整输入框高度");
+      host.appendChild(handle);
+
+      const applyHeight = px => {
+        textarea.style.height = Math.round(px) + "px";
+      };
+      const clearSize = () => {
+        textarea.style.height = "";
+        state.fieldHeights.delete(storeKey);
+      };
+
+      const saved = state.fieldHeights.get(storeKey);
+      if (saved) applyHeight(saved);
+
+      let activeId = null;
+      let startY = 0;
+      let startHeight = 0;
+      let pointerY = 0;
+      let extraY = 0;
+      let floorHeight = RESIZE_MIN_HEIGHT;
+      let moved = false;
+      let autoTimer = null;
+
+      const updateHeight = () => {
+        const height = Math.min(Math.max(startHeight + (pointerY - startY) + extraY, floorHeight), RESIZE_MAX_HEIGHT);
+        applyHeight(height);
+        state.fieldHeights.set(storeKey, Math.round(height));
+      };
+
+      // 手指停在屏幕上下边缘时自动滚动页面，同时继续加高，
+      // 这样在手机上也能把内容框拉得比屏幕还高。
+      const autoScroll = () => {
+        if (activeId === null) {
+          stopAutoScroll();
+          return;
+        }
+        // 只有真正开始拖动（而不是单纯点一下）才自动滚动，免得误触把页面推移。
+        if (!moved) return;
+        let step = 0;
+        if (pointerY > window.innerHeight - RESIZE_EDGE) step = 8;
+        else if (pointerY < RESIZE_EDGE) step = -8;
+        if (!step) return;
+        const scroller = findScrollParent(textarea);
+        const before = scroller.scrollTop;
+        scroller.scrollTop = before + step;
+        const scrolled = scroller.scrollTop - before;
+        if (scrolled) {
+          extraY += scrolled;
+          updateHeight();
+        }
+      };
+
+      const stopAutoScroll = () => {
+        if (autoTimer) {
+          clearInterval(autoTimer);
+          autoTimer = null;
+        }
+      };
+
+      const onMove = event => {
+        if (activeId === null || event.pointerId !== activeId) return;
+        pointerY = event.clientY;
+        if (!moved && Math.abs(pointerY - startY) < 4) return;
+        moved = true;
+        if (event.cancelable) event.preventDefault();
+        handle.classList.add("dragging");
+        updateHeight();
+      };
+
+      const onEnd = event => {
+        if (activeId === null || (event && event.pointerId !== activeId)) return;
+        activeId = null;
+        stopAutoScroll();
+        handle.classList.remove("dragging");
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onEnd);
+        window.removeEventListener("pointercancel", onEnd);
+        if (!moved && state.fieldHeights.has(storeKey)) {
+          // 只是点了一下，且当前是自定义高度：恢复默认。
+          clearSize();
+          showToast("输入框高度已恢复默认");
+        }
+      };
+
+      handle.addEventListener("pointerdown", event => {
+        if (event.button !== undefined && event.button !== 0) return;
+        event.preventDefault();
+        activeId = event.pointerId;
+        startY = event.clientY;
+        pointerY = startY;
+        extraY = 0;
+        moved = false;
+        startHeight = textarea.getBoundingClientRect().height || textarea.offsetHeight || 0;
+        // 以 CSS 里的默认高度为下限：拖小不会比默认还矮，要回到默认只需点一下。
+        const cssMin = parseFloat(window.getComputedStyle(textarea).minHeight);
+        floorHeight = Math.max(RESIZE_MIN_HEIGHT, Number.isFinite(cssMin) ? cssMin : 0);
+        window.addEventListener("pointermove", onMove, { passive: false });
+        window.addEventListener("pointerup", onEnd);
+        window.addEventListener("pointercancel", onEnd);
+        stopAutoScroll();
+        autoTimer = setInterval(autoScroll, 16);
+      });
     }
 
     function updateSelected(label, mutator, options = {}) {
@@ -3065,6 +4395,7 @@
         state.renderLimit = Math.max(state.renderLimit, state.selected.index + 1);
       }
       render();
+      if (isMobileLayout()) setMobileView("edit");
     }
 
     function duplicateSelected() {
@@ -3752,7 +5083,7 @@
     function buildTableSummary(rendered, visible) {
       const total = getRows().length;
       const currentLabel = DATASETS[state.currentFile]?.label || "数据";
-      const dragHint = canDragRows() ? "。按住“拖”移动条目，会直接改变 JSON 里的物品位置" : "";
+      const dragHint = canDragRows() ? "。可长按“拖”或点 ↑↓ 调整条目顺序" : "";
       const loadHint = visible > rendered ? "，已渲染前 " + rendered + " 条，向下滚动继续加载" : "";
       return currentLabel + ": 可见 " + visible + " / 总计 " + total + "，分类 " + getCategories().length + " 个" + loadHint + dragHint;
     }
@@ -3790,33 +5121,264 @@
 
     function setupSplitters() {
       const root = document.querySelector(".app");
+      // 用 Pointer Events：鼠标和手指都能拖动分隔条，把编辑区拉宽。
       const startDrag = (splitter, side, event) => {
+        if (event.pointerType === "mouse" && event.button !== 0) return;
         event.preventDefault();
         splitter.classList.add("dragging");
         const onMove = moveEvent => {
+          if (event.pointerId !== undefined && moveEvent.pointerId !== event.pointerId) return;
           const rect = root.getBoundingClientRect();
+          const sidebar = root.querySelector(".sidebar");
+          const sidebarWidth = sidebar ? sidebar.getBoundingClientRect().width : 220;
           if (side === "left") {
-            const width = Math.min(Math.max(moveEvent.clientX - rect.left, 160), 380);
+            // 左边最多推到还够放列表 + 编辑区的位置。
+            const maxSidebar = Math.max(160, Math.min(380, rect.width - 800));
+            const width = Math.min(Math.max(moveEvent.clientX - rect.left, 160), maxSidebar);
             root.style.setProperty("--sidebar-w", width + "px");
           } else {
-            const width = Math.min(Math.max(rect.right - moveEvent.clientX, 420), Math.max(520, rect.width - 560));
+            // 预留：左侧栏 + 两条分隔条 + 列表最小宽度，避免拖到表格被挤爆。
+            const reserved = sidebarWidth + 2 * 18 + 340;
+            const maxEditor = Math.max(360, rect.width - reserved);
+            const width = Math.min(Math.max(rect.right - moveEvent.clientX, 360), maxEditor);
             root.style.setProperty("--editor-w", width + "px");
           }
         };
         const onUp = () => {
           splitter.classList.remove("dragging");
-          window.removeEventListener("mousemove", onMove);
-          window.removeEventListener("mouseup", onUp);
+          window.removeEventListener("pointermove", onMove);
+          window.removeEventListener("pointerup", onUp);
+          window.removeEventListener("pointercancel", onUp);
         };
-        window.addEventListener("mousemove", onMove);
-        window.addEventListener("mouseup", onUp);
+        window.addEventListener("pointermove", onMove, { passive: false });
+        window.addEventListener("pointerup", onUp);
+        window.addEventListener("pointercancel", onUp);
       };
-      el.leftSplitter.addEventListener("mousedown", event => startDrag(el.leftSplitter, "left", event));
-      el.rightSplitter.addEventListener("mousedown", event => startDrag(el.rightSplitter, "right", event));
+      el.leftSplitter.addEventListener("pointerdown", event => startDrag(el.leftSplitter, "left", event));
+      el.rightSplitter.addEventListener("pointerdown", event => startDrag(el.rightSplitter, "right", event));
+    }
+
+    // ===== 手机端长按拖动排序 =====
+    // 鼠标继续走原生 HTML5 拖拽；触摸 / 手写笔走这里的长按拖动，二者互不干扰。
+    // 长按握把后才进入拖动状态，避免和页面滚动抢手势。
+
+    function findScrollParent(node) {
+      let current = node && node.parentElement;
+      while (current && current !== document.body) {
+        const style = window.getComputedStyle(current);
+        if (/(auto|scroll|overlay)/.test(style.overflowY) && current.scrollHeight > current.clientHeight + 4) {
+          return current;
+        }
+        current = current.parentElement;
+      }
+      return document.scrollingElement || document.documentElement;
+    }
+
+    function enableLongPressReorder(handle, options) {
+      const { container, selector, axis = "y", onDrop } = options;
+      const LONG_PRESS_MS = 180;
+      const MOVE_TOLERANCE = 12;
+      const EDGE = 72;
+      let timer = null;
+      let autoTimer = null;
+      let pointerId = null;
+      let armed = false;
+      let sourceNode = null;
+      let startX = 0;
+      let startY = 0;
+      let pointerX = 0;
+      let pointerY = 0;
+      let candidates = [];
+      let hover = null;
+      let scroller = null;
+
+      // 拖动期间容器不会滚动（除了下面的自动滚动），所以位置快照可以复用，避免每帧触发重排。
+      const snapshot = () => {
+        candidates = Array.from(container.querySelectorAll(selector))
+          .filter(node => node !== sourceNode)
+          .map(node => ({ node, rect: node.getBoundingClientRect() }));
+      };
+
+      const clearHover = () => {
+        if (!hover) return;
+        hover.node.classList.remove("drop-before", "drop-after");
+        hover = null;
+      };
+
+      const updateHover = () => {
+        let best = null;
+        let bestScore = Infinity;
+        for (const candidate of candidates) {
+          const rect = candidate.rect;
+          const dx = Math.max(rect.left - pointerX, 0, pointerX - rect.right);
+          const dy = Math.max(rect.top - pointerY, 0, pointerY - rect.bottom);
+          const score = dx * dx + dy * dy;
+          if (score < bestScore) {
+            bestScore = score;
+            best = candidate;
+          }
+        }
+        clearHover();
+        if (!best) return;
+        const rect = best.rect;
+        const position =
+          axis === "y"
+            ? pointerY > rect.top + rect.height / 2
+              ? "after"
+              : "before"
+            : pointerX < rect.left + rect.width / 2
+              ? "before"
+              : "after";
+        best.node.classList.add(position === "after" ? "drop-after" : "drop-before");
+        hover = { node: best.node, position };
+      };
+
+      const stopAutoScroll = () => {
+        if (autoTimer) {
+          clearInterval(autoTimer);
+          autoTimer = null;
+        }
+      };
+
+      // 手指停在屏幕上下边缘时自动滚动列表，长列表也能拖到远处。
+      const autoScroll = () => {
+        if (!armed || !scroller) return;
+        const rect =
+          scroller === document.scrollingElement
+            ? { top: 0, bottom: window.innerHeight }
+            : scroller.getBoundingClientRect();
+        let delta = 0;
+        if (pointerY < rect.top + EDGE) delta = -Math.ceil((rect.top + EDGE - pointerY) / 5);
+        else if (pointerY > rect.bottom - EDGE) delta = Math.ceil((pointerY - (rect.bottom - EDGE)) / 5);
+        if (!delta) return;
+        const before = scroller.scrollTop;
+        scroller.scrollTop = before + delta;
+        if (scroller.scrollTop !== before) {
+          snapshot();
+          updateHover();
+        }
+      };
+
+      const reset = commit => {
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
+        stopAutoScroll();
+        stopTracking();
+        if (armed && sourceNode) {
+          sourceNode.classList.remove("dragging");
+          container.classList.remove("touch-dragging");
+          clearHover();
+          if (commit && hover) onDrop(sourceNode, hover.node, hover.position);
+        }
+        armed = false;
+        sourceNode = null;
+        pointerId = null;
+        candidates = [];
+        hover = null;
+        scroller = null;
+      };
+
+      // 按下后手指常常会移出握把，所以进入拖动状态后把 move/up 挂到 window 上，
+      // 比依赖指针捕获更稳（部分浏览器 / WebView 对 setPointerCapture 支持不佳）。
+      const onWindowMove = event => {
+        if (pointerId === null || event.pointerId !== pointerId || !armed) return;
+        pointerX = event.clientX;
+        pointerY = event.clientY;
+        if (event.cancelable) event.preventDefault();
+        updateHover();
+        if (!autoTimer) autoTimer = setInterval(autoScroll, 16);
+      };
+      const onWindowEnd = commit => event => {
+        if (pointerId === null || event.pointerId !== pointerId) return;
+        reset(commit);
+      };
+      const onWindowUp = onWindowEnd(true);
+      const onWindowCancel = onWindowEnd(false);
+
+      const startTracking = () => {
+        window.addEventListener("pointermove", onWindowMove, { passive: false });
+        window.addEventListener("pointerup", onWindowUp);
+        window.addEventListener("pointercancel", onWindowCancel);
+      };
+      const stopTracking = () => {
+        window.removeEventListener("pointermove", onWindowMove);
+        window.removeEventListener("pointerup", onWindowUp);
+        window.removeEventListener("pointercancel", onWindowCancel);
+      };
+
+      handle.addEventListener("contextmenu", event => {
+        if (armed) event.preventDefault();
+      });
+
+      handle.addEventListener("pointerdown", event => {
+        if (event.pointerType === "mouse") return;
+        if (event.button !== 0) return;
+        startX = event.clientX;
+        startY = event.clientY;
+        pointerX = startX;
+        pointerY = startY;
+        pointerId = event.pointerId;
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          timer = null;
+          const node = handle.closest(selector);
+          if (!node || !container.contains(node)) return;
+          armed = true;
+          sourceNode = node;
+          node.classList.add("dragging");
+          container.classList.add("touch-dragging");
+          startTracking();
+          scroller = findScrollParent(container);
+          snapshot();
+          if (navigator.vibrate) {
+            try {
+              navigator.vibrate(12);
+            } catch (_error) {
+              // 没有震动权限时忽略。
+            }
+          }
+        }, LONG_PRESS_MS);
+      });
+
+      handle.addEventListener("pointermove", event => {
+        if (pointerId === null || event.pointerId !== pointerId) return;
+        if (armed) return; // 已进入拖动，交给 window 上的监听处理
+        pointerX = event.clientX;
+        pointerY = event.clientY;
+        // 还没长按成功就移动，说明用户想滚动页面，放弃这次拖动。
+        if (Math.hypot(pointerX - startX, pointerY - startY) > MOVE_TOLERANCE) {
+          if (timer) {
+            clearTimeout(timer);
+            timer = null;
+          }
+          pointerId = null;
+        }
+      });
+
+      handle.addEventListener("pointerup", event => {
+        if (pointerId === null || event.pointerId !== pointerId) return;
+        if (!armed) reset(false);
+      });
+      handle.addEventListener("pointercancel", event => {
+        if (pointerId === null || event.pointerId !== pointerId) return;
+        if (!armed) reset(false);
+      });
+    }
+
+    // 弹窗骨架：标题 + 重置操作区 + 「关闭」按钮 + 显示遮罩。两种弹窗共用，避免重复构造。
+    function showModal(title) {
+      el.modalTitle.textContent = title;
+      el.modalActions.innerHTML = "";
+      const close = document.createElement("button");
+      close.textContent = "关闭";
+      close.addEventListener("click", closeModal);
+      el.modalActions.appendChild(close);
+      el.modalBackdrop.classList.add("show");
     }
 
     function openChoiceModal(title, choices) {
-      el.modalTitle.textContent = title;
       el.modalContent.innerHTML = "";
       const list = document.createElement("div");
       list.className = "choice-list";
@@ -3832,23 +5394,12 @@
         list.appendChild(button);
       });
       el.modalContent.appendChild(list);
-      el.modalActions.innerHTML = "";
-      const close = document.createElement("button");
-      close.textContent = "关闭";
-      close.addEventListener("click", closeModal);
-      el.modalActions.appendChild(close);
-      el.modalBackdrop.classList.add("show");
+      showModal(title);
     }
 
     function openModal(title, content) {
-      el.modalTitle.textContent = title;
       el.modalContent.textContent = content;
-      el.modalActions.innerHTML = "";
-      const close = document.createElement("button");
-      close.textContent = "关闭";
-      close.addEventListener("click", closeModal);
-      el.modalActions.appendChild(close);
-      el.modalBackdrop.classList.add("show");
+      showModal(title);
     }
 
     function closeModal(options = {}) {

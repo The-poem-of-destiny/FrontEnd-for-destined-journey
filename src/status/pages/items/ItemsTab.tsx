@@ -267,6 +267,18 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     setInspectItem(null);
   };
 
+  const handleItemRename = (itemState: NonNullable<InspectItemState>, nextName: string) => {
+    if (!nextName || nextName === itemState.name) return;
+
+    const renameState = (current: InspectItemState): InspectItemState =>
+      current?.categoryId === itemState.categoryId && current.name === itemState.name
+        ? { ...current, name: nextName }
+        : current;
+
+    setSelectedItem(renameState);
+    setInspectItem(renameState);
+  };
+
   const handleDeleteItem = (name: string) => {
     setDeleteTarget({
       type: activeCategoryConfig.label,
@@ -316,6 +328,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
         pathPrefix={`${config.pathPrefix}.${itemState.name}`}
         itemCategory={config.itemCategory}
         displayMode="modal-detail"
+        onRename={nextName => handleItemRename(itemState, nextName)}
       />
     );
   };

@@ -29,6 +29,8 @@ import {
   readSessionState,
   removeAvatarRecord,
   removePartnerGalleryRecord,
+  renameAvatarRecord,
+  renamePartnerGalleryRecord,
   saveAvatarRecord,
   savePartnerGalleryItems,
   writeSessionState,
@@ -139,6 +141,13 @@ const PartnerAssetSections: PartnerAssetSectionConfig[] = [
     emptyText: '暂无资产',
   },
 ];
+
+const renameRecordKey = <T,>(record: Record<string, T>, currentName: string, nextName: string) => {
+  if (!Object.hasOwn(record, currentName)) return record;
+  const nextRecord = { ...record, [nextName]: record[currentName] };
+  delete nextRecord[currentName];
+  return nextRecord;
+};
 
 /**
  * 命定页内容组件
@@ -355,25 +364,6 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     );
   };
 
-  /**
-   * 渲染只读字段行（等级/生命层级等不可编辑字段）
-   */
-  const renderReadonlyRow = (
-    label: string,
-    value: string | number | undefined,
-    rowClass: string,
-    labelClass: string,
-    valueClass: string,
-  ) => {
-    if (value === undefined || value === null || value === '') return null;
-    return (
-      <div className={rowClass}>
-        <span className={labelClass}>{label}</span>
-        <span className={valueClass}>{value}</span>
-      </div>
-    );
-  };
-
   const renderAffectionBar = (value: number) => {
     const percentage = Math.abs(value);
     const isNegative = value < 0;
@@ -563,12 +553,54 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     );
   };
 
+  const handlePartnerRename = async (currentName: string, value: unknown) => {
+    const nextName = String(value).trim();
+    if (!nextName || nextName === currentName) return;
+
+    setSelectedPartnerName(nextName);
+    setActiveAvatarPartnerName(name => (name === currentName ? nextName : name));
+    setActiveGalleryPreview(preview =>
+      preview?.partnerName === currentName ? { ...preview, partnerName: nextName } : preview,
+    );
+    setPendingGalleryDelete(pending =>
+      pending?.partnerName === currentName ? { ...pending, partnerName: nextName } : pending,
+    );
+    setPartnerAvatarMap(record => renameRecordKey(record, currentName, nextName));
+    setPartnerDefaultAvatarMap(record => renameRecordKey(record, currentName, nextName));
+    setPartnerAvatarRemovedMap(record => renameRecordKey(record, currentName, nextName));
+    setPartnerGalleryMap(record => renameRecordKey(record, currentName, nextName));
+    setPartnerExternalGalleryMap(record => renameRecordKey(record, currentName, nextName));
+    setPartnerPredefinedGalleryMap(record => renameRecordKey(record, currentName, nextName));
+
+    try {
+      await Promise.all([
+        renameAvatarRecord(avatarScopeKey, 'partner', currentName, nextName),
+        renamePartnerGalleryRecord(avatarScopeKey, currentName, nextName),
+      ]);
+    } catch (error) {
+      console.warn('[DestinyTab] 迁移伙伴本地图片失败:', error);
+    }
+  };
+
   /** 详情头部身份信息：名字 + 好感度 + 在场/契约标记 */
   const renderPartnerIdentity = (partnerName: string, partner: PartnerRecord) => (
     <>
       <div className={styles.partnerIdentityHeader}>
         <div className={styles.partnerIdentityTitleRow}>
-          <IconTitle text={partnerName} className={styles.partnerName} />
+          {editEnabled ? (
+            <EditableField
+              path={`关系列表.${partnerName}`}
+              value={partnerName}
+              type="text"
+              renameKey
+              className={styles.partnerName}
+              onUpdateSuccess={value => {
+                void handlePartnerRename(partnerName, value);
+              }}
+            />
+          ) : (
+            <IconTitle text={partnerName} className={styles.partnerName} />
+          )}
         </div>
       </div>
       <div className={styles.partnerMeta}>
@@ -1416,19 +1448,24 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
                   styles.infoLabel,
                   styles.infoValue,
                 )}
-                {renderReadonlyRow(
+                {renderEditableRow(
                   '生命层级',
+                  `关系列表.${partnerName}.生命层级`,
                   partner.生命层级,
+                  'text',
                   styles.infoRow,
                   styles.infoLabel,
                   styles.infoValue,
                 )}
-                {renderReadonlyRow(
+                {renderEditableRow(
                   '等级',
-                  partner.等级 ? `Lv.${partner.等级}` : '',
+                  `关系列表.${partnerName}.等级`,
+                  partner.等级,
+                  'number',
                   styles.infoRow,
                   styles.infoLabel,
                   styles.infoValue,
+                  { numberConfig: { min: 1, max: 25, step: 1 } },
                 )}
               </div>
             </Card>

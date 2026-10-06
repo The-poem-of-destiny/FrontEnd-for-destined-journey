@@ -343,6 +343,7 @@ export const ItemCollectionPanel: FC<ItemCollectionPanelProps> = ({
             pathPrefix={`${pathPrefix}.${inspectItem}`}
             itemCategory={itemCategory}
             displayMode="modal-detail"
+            onRename={setInspectItem}
           />
         ) : null}
       </ItemInspectModal>

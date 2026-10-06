@@ -34,6 +34,7 @@ export const KeyValueEditor: FC<KeyValueEditorProps> = ({
   const [newKey, setNewKey] = useState('');
   const [newValue, setNewValue] = useState('');
   const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editingNextKey, setEditingNextKey] = useState('');
   const [editingValue, setEditingValue] = useState('');
 
   const handleCommit = (nextValue: Record<string, string | number>) => {
@@ -61,21 +62,31 @@ export const KeyValueEditor: FC<KeyValueEditorProps> = ({
   const handleStartEdit = (key: string) => {
     if (disabled) return;
     setEditingKey(key);
+    setEditingNextKey(key);
     setEditingValue(String(value[key]));
   };
 
   /** 确认编辑（失焦或按键触发） */
   const handleConfirmEdit = () => {
     if (editingKey === null) return;
+    const trimmedKey = editingNextKey.trim();
+    if (!trimmedKey || (trimmedKey !== editingKey && trimmedKey in value)) return;
     const parsedValue = valueType === 'number' ? parseFloat(editingValue) || 0 : editingValue;
-    handleCommit({ ...value, [editingKey]: parsedValue });
+    const nextValue = Object.fromEntries(
+      Object.entries(value).map(([key, val]) =>
+        key === editingKey ? [trimmedKey, parsedValue] : [key, val],
+      ),
+    );
+    handleCommit(nextValue);
     setEditingKey(null);
+    setEditingNextKey('');
     setEditingValue('');
   };
 
   /** 取消编辑（Escape 触发） */
   const handleCancelEdit = () => {
     setEditingKey(null);
+    setEditingNextKey('');
     setEditingValue('');
   };
 
@@ -117,34 +128,46 @@ export const KeyValueEditor: FC<KeyValueEditorProps> = ({
           <div className={styles.entries}>
             {entries.map(([key, val]) => (
               <div key={key} className={styles.entry}>
-                <span className={styles.entryKey}>{key}</span>
                 {editingKey === key ? (
-                  <div className={styles.editWrapper}>
+                  <div
+                    className={styles.editWrapper}
+                    onBlur={event => {
+                      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                        handleBlur();
+                      }
+                    }}
+                  >
+                    <input
+                      type="text"
+                      value={editingNextKey}
+                      onChange={e => setEditingNextKey(e.target.value)}
+                      onKeyDown={e => handleKeyDown(e, 'edit')}
+                      className={styles.editInput}
+                      placeholder={keyPlaceholder}
+                      autoFocus
+                    />
                     {valueType === 'number' ? (
                       <input
                         type="number"
                         value={editingValue}
                         onChange={e => setEditingValue(e.target.value)}
                         onKeyDown={e => handleKeyDown(e, 'edit')}
-                        onBlur={handleBlur}
                         className={styles.editInput}
-                        autoFocus
                       />
                     ) : (
                       <textarea
                         value={editingValue}
                         onChange={e => setEditingValue(e.target.value)}
                         onKeyDown={e => handleKeyDown(e, 'edit')}
-                        onBlur={handleBlur}
                         className={styles.editTextarea}
                         rows={3}
-                        autoFocus
                         placeholder="失焦自动保存 · Esc 取消"
                       />
                     )}
                   </div>
                 ) : (
                   <>
+                    <span className={styles.entryKey}>{key}</span>
                     <span
                       className={styles.entryValue}
                       onClick={() => handleStartEdit(key)}

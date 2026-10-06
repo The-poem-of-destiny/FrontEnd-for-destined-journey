@@ -112,6 +112,20 @@
   min-width: 0;
 }
 
+.heroEditRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: $spacing-sm;
+  width: 100%;
+}
+
+.heroEditLabel {
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .heroLevel {
   color: var(--theme-text-primary);
   font-size: 26px;

@@ -19,6 +19,8 @@ type FieldType = 'text' | 'number' | 'tags' | 'keyvalue' | 'textarea' | 'select'
 export interface EditableFieldProps {
   /** 数据路径 (相对于 stat_data) */
   path: string;
+  /** 将 path 指向的记录键重命名，而不是覆盖该路径的值 */
+  renameKey?: boolean;
   /** 当前值 */
   value: unknown;
   /** 字段类型 */
@@ -58,7 +60,7 @@ export interface EditableFieldProps {
     size?: 'sm' | 'md';
   };
   /** 更新成功回调 */
-  onUpdateSuccess?: () => void;
+  onUpdateSuccess?: (value: unknown) => void;
 }
 
 /**
@@ -67,6 +69,7 @@ export interface EditableFieldProps {
  */
 export const EditableField: FC<EditableFieldProps> = ({
   path,
+  renameKey = false,
   value,
   type = 'text',
   label,
@@ -79,7 +82,7 @@ export const EditableField: FC<EditableFieldProps> = ({
   toggleConfig,
   onUpdateSuccess,
 }) => {
-  const { updateField } = useMvuDataStore();
+  const { renameField, updateField } = useMvuDataStore();
 
   const [pendingValue, setPendingValue] = useState<unknown | null>(null);
   const [pendingLabel, setPendingLabel] = useState<string>('');
@@ -107,31 +110,38 @@ export const EditableField: FC<EditableFieldProps> = ({
   const handleChange = useCallback(
     (newVal: unknown) => {
       if (isDisabled) return;
+      const nextValue = renameKey && typeof newVal === 'string' ? newVal.trim() : newVal;
+      if (renameKey && !nextValue) {
+        toastr.error('名称不能为空');
+        return;
+      }
       // 避免无变化时弹窗
-      if (_.isEqual(newVal, formattedCurrentValue)) return;
-      setPendingValue(newVal);
+      if (_.isEqual(nextValue, formattedCurrentValue)) return;
+      setPendingValue(nextValue);
       setPendingPrevValue(formattedCurrentValue);
       setPendingLabel(label ?? path);
       setShowConfirm(true);
     },
-    [isDisabled, formattedCurrentValue, label, path],
+    [isDisabled, formattedCurrentValue, label, path, renameKey],
   );
 
   /** 确认提交 */
   const confirmUpdate = useCallback(async () => {
     if (!showConfirm) return;
-    const success = await updateField(path, pendingValue);
+    const success = renameKey
+      ? await renameField(path, String(pendingValue ?? ''))
+      : await updateField(path, pendingValue);
     setShowConfirm(false);
     setPendingValue(null);
     setPendingPrevValue(null);
 
     if (success) {
       toastr.success('已保存');
-      onUpdateSuccess?.();
+      onUpdateSuccess?.(pendingValue);
     } else {
-      toastr.error('保存失败');
+      toastr.error(renameKey ? '重命名失败，请确认名称非空且未被占用' : '保存失败');
     }
-  }, [showConfirm, updateField, path, pendingValue, onUpdateSuccess]);
+  }, [showConfirm, renameKey, renameField, path, pendingValue, updateField, onUpdateSuccess]);
 
   /** 取消提交 */
   const cancelUpdate = useCallback(() => {

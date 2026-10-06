@@ -117,3 +117,16 @@ export const removePartnerGalleryRecord = async (
     await readRequest(store.delete(buildPartnerGalleryKey(scope_key, owner_name)));
   });
 };
+
+export const renamePartnerGalleryRecord = async (
+  scope_key: string,
+  current_name: string,
+  next_name: string,
+): Promise<void> => {
+  const records = await getPartnerGalleryRecordsByScopeKey(scope_key);
+  const record = records.find(item => item.owner_name === current_name);
+  if (!record) return;
+
+  await savePartnerGalleryItems(scope_key, next_name, record.items);
+  await removePartnerGalleryRecord(scope_key, current_name);
+};

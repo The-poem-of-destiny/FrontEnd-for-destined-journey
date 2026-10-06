@@ -142,7 +142,9 @@ export interface CharacterConfig {
   startLocation: string;
   customStartLocation: string;
   level: number;
-  /** 基础点分配（总和上限25，单项上限6） */
+  /** 天赋水平，空字符串表示尚未选择 */
+  talentLevel: string;
+  /** 基础点分配（总和由天赋决定，20–30点，单项上限6） */
   basePoints: Record<keyof Attributes, number>;
   /** 额外点分配（总和 = Lv-1） */
   attributePoints: Record<keyof Attributes, number>;
