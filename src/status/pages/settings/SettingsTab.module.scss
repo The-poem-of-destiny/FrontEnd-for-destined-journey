@@ -58,6 +58,28 @@
   gap: $spacing-sm;
 }
 
+.uniqueColorMode,
+.gradientAngleInput {
+  min-height: 28px;
+  padding: 2px 6px;
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+  background: var(--theme-card-bg);
+  color: var(--theme-text-primary);
+  font-size: 11px;
+}
+
+.gradientAngleInput {
+  width: 56px;
+}
+
+.uniqueColorPreview {
+  width: 72px;
+  height: 24px;
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+}
+
 .uniqueColorInput {
   width: 36px;
   height: 28px;

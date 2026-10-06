@@ -13,8 +13,10 @@ export const SettingsTab: FC = () => {
   const {
     currentThemeId,
     qualityUniqueOverride,
+    qualityUniqueGradientOverride,
     setTheme,
     setQualityUniqueOverride,
+    setQualityUniqueGradientOverride,
     resetQualityUniqueOverride,
     reset,
     saveTheme,
@@ -22,13 +24,27 @@ export const SettingsTab: FC = () => {
   } = useThemeStore();
   const { editEnabled, setEditEnabled, saveSettings } = useEditorSettingStore();
   const currentUniqueColor = getColors().qualityUnique;
+  const gradientDraft = qualityUniqueGradientOverride ?? {
+    start: currentUniqueColor,
+    end: currentUniqueColor,
+    angle: 90,
+  };
+  const uniqueColorPreview = qualityUniqueGradientOverride
+    ? `linear-gradient(${gradientDraft.angle}deg, ${gradientDraft.start}, ${gradientDraft.end})`
+    : currentUniqueColor;
 
+  const handleUniqueColorModeChange = (mode: 'solid' | 'gradient') => {
+    if (mode === 'solid') {
+      setQualityUniqueOverride(currentUniqueColor);
+      return;
+    }
+    setQualityUniqueGradientOverride(gradientDraft);
+  };
   const handleToggle = async (next: boolean) => {
     setEditEnabled(next);
     await saveSettings();
     toastr.success(next ? '已启用编辑' : '已关闭编辑');
   };
-
 
   /** 处理保存 */
   const handleSave = async () => {
@@ -87,14 +103,77 @@ export const SettingsTab: FC = () => {
             </div>
           </div>
           <div className={styles.uniqueColorControl}>
-            <input
-              className={styles.uniqueColorInput}
-              type="color"
-              value={currentUniqueColor}
-              onChange={event => setQualityUniqueOverride(event.target.value)}
-              aria-label="选择唯一品质颜色"
+            <select
+              className={styles.uniqueColorMode}
+              value={qualityUniqueGradientOverride ? 'gradient' : 'solid'}
+              onChange={event =>
+                handleUniqueColorModeChange(event.target.value as 'solid' | 'gradient')
+              }
+              aria-label="唯一品质颜色模式"
+            >
+              <option value="solid">纯色</option>
+              <option value="gradient">渐变</option>
+            </select>
+            {qualityUniqueGradientOverride ? (
+              <>
+                <input
+                  className={styles.uniqueColorInput}
+                  type="color"
+                  value={gradientDraft.start}
+                  onChange={event =>
+                    setQualityUniqueGradientOverride({
+                      ...gradientDraft,
+                      start: event.target.value,
+                    })
+                  }
+                  aria-label="唯一品质渐变起始色"
+                />
+                <input
+                  className={styles.uniqueColorInput}
+                  type="color"
+                  value={gradientDraft.end}
+                  onChange={event =>
+                    setQualityUniqueGradientOverride({
+                      ...gradientDraft,
+                      end: event.target.value,
+                    })
+                  }
+                  aria-label="唯一品质渐变结束色"
+                />
+                <input
+                  className={styles.gradientAngleInput}
+                  type="number"
+                  min="0"
+                  max="360"
+                  value={gradientDraft.angle}
+                  onChange={event =>
+                    setQualityUniqueGradientOverride({
+                      ...gradientDraft,
+                      angle: Number(event.target.value),
+                    })
+                  }
+                  aria-label="唯一品质渐变角度"
+                />
+              </>
+            ) : (
+              <input
+                className={styles.uniqueColorInput}
+                type="color"
+                value={currentUniqueColor}
+                onChange={event => setQualityUniqueOverride(event.target.value)}
+                aria-label="选择唯一品质颜色"
+              />
+            )}
+            <span
+              className={styles.uniqueColorPreview}
+              style={{ background: uniqueColorPreview }}
+              aria-label="唯一品质颜色预览"
             />
-            <code className={styles.uniqueColorValue}>{currentUniqueColor}</code>
+            <code className={styles.uniqueColorValue}>
+              {qualityUniqueGradientOverride
+                ? `${gradientDraft.start} → ${gradientDraft.end} · ${gradientDraft.angle}°`
+                : currentUniqueColor}
+            </code>
             {qualityUniqueOverride ? (
               <button
                 className={styles.resetColorButton}

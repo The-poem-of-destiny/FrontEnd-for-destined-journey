@@ -590,3 +590,7 @@
 }
 
 @include quality-colors;
+
+.itemQualityMark.qualityUnique {
+  background: var(--theme-quality-unique-gradient, currentColor);
+}
