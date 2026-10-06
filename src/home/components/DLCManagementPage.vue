@@ -153,7 +153,7 @@ const selectedDLC = ref<string | null>(null);
 const dlcOptions = ref<DLCOption[]>([...initialDLCState.dlcOptions]);
 const localSelections = ref(new Map(initialDLCState.localSelections));
 
-const bookName = ref<string | null>(null);
+const bookNames = ref<string[]>([]);
 
 // 计算属性：当前 Tab 的选项列表
 const currentTabOptions = computed(() => {
@@ -184,12 +184,12 @@ async function loadAllOptions() {
     const result = await loadDLCOptionsService();
     dlcOptions.value = result.dlcOptions;
     localSelections.value = result.localSelections;
-    bookName.value = result.bookName;
+    bookNames.value = result.bookNames;
   } catch (error) {
     console.error('加载DLC数据失败:', error);
     dlcOptions.value = [];
     localSelections.value = new Map();
-    bookName.value = null;
+    bookNames.value = [];
   } finally {
     isLoading.value = false;
   }
@@ -220,12 +220,8 @@ function handleToggle(dlcKey: string) {
 async function handleNext() {
   isSaving.value = true;
   try {
-    if (bookName.value) {
-      const updatedOptions = await saveDLCChangesService(
-        dlcOptions.value,
-        localSelections.value,
-        bookName.value,
-      );
+    if (bookNames.value.length > 0) {
+      const updatedOptions = await saveDLCChangesService(dlcOptions.value, localSelections.value);
       dlcOptions.value = updatedOptions;
     }
   } catch (error) {
