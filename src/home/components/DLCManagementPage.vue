@@ -66,6 +66,10 @@
             <div class="item-detail">
               <template v-if="selectedDLC && selectedDLCInfo">
                 <h3 class="detail-name">{{ selectedDLCInfo.label }}</h3>
+                <div v-if="selectedDLCInfo.isWorkshop" class="detail-row">
+                  <span class="detail-label">来源:</span>
+                  <span class="detail-value">创意工坊</span>
+                </div>
                 <div class="detail-row">
                   <span class="detail-label">作者:</span>
                   <span class="detail-value">{{ selectedDLCInfo.author || '未知' }}</span>

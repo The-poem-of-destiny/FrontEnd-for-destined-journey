@@ -20,6 +20,7 @@ export interface DLCOption {
   label: string; // 显示名称，如 "薇薇拉"
   author: string; // 作者
   info: string; // 附加信息
+  isWorkshop: boolean; // 是否来自创意工坊（条目名称包含 [WS]）
   exclusionTargets: string[]; // 互斥目标 [!xxx]
   replacementTargets: string[]; // 替换目标 [>xxx]
   prerequisiteTargets: string[]; // 前置需求 [<xxx]
@@ -81,10 +82,12 @@ function pinyinCompare(a: string, b: string): number {
 }
 
 /**
- * 对 DLC 选项进行排序（按 label 的拼音首字母排序）
+ * 对 DLC 选项进行排序（原版优先，同来源按 label 的拼音首字母排序）
  */
 export function sortDLCOptions(options: DLCOption[]): DLCOption[] {
-  return [...options].sort((a, b) => pinyinCompare(a.label, b.label));
+  return [...options].sort(
+    (a, b) => Number(a.isWorkshop) - Number(b.isWorkshop) || pinyinCompare(a.label, b.label),
+  );
 }
 
 // ========================
@@ -215,6 +218,7 @@ export async function loadDLCOptions(): Promise<{
       label: extractDLCLabel(dlcKey),
       author,
       info,
+      isWorkshop: groupEntries.some(entry => entry.name.includes('[WS]')),
       exclusionTargets: extractTargetsFromEntries(groupEntries, EXCLUSION_PATTERN),
       replacementTargets: extractTargetsFromEntries(groupEntries, REPLACEMENT_PATTERN),
       prerequisiteTargets: extractTargetsFromEntries(groupEntries, PREREQUISITE_PATTERN),
