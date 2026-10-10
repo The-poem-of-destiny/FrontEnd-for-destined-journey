@@ -1,4 +1,8 @@
-import { getFilteredEntries, getWorldBookName, updateWorldBook } from './worldbookload&update';
+import {
+  getActiveWorldBookNames,
+  getFilteredEntries,
+  updateWorldBooks,
+} from './worldbookload&update';
 
 // ========================
 // 统一 DLC 类型定义
@@ -11,6 +15,7 @@ export type DLCCategory = '角色' | '事件' | '扩展';
 export interface DLCEntry {
   name: string;
   enabled: boolean;
+  bookName: string;
 }
 
 /** DLC 选项（分组后的 DLC 项） */
@@ -94,13 +99,18 @@ export function sortDLCOptions(options: DLCOption[]): DLCOption[] {
 // 解析函数
 // ========================
 
+/** Remove standalone [WS] marker for DLC parsing only. Original entry names are preserved for writes. */
+function normalizeDLCEntryName(entryName: string): string {
+  return entryName.replace(/\[WS\]/g, '');
+}
+
 /**
  * 从条目名称中提取分组 Key
  * @param entryName 如 "薇薇拉-本体[DLC][角色][薇薇拉](Author)"
  * @returns 如 "[DLC][角色][薇薇拉]"，不匹配则返回 null
  */
 function extractDLCKey(entryName: string): string | null {
-  const match = entryName.match(DLC_KEY_PATTERN);
+  const match = normalizeDLCEntryName(entryName).match(DLC_KEY_PATTERN);
   return match ? match[1] : null;
 }
 
@@ -110,7 +120,7 @@ function extractDLCKey(entryName: string): string | null {
  * @returns 如 "角色"，不匹配则返回 null
  */
 function extractDLCCategory(entryName: string): DLCCategory | null {
-  const match = entryName.match(DLC_CATEGORY_PATTERN);
+  const match = normalizeDLCEntryName(entryName).match(DLC_CATEGORY_PATTERN);
   return match ? (match[1] as DLCCategory) : null;
 }
 
@@ -181,16 +191,16 @@ function extractAuthorInfo(entries: DLCEntry[]): { author: string; info: string 
 export async function loadDLCOptions(): Promise<{
   dlcOptions: DLCOption[];
   localSelections: Map<string, boolean>;
-  bookName: string | null;
+  bookNames: string[];
 }> {
-  const bookName = getWorldBookName();
-  const entries = await getFilteredEntries(DLC_PATTERN, bookName);
+  const bookNames = getActiveWorldBookNames();
+  const entries = await getFilteredEntries(DLC_PATTERN, bookNames);
 
   // 按 dlcKey 分组条目
   const groups = new Map<string, DLCEntry[]>();
   const categoryMap = new Map<string, DLCCategory>();
 
-  for (const entry of entries as { name: string; enabled: boolean }[]) {
+  for (const entry of entries) {
     const dlcKey = extractDLCKey(entry.name);
     if (!dlcKey) continue;
 
@@ -204,6 +214,7 @@ export async function loadDLCOptions(): Promise<{
     groups.get(dlcKey)!.push({
       name: entry.name,
       enabled: entry.enabled,
+      bookName: entry.bookName,
     });
   }
 
@@ -231,7 +242,7 @@ export async function loadDLCOptions(): Promise<{
 
   const localSelections = new Map(sortedOptions.map(dlc => [dlc.dlcKey, dlc.enabled]));
 
-  return { dlcOptions: sortedOptions, localSelections, bookName };
+  return { dlcOptions: sortedOptions, localSelections, bookNames };
 }
 
 // ========================
@@ -429,13 +440,11 @@ function escapeRegExp(string: string): string {
  * 保存 DLC 选择到世界书
  * @param dlcOptions DLC 选项列表
  * @param localSelections 本地选择状态
- * @param bookName 世界书名称
  * @returns 更新后的 DLC 选项列表
  */
 export async function saveDLCChanges(
   dlcOptions: DLCOption[],
   localSelections: Map<string, boolean>,
-  bookName: string,
 ): Promise<DLCOption[]> {
   if (!hasDLCChanges(dlcOptions, localSelections)) {
     return dlcOptions;
@@ -445,7 +454,7 @@ export async function saveDLCChanges(
   const originalStates = new Map(dlcOptions.map(dlc => [dlc.dlcKey, dlc.enabled]));
 
   // 构建更新列表：将每个 DLC 的所有条目设置为相同的启用状态
-  const updatedEntries: Array<{ name: string; enabled: boolean }> = [];
+  const updatedEntries: Array<{ name: string; enabled: boolean; bookName: string }> = [];
 
   for (const dlc of dlcOptions) {
     const newEnabled = localSelections.get(dlc.dlcKey) ?? false;
@@ -453,6 +462,7 @@ export async function saveDLCChanges(
       updatedEntries.push({
         name: entry.name,
         enabled: newEnabled,
+        bookName: entry.bookName,
       });
     }
   }
@@ -483,12 +493,14 @@ export async function saveDLCChanges(
   if (exclusionTargetsToDisable.length > 0) {
     for (const target of exclusionTargetsToDisable) {
       const pattern = new RegExp(`\\[${escapeRegExp(target)}\\]`);
-      const matchingEntries = await getFilteredEntries(pattern, bookName);
+      const matchingEntries = await getFilteredEntries(pattern);
 
-      for (const entry of matchingEntries as { name: string; enabled: boolean }[]) {
-        const existingIndex = updatedEntries.findIndex(e => e.name === entry.name);
+      for (const entry of matchingEntries) {
+        const existingIndex = updatedEntries.findIndex(
+          e => e.name === entry.name && e.bookName === entry.bookName,
+        );
         if (existingIndex === -1) {
-          updatedEntries.push({ name: entry.name, enabled: false });
+          updatedEntries.push({ name: entry.name, enabled: false, bookName: entry.bookName });
         } else {
           updatedEntries[existingIndex].enabled = false;
         }
@@ -500,12 +512,14 @@ export async function saveDLCChanges(
   if (replacementTargetsToDisable.length > 0) {
     for (const target of replacementTargetsToDisable) {
       const pattern = new RegExp(`\\[${escapeRegExp(target)}\\]`);
-      const matchingEntries = await getFilteredEntries(pattern, bookName);
+      const matchingEntries = await getFilteredEntries(pattern);
 
-      for (const entry of matchingEntries as { name: string; enabled: boolean }[]) {
-        const existingIndex = updatedEntries.findIndex(e => e.name === entry.name);
+      for (const entry of matchingEntries) {
+        const existingIndex = updatedEntries.findIndex(
+          e => e.name === entry.name && e.bookName === entry.bookName,
+        );
         if (existingIndex === -1) {
-          updatedEntries.push({ name: entry.name, enabled: false });
+          updatedEntries.push({ name: entry.name, enabled: false, bookName: entry.bookName });
         } else {
           updatedEntries[existingIndex].enabled = false;
         }
@@ -517,12 +531,14 @@ export async function saveDLCChanges(
   if (filteredReplacementTargetsToEnable.length > 0) {
     for (const target of filteredReplacementTargetsToEnable) {
       const pattern = new RegExp(`\\[${escapeRegExp(target)}\\]`);
-      const matchingEntries = await getFilteredEntries(pattern, bookName);
+      const matchingEntries = await getFilteredEntries(pattern);
 
-      for (const entry of matchingEntries as { name: string; enabled: boolean }[]) {
-        const existingIndex = updatedEntries.findIndex(e => e.name === entry.name);
+      for (const entry of matchingEntries) {
+        const existingIndex = updatedEntries.findIndex(
+          e => e.name === entry.name && e.bookName === entry.bookName,
+        );
         if (existingIndex === -1) {
-          updatedEntries.push({ name: entry.name, enabled: true });
+          updatedEntries.push({ name: entry.name, enabled: true, bookName: entry.bookName });
         } else if (updatedEntries[existingIndex].enabled !== false) {
           updatedEntries[existingIndex].enabled = true;
         }
@@ -530,7 +546,7 @@ export async function saveDLCChanges(
     }
   }
 
-  await updateWorldBook(updatedEntries, bookName);
+  await updateWorldBooks(updatedEntries);
 
   // 返回更新后的 DLC 选项列表
   return dlcOptions.map(dlc => {

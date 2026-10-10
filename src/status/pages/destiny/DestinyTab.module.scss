@@ -15,7 +15,7 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 }
 
 .destinyTabDetailModeMobile {
-  @media (max-width: 900px) {
+  @media (max-width: 720px) {
     flex: 1;
     min-height: 100%;
     height: 100%;
@@ -415,7 +415,7 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 }
 
 .partnerSummaryListHiddenMobile {
-  @media (max-width: 900px) {
+  @media (max-width: 720px) {
     display: none;
   }
 }
@@ -813,7 +813,7 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
   font-size: 13px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 720px) {
   .partnerMasterDetailContent {
     grid-template-columns: 1fr;
   }

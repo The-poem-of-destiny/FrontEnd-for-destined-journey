@@ -1,66 +1,112 @@
-//获取世界书名字
-export function getWorldBookName() {
-  const bookInfo = window.top?.TavernHelper.getCharWorldbookNames('current');
-  const BookName = bookInfo ? bookInfo.primary : null;
-  return BookName;
+export interface WorldbookEntryRef {
+  name: string;
+  enabled: boolean;
+  bookName: string;
 }
-//获取条目
-export async function getWorldbookEntries(bookName: string | null) {
-  if (!bookName) {
-    return;
-  }
-  const worldbook = await window.top?.TavernHelper.getWorldbook(bookName);
-  if (!worldbook) {
-    return;
-  }
-  return worldbook.map((entry: { name: string; enabled: boolean }) => ({
-    name: entry.name,
-    enabled: entry.enabled,
-  }));
+
+/**
+ * 获取 Home 当前应该读取的所有世界书来源。
+ * 顺序：角色主世界书 → 角色附加世界书。
+ */
+export function getActiveWorldBookNames(): string[] {
+  const helper = window.top?.TavernHelper;
+  if (!helper) return [];
+
+  const charBooks = helper.getCharWorldbookNames('current');
+
+  return [charBooks?.primary ?? null, ...(charBooks?.additional ?? [])].filter(
+    (name, index, all): name is string => Boolean(name) && all.indexOf(name) === index,
+  );
 }
-//使用正则筛选条目
-export async function getFilteredEntries(pattern: RegExp, bookName: string | null) {
-  const worldbook = await getWorldbookEntries(bookName);
-  if (!worldbook || worldbook.length === 0) {
-    return [];
+
+/** @deprecated 仅保留给旧调用；Home 新逻辑应使用 getActiveWorldBookNames。 */
+export function getWorldBookName(): string | null {
+  return window.top?.TavernHelper.getCharWorldbookNames('current')?.primary ?? null;
+}
+
+// 获取一个或多个世界书的条目，并保留来源世界书名称
+export async function getWorldbookEntries(
+  bookNames: string | string[] | null,
+): Promise<WorldbookEntryRef[]> {
+  const helper = window.top?.TavernHelper;
+  if (!helper || !bookNames) return [];
+
+  const names = Array.isArray(bookNames) ? bookNames : [bookNames];
+  const entries: WorldbookEntryRef[] = [];
+
+  for (const bookName of names) {
+    if (!bookName) continue;
+    const worldbook = await helper.getWorldbook(bookName);
+    if (!worldbook) continue;
+
+    entries.push(
+      ...worldbook.map((entry: { name: string; enabled: boolean }) => ({
+        name: entry.name,
+        enabled: entry.enabled,
+        bookName,
+      })),
+    );
   }
-  return worldbook
-    .filter((entry: { name: string }) => pattern.test(entry.name))
-    .map((entry: { name: any; enabled: any }) => ({
+
+  return entries;
+}
+
+// 使用正则筛选一个或多个世界书条目；默认读取 Home 当前全部来源
+export async function getFilteredEntries(
+  pattern: RegExp,
+  bookNames: string | string[] | null = getActiveWorldBookNames(),
+): Promise<WorldbookEntryRef[]> {
+  const worldbook = await getWorldbookEntries(bookNames);
+  if (worldbook.length === 0) return [];
+
+  return worldbook.filter(entry => {
+    pattern.lastIndex = 0;
+    return pattern.test(entry.name);
+  });
+}
+
+/**
+ * 按条目自身的 bookName 写回原来源世界书。
+ * 同名条目位于不同世界书时不会互相覆盖。
+ */
+export async function updateWorldBooks(
+  entries: Array<{ name: string; enabled: boolean; bookName: string }>,
+): Promise<void> {
+  const helper = window.top?.TavernHelper;
+  if (!helper || entries.length === 0) return;
+
+  const entriesByBook = new Map<string, Array<{ name: string; enabled: boolean }>>();
+  for (const entry of entries) {
+    if (!entry.bookName) continue;
+    if (!entriesByBook.has(entry.bookName)) {
+      entriesByBook.set(entry.bookName, []);
+    }
+    entriesByBook.get(entry.bookName)!.push({
       name: entry.name,
       enabled: entry.enabled,
-    }));
+    });
+  }
+
+  await Promise.all(
+    Array.from(entriesByBook, async ([bookName, bookEntries]) => {
+      const enabledMap = new Map(bookEntries.map(entry => [entry.name, entry.enabled]));
+      await helper.updateWorldbookWith(bookName, worldbook =>
+        worldbook.map(entry => {
+          const newEnabled = enabledMap.get(entry.name);
+          return newEnabled === undefined ? entry : { ...entry, enabled: newEnabled };
+        }),
+      );
+    }),
+  );
 }
+
 /**
- * 更新世界书条目的启用状态
- *
- * @param entries 修改后的条目列表，包含 name 和 enabled 属性
- * @throws 如果没有绑定世界书或世界书不存在，将会抛出错误
- *
- * @example
- * // 更新世界书
- * await updateWorldBook(entries);
+ * 兼容旧的单世界书写入接口。
  */
 export async function updateWorldBook(
   entries: Array<{ name: string; enabled: boolean }>,
   bookName: string,
 ): Promise<void> {
-  if (!bookName) {
-    return;
-  }
-  if (!bookName) {
-    throw new Error('No worldbook bound to current character');
-  }
-
-  const enabledMap = new Map(entries.map(e => [e.name, e.enabled]));
-
-  await window.top?.TavernHelper.updateWorldbookWith(bookName, worldbook => {
-    return worldbook.map(entry => {
-      const newEnabled = enabledMap.get(entry.name);
-      if (newEnabled !== undefined) {
-        return { ...entry, enabled: newEnabled };
-      }
-      return entry;
-    });
-  });
+  if (!bookName) return;
+  await updateWorldBooks(entries.map(entry => ({ ...entry, bookName })));
 }
