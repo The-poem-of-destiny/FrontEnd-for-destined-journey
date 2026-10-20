@@ -7,6 +7,7 @@ import {
   getAvatarActionState,
   getAvatarRecord,
   getAvatarScopeKey,
+  getAscensionItemLabel,
   getIconifyMask,
   isAvatarRemovedRecord,
   readAvatarFileAsDataUrl,
@@ -445,9 +446,18 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
     ? [
         ascension?.神国?.名称 ? { type: 'kingdom' as const, label: ascension.神国.名称 } : null,
         ascension?.神位 ? { type: 'rank' as const, label: ascension.神位 } : null,
-        ...Object.keys(ascension?.法则 ?? {}).map(label => ({ type: 'law' as const, label })),
-        ...Object.keys(ascension?.权能 ?? {}).map(label => ({ type: 'power' as const, label })),
-        ...Object.keys(ascension?.要素 ?? {}).map(label => ({ type: 'element' as const, label })),
+        ...Object.keys(ascension?.法则 ?? {}).map(name => ({
+          type: 'law' as const,
+          label: getAscensionItemLabel(name, '法则'),
+        })),
+        ...Object.keys(ascension?.权能 ?? {}).map(name => ({
+          type: 'power' as const,
+          label: getAscensionItemLabel(name, '权能'),
+        })),
+        ...Object.keys(ascension?.要素 ?? {}).map(name => ({
+          type: 'element' as const,
+          label: getAscensionItemLabel(name, '要素'),
+        })),
       ].filter((item): item is AscensionPreviewItem => Boolean(item?.label))
     : [];
   const visibleAscensionPreviewItems = ascensionPreviewItems.slice(0, AscensionPreviewLimit);

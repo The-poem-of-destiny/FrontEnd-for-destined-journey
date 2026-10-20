@@ -1,4 +1,5 @@
 import type { Ascension as AscensionType } from '@/status/core/types/mvu-data';
+import { getAscensionItemLabel } from '@/status/core/utils/ascension';
 import { FC } from 'react';
 import { EditableField } from '../EditableField';
 import styles from './Ascension.module.scss';
@@ -19,6 +20,7 @@ interface SectionConfig {
   title: string;
   icon: string;
   itemClass: string;
+  sectionKey: '要素' | '权能' | '法则';
 }
 
 /**
@@ -42,7 +44,7 @@ export const Ascension: FC<AscensionProps> = ({
     icon,
     itemClass,
     sectionKey,
-  }: SectionConfig & { sectionKey: string }) => {
+  }: SectionConfig) => {
     // 如果数据为空则不显示（包括被 schema 过滤的情况）
     if (_.isEmpty(sectionData)) return null;
 
@@ -63,7 +65,7 @@ export const Ascension: FC<AscensionProps> = ({
                   className={styles.itemName}
                 />
               ) : (
-                <div className={styles.itemName}>{name}</div>
+                <div className={styles.itemName}>{getAscensionItemLabel(name, sectionKey)}</div>
               )}
               {editEnabled && pathPrefix ? (
                 <div className={styles.itemDetails}>
@@ -78,7 +80,7 @@ export const Ascension: FC<AscensionProps> = ({
                   <div className={styles.itemDetails}>
                     {_.map(details, (value, key) => (
                       <div key={key} className={styles.detailRow}>
-                        <span className={styles.detailKey}>{key}</span>
+                        <span className={styles.detailKey}>{key === 'desc' ? '描述' : key}</span>
                         <span className={styles.detailValue}>{value}</span>
                       </div>
                     ))}

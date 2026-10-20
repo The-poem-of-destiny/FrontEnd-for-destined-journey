@@ -1,3 +1,4 @@
+export * from './ascension';
 export * from './assets';
 export * from './avatar-storage';
 export * from './avatar-presets';
